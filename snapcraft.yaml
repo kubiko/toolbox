@@ -22,7 +22,7 @@ apps:
 
     mc:
         command: mc
-        plugs: [home]
+        plugs: [home, process-control, system-observe, mount-observe]
 
 parts:
     tools:
@@ -33,7 +33,7 @@ parts:
           fat:
             - -etc
             - -lib
-            - -usr/lib
+            - -usr/lib/gcc
             - -usr/share
             - -var
         stage:
@@ -41,3 +41,8 @@ parts:
         snap:
           - $fat
 
+    connect-interfaces:
+        source: .
+        plugin: dump
+        organize:
+            connect-interfaces: bin/connect-interfaces
