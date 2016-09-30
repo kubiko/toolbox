@@ -1,0 +1,7 @@
+**/parts
+**/stage
+**/snap
+**/prime
+**/*.snap
+**/*.tar*
+.project

@@ -1,0 +1,43 @@
+name: toolbox
+version: "0.0.1"
+summary: set of usefull shell tools
+description: |
+ set of usefull shell tools
+
+confinement: strict
+grade: devel
+
+apps:
+    nano:
+        command: nano
+        plugs: [home]
+
+    wget:
+        command: wget
+        plugs: [home]
+
+    ag:
+        command: ag
+        plugs: [home] 
+
+    mc:
+        command: mc
+        plugs: [home]
+
+parts:
+    tools:
+        source: .
+        plugin: dump
+        stage-packages: [wget, nano, silversearcher-ag, mc]
+        filesets:
+          fat:
+            - -etc
+            - -lib
+            - -usr/lib
+            - -usr/share
+            - -var
+        stage:
+          - $fat
+        snap:
+          - $fat
+
