@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.0.1"
+version: "0.0.2"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -14,7 +14,7 @@ apps:
 
     wget:
         command: wget
-        plugs: [home]
+        plugs: [home, network]
 
     ag:
         command: ag
@@ -24,11 +24,27 @@ apps:
         command: mc
         plugs: [home, process-control, system-observe, mount-observe]
 
+    mcdiff:
+        command: mcdiff
+        plugs: [home, process-control, system-observe, mount-observe]
+
+    mcedit:
+        command: mcedit
+        plugs: [home, process-control, system-observe, mount-observe]
+
+    mcview:
+        command: mcview
+        plugs: [home, process-control, system-observe, mount-observe]
+
+    pastebinit:
+        command: pastebinit
+        plugs: [home, network]
+
 parts:
     tools:
         source: .
         plugin: dump
-        stage-packages: [wget, nano, silversearcher-ag, mc]
+        stage-packages: [wget, nano, silversearcher-ag, mc, pastebinit]
         filesets:
           fat:
             - -etc

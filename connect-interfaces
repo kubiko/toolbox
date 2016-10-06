@@ -6,4 +6,5 @@ snap connect toolbox:home ubuntu-core:home
 snap connect toolbox:process-control ubuntu-core:process-control
 snap connect toolbox:system-observe ubuntu-core:system-observe
 snap connect toolbox:mount-observe ubuntu-core:mount-observe
+snap connect toolbox:network ubuntu-core:network
 # snap connect toolbox: ubuntu-core:
