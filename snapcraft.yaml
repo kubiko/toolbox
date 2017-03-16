@@ -40,15 +40,92 @@ apps:
         command: pastebinit
         plugs: [home, network]
 
+    curl:
+        command: curl
+        plugs: [home, network]
+
+    lsusb:
+        command: lsusb
+
+    usb-devices:
+        command: usb-devices
+
+    usbhid-dump:
+        command: usbhid-dump
+
+    update-usbids:
+        command: update-usbids
+
+    cppfilt:
+        command: c++filt
+
+    elfedit:
+        command: elfedit
+
+    readelf:
+        command: readelf
+
+    ld:
+        command: ld
+
+    ld-bfd:
+        command: ld.bfd
+
+    strings:
+        command: strings
+
+    size:
+        command: size
+
+    strip:
+        command: strip
+
+    objcopy:
+        command: objcopy
+
+    x86-64-linux-gnu-ld:
+        command: x86_64-linux-gnu-ld
+
+    objdump:
+        command: objdump
+
+    addr2line:
+        command: addr2line
+
+    dwp:
+        command: dwp
+
+    as:
+        command: as
+
+    ar:
+        command: ar
+
+    gold:
+        command: gold
+
+    ld-gold:
+        command: ld.gold
+
+    nm:
+        command: nm
+
+    gprof:
+        command: gprof
+
+    ranlib:
+        command: ranlib
+
+    set-path:
+        command: set-path
 parts:
     tools:
         source: .
         plugin: dump
-        stage-packages: [wget, nano, silversearcher-ag, mc, pastebinit]
+        stage-packages: [wget, nano, silversearcher-ag, mc, pastebinit, curl, usbutils, binutils]
         filesets:
           fat:
             - -etc
-            - -lib
             - -usr/lib/gcc
             - -usr/share
             - -var
@@ -62,3 +139,4 @@ parts:
         plugin: dump
         organize:
             connect-interfaces: bin/connect-interfaces
+            set-path: bin/set-path
