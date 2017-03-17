@@ -137,7 +137,7 @@ parts:
     usbutils:
         source: https://github.com/gregkh/usbutils.git
         plugin: autotools
-        build-packages: [libusb-1.0-0]
+        build-packages: [libusb-1.0-0, gawk]
         stage-packages: [libusb-1.0-0]
         prepare: |
             git submodule init
