@@ -56,10 +56,6 @@ apps:
         command: usbhid-dump
         plugs: [hardware-observe, network]
 
-    update-usbids:
-        command: update-usbids
-        plugs: [hardware-observe, network]
-
     cppfilt:
         command: c++filt
 
