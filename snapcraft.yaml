@@ -142,7 +142,7 @@ parts:
         source: https://github.com/gregkh/usbutils.git
         plugin: autotools
         build-packages:
-            - libusb-1.0-0
+            - libusb-1.0-0-dev
             - zlib1g
             - gawk
             - pkg-config
