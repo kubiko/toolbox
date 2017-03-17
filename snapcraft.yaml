@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.0.2"
+version: "0.0.3"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -18,7 +18,7 @@ apps:
 
     ag:
         command: ag
-        plugs: [home] 
+        plugs: [home]
 
     mc:
         command: mc
@@ -83,9 +83,6 @@ apps:
     objcopy:
         command: objcopy
 
-    x86-64-linux-gnu-ld:
-        command: x86_64-linux-gnu-ld
-
     objdump:
         command: objdump
 
@@ -122,21 +119,27 @@ parts:
     tools:
         source: .
         plugin: dump
-        stage-packages: [wget, nano, silversearcher-ag, mc, pastebinit, curl, usbutils, binutils]
+        stage-packages: [wget, nano, silversearcher-ag, mc, pastebinit, curl, binutils]
         filesets:
           fat:
-            - -etc
             - -usr/lib/gcc
             - -usr/share
-            - -var
+#            - -etc
+#            - -var
         stage:
-          - $fat
-        snap:
-          - $fat
-
-    connect-interfaces:
-        source: .
-        plugin: dump
+            - $fat
+        prime:
+            - $fat
         organize:
             connect-interfaces: bin/connect-interfaces
             set-path: bin/set-path
+
+    usbutils:
+        source: https://github.com/gregkh/usbutils.git
+        plugin: autotools
+        build-packages: [libusb-1.0-0-dev]
+        stage-packages: [libusb-1.0-0]
+        prepare: |
+            git submodule init
+            git submodule update
+            autoreconf --install --symlink
