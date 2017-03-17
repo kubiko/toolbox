@@ -2,9 +2,9 @@
 
 echo "Connecting interfaces"
 
-snap connect toolbox:home ubuntu-core:home
-snap connect toolbox:process-control ubuntu-core:process-control
-snap connect toolbox:system-observe ubuntu-core:system-observe
-snap connect toolbox:mount-observe ubuntu-core:mount-observe
-snap connect toolbox:network ubuntu-core:network
+snap connect toolbox:home core:home
+snap connect toolbox:process-control core:process-control
+snap connect toolbox:system-observe core:system-observe
+snap connect toolbox:mount-observe core:mount-observe
+snap connect toolbox:network core:network
 # snap connect toolbox: ubuntu-core:
