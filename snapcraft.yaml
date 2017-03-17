@@ -46,15 +46,19 @@ apps:
 
     lsusb:
         command: lsusb
+        plugs: [hardware-observe, network]
 
     usb-devices:
         command: usb-devices
+        plugs: [hardware-observe, network]
 
     usbhid-dump:
         command: usbhid-dump
+        plugs: [hardware-observe, network]
 
     update-usbids:
         command: update-usbids
+        plugs: [hardware-observe, network]
 
     cppfilt:
         command: c++filt
@@ -115,17 +119,17 @@ apps:
 
     set-path:
         command: set-path
+    screen:
+        command: screen
+
 parts:
     tools:
         source: .
         plugin: dump
-        stage-packages: [wget, nano, silversearcher-ag, mc, pastebinit, curl, binutils]
+        stage-packages: [wget, nano, silversearcher-ag, mc, pastebinit, curl, binutils, screen]
         filesets:
           fat:
             - -usr/lib/gcc
-            - -usr/share
-#            - -etc
-#            - -var
         stage:
             - $fat
         prime:
@@ -137,8 +141,17 @@ parts:
     usbutils:
         source: https://github.com/gregkh/usbutils.git
         plugin: autotools
-        build-packages: [libusb-1.0-0, gawk]
+        build-packages:
+            - libusb-1.0-0
+            - zlib1g
+            - gawk
+            - pkg-config
+            - libudev-dev
         stage-packages: [libusb-1.0-0]
+        configflags:
+            - --prefix=/usr
+            - --libdir=/usr/lib
+            - --localstatedir=/var/snap/toolbox/common/
         prepare: |
             git submodule init
             git submodule update
