@@ -1,0 +1,3 @@
+#!/bin/bash
+
+export PATH=/snap/toolbox/current/bin:/snap/toolbox/current/usr/bin:$PATH
