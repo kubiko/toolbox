@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.0.3"
+version: "0.0.4"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -117,12 +117,13 @@ apps:
         command: set-path
     screen:
         command: screen
-
+    tree:
+        command: tree
 parts:
     tools:
         source: .
         plugin: dump
-        stage-packages: [wget, nano, silversearcher-ag, mc, pastebinit, curl, binutils, screen]
+        stage-packages: [wget, nano, silversearcher-ag, mc, pastebinit, curl, binutils, screen, tree]
         filesets:
           fat:
             - -usr/lib/gcc
