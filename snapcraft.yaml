@@ -119,11 +119,15 @@ apps:
         command: screen
     tree:
         command: tree
+    zip:
+        command: zip
+    unzip:
+        command: unzip
 parts:
     tools:
         source: .
         plugin: dump
-        stage-packages: [wget, nano, silversearcher-ag, mc, pastebinit, curl, binutils, screen, tree]
+        stage-packages: [wget, nano, silversearcher-ag, mc, pastebinit, curl, binutils, screen, tree, zip, unzip]
         filesets:
           fat:
             - -usr/lib/gcc
