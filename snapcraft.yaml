@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.0.4"
+version: "0.0.5"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -123,14 +123,22 @@ apps:
         command: zip
     unzip:
         command: unzip
+    vim:
+        command: vim.basic
+    vim-tiny:
+        command: vim.tiny
+    vimdiff:
+        command: vim.basic -d
+
 parts:
     tools:
         source: .
         plugin: dump
-        stage-packages: [wget, nano, silversearcher-ag, mc, pastebinit, curl, binutils, screen, tree, zip, unzip]
+        stage-packages: [wget, nano, silversearcher-ag, mc, pastebinit, curl, binutils, screen, tree, zip, unzip, vim, vim-tiny, vim-common, vim-runtime]
         filesets:
           fat:
             - -usr/lib/gcc
+            - -usr/share/vim
         stage:
             - $fat
         prime:
