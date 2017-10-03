@@ -10,125 +10,157 @@ grade: devel
 apps:
     nano:
         command: nano
-        plugs: [home]
+        plugs: &default [home, process-control, system-observe, mount-observe]
 
     wget:
         command: wget
-        plugs: [home, network]
+        plugs: *default
 
     ag:
         command: ag
-        plugs: [home]
+        plugs: *default
 
     mc:
         command: mc
-        plugs: [home, process-control, system-observe, mount-observe]
+        plugs: *default
 
     mcdiff:
         command: mcdiff
-        plugs: [home, process-control, system-observe, mount-observe]
+        plugs: *default
 
     mcedit:
         command: mcedit
-        plugs: [home, process-control, system-observe, mount-observe]
+        plugs: *default
 
     mcview:
         command: mcview
-        plugs: [home, process-control, system-observe, mount-observe]
+        plugs: *default
 
     pastebinit:
         command: pastebinit
-        plugs: [home, network]
+        plugs: *default
 
     curl:
         command: curl
-        plugs: [home, network]
+        plugs: *default
 
     lsusb:
         command: lsusb
-        plugs: [hardware-observe, network]
+        plugs: *default
 
     usb-devices:
         command: usb-devices
-        plugs: [hardware-observe, network]
+        plugs: *default
 
     usbhid-dump:
         command: usbhid-dump
-        plugs: [hardware-observe, network]
+        plugs: *default
 
     cppfilt:
         command: c++filt
+        plugs: *default
 
     elfedit:
         command: elfedit
+        plugs: *default
 
     readelf:
         command: readelf
+        plugs: *default
 
     ld:
         command: ld
+        plugs: *default
 
     ld-bfd:
         command: ld.bfd
+        plugs: *default
 
     strings:
         command: strings
+        plugs: *default
 
     size:
         command: size
+        plugs: *default
 
     strip:
         command: strip
+        plugs: *default
 
     objcopy:
         command: objcopy
+        plugs: *default
 
     objdump:
         command: objdump
+        plugs: *default
 
     addr2line:
         command: addr2line
+        plugs: *default
 
     dwp:
         command: dwp
+        plugs: *default
 
     as:
         command: as
+        plugs: *default
 
     ar:
         command: ar
+        plugs: *default
 
     gold:
         command: gold
+        plugs: *default
 
     ld-gold:
         command: ld.gold
+        plugs: *default
 
     nm:
         command: nm
+        plugs: *default
 
     gprof:
         command: gprof
+        plugs: *default
 
     ranlib:
         command: ranlib
+        plugs: *default
 
     set-path:
         command: set-path
+        plugs: *default
+
     screen:
         command: screen
+        plugs: *default
+
     tree:
         command: tree
+        plugs: *default
     zip:
         command: zip
+        plugs: *default
+
     unzip:
         command: unzip
+        plugs: *default
     vim:
         command: vim.basic
+        plugs: *default
+
     vim-tiny:
         command: vim.tiny
+        plugs: *default
+
     vimdiff:
         command: vim.basic -d
+        plugs: *default
 
 parts:
     tools:
