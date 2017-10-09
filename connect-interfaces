@@ -1,10 +1,4 @@
 #!/bin/bash
 
 echo "Connecting interfaces"
-
-snap connect toolbox:home core:home
-snap connect toolbox:process-control core:process-control
-snap connect toolbox:system-observe core:system-observe
-snap connect toolbox:mount-observe core:mount-observe
-snap connect toolbox:network core:network
-# snap connect toolbox: ubuntu-core:
+grep " - " /snap/toolbox/current/meta/snap.yaml | sort | uniq |sed -e 's/^[ \t]*//' | sed -e 's/- /toolbox:/' | while read line; do snap connect $line core; done

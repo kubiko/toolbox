@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.0.5"
+version: "0.0.6"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -10,7 +10,7 @@ grade: devel
 apps:
     nano:
         command: nano
-        plugs: &default [home, process-control, system-observe, mount-observe]
+        plugs: &default [home, process-control, system-observe, mount-observe,hardware-observe,framebuffer, network-control, physical-memory-control, raw-usb, removable-media, system-trace, uhid, upower-observe, classic-support ]
 
     wget:
         command: wget
@@ -161,12 +161,15 @@ apps:
     vimdiff:
         command: vim.basic -d
         plugs: *default
+    lsof:
+        command: lsof
+        plugs: *default
 
 parts:
     tools:
         source: .
         plugin: dump
-        stage-packages: [wget, nano, silversearcher-ag, mc, pastebinit, curl, binutils, screen, tree, zip, unzip, vim, vim-tiny, vim-common, vim-runtime]
+        stage-packages: [wget, nano, silversearcher-ag, pastebinit, curl, binutils, screen, tree, zip, unzip, vim, vim-tiny, vim-common, vim-runtime, lsof]
         filesets:
           fat:
             - -usr/lib/gcc
@@ -179,6 +182,13 @@ parts:
             connect-interfaces: bin/connect-interfaces
             set-path: bin/set-path
 
+    mc:
+        source: https://github.com/MidnightCommander/mc.git
+        plugin: autotools
+        configflags:
+            - --prefix=/snap/toolbox/current/usr 
+            - --sysconfdir=/var/snap/toolbox/common/etc
+            - --without-x
     usbutils:
         source: https://github.com/gregkh/usbutils.git
         plugin: autotools
