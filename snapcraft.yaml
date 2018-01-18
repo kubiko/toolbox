@@ -200,6 +200,10 @@ parts:
             - --prefix=/snap/toolbox/current/usr 
             - --sysconfdir=/var/snap/toolbox/common/etc
             - --without-x
+        build-packages:
+            - libglib2.0-dev
+            - libslang2-dev
+            - gettext
     usbutils:
         source: https://github.com/gregkh/usbutils.git
         plugin: autotools
