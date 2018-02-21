@@ -176,11 +176,39 @@ apps:
         command: hdparm
         plugs: *default
 
+    rhash:
+        command: rhash
+        plugs: *default
+
+    gost-hash:
+        command: gost-hash
+        plugs: *default
+
+    has160-hash:
+        command: has160-hash
+        plugs: *default
+
+    sfv-hash:
+        command: sfv-hash
+        plugs: *default
+
+    tiger-hash:
+        command: tiger-hash
+        plugs: *default
+
+    tth-hash:
+        command: tth-hash
+        plugs: *default
+
+    whirlpool-hash:
+        command: whirlpool-hash
+        plugs: *default
+
 parts:
     tools:
         source: .
         plugin: dump
-        stage-packages: [wget, nano, silversearcher-ag, pastebinit, curl, binutils, screen, tree, zip, unzip, vim, vim-tiny, vim-common, vim-runtime, lsof, iotop, hdparm]
+        stage-packages: [wget, nano, silversearcher-ag, pastebinit, curl, binutils, screen, tree, zip, unzip, vim, vim-tiny, vim-common, vim-runtime, lsof, iotop, hdparm, rhash]
         filesets:
           fat:
             - -usr/lib/gcc
