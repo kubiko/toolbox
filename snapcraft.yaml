@@ -21,19 +21,19 @@ apps:
         plugs: *default
 
     mc:
-        command: which mc
+        command: mc
         plugs: *default
 
     mcdiff:
-        command: which mcdiff
+        command: mcdiff
         plugs: *default
 
     mcedit:
-        command: which mcedit
+        command: mcedit
         plugs: *default
 
     mcview:
-        command: which mcview
+        command: mcview
         plugs: *default
 
     pastebinit:
@@ -232,6 +232,11 @@ parts:
             - libglib2.0-dev
             - libslang2-dev
             - gettext
+        install: |
+            mv $SNAPCRAFT_PART_INSTALL/snap/toolbox/current/usr $SNAPCRAFT_PART_INSTALL/
+            rm -rf $SNAPCRAFT_PART_INSTALL/snap
+            mv $SNAPCRAFT_PART_INSTALL/var/snap/toolbox/common/etc $SNAPCRAFT_PART_INSTALL/
+            rm -rf $SNAPCRAFT_PART_INSTALL/var
     usbutils:
         source: https://github.com/gregkh/usbutils.git
         plugin: autotools
