@@ -21,19 +21,19 @@ apps:
         plugs: *default
 
     mc:
-        command: mc
+        command: which mc
         plugs: *default
 
     mcdiff:
-        command: mcdiff
+        command: which mcdiff
         plugs: *default
 
     mcedit:
-        command: mcedit
+        command: which mcedit
         plugs: *default
 
     mcview:
-        command: mcview
+        command: which mcview
         plugs: *default
 
     pastebinit:
