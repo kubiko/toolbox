@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.0.8"
+version: "0.0.9"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -202,6 +202,10 @@ apps:
 
     whirlpool-hash:
         command: whirlpool-hash
+        plugs: *default
+
+    clean-journalctl:
+        command: journalctl --vacuum-time=1seconds
         plugs: *default
 
 parts:
