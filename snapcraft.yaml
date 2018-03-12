@@ -10,7 +10,7 @@ grade: devel
 apps:
     nano:
         command: nano
-        plugs: &default [home, process-control, system-observe, mount-observe,hardware-observe,framebuffer, network-control, physical-memory-control, raw-usb, removable-media, system-trace, uhid, upower-observe ]
+        plugs: &default [home, process-control, system-observe, mount-observe,hardware-observe,framebuffer, network-control, physical-memory-control, raw-usb, removable-media, system-trace, uhid ]
 
     wget:
         command: wget
