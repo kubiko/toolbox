@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.0.9"
+version: "0.1.0"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -208,11 +208,14 @@ apps:
         command: journalctl --vacuum-time=1seconds
         plugs: *default
 
+    ethtool:
+        command: sbin/ethtool
+
 parts:
     tools:
         source: .
         plugin: dump
-        stage-packages: [wget, nano, silversearcher-ag, pastebinit, curl, binutils, screen, tree, zip, unzip, vim, vim-tiny, vim-common, vim-runtime, lsof, iotop, hdparm, rhash]
+        stage-packages: [wget, nano, silversearcher-ag, pastebinit, curl, binutils, screen, tree, zip, unzip, vim, vim-tiny, vim-common, vim-runtime, lsof, iotop, hdparm, rhash, ethtool]
         filesets:
           fat:
             - -usr/lib/gcc
