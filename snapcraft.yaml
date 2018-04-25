@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.1.0"
+version: "0.1.1"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -210,12 +210,29 @@ apps:
 
     ethtool:
         command: sbin/ethtool
+        plugs: *default
+
+    i2cset:
+        command: usr/sbin/i2cset
+        plugs: *default
+
+    i2cdump:
+        command: usr/sbin/i2cdump
+        plugs: *default
+
+    i2cdetect:
+        command: usr/sbin/i2cdetect
+        plugs: *default
+
+    i2cget:
+        command: usr/sbin/i2cget
+        plugs: *default
 
 parts:
     tools:
         source: .
         plugin: dump
-        stage-packages: [wget, nano, silversearcher-ag, pastebinit, curl, binutils, screen, tree, zip, unzip, vim, vim-tiny, vim-common, vim-runtime, lsof, iotop, hdparm, rhash, ethtool]
+        stage-packages: [wget, nano, silversearcher-ag, pastebinit, curl, binutils, screen, tree, zip, unzip, vim, vim-tiny, vim-common, vim-runtime, lsof, iotop, hdparm, rhash, ethtool, i2c-tools]
         filesets:
           fat:
             - -usr/lib/gcc
