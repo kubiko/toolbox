@@ -270,6 +270,7 @@ parts:
           - ethtool
           - i2c-tools
           - cryptsetup-bin
+          - libgpm2
         filesets:
           fat:
             - -usr/lib/gcc
@@ -291,6 +292,7 @@ parts:
             - libslang2-dev
             - gettext
         override-build: |
+            snapcraftctl build
             mv $SNAPCRAFT_PART_INSTALL/snap/toolbox/current/usr $SNAPCRAFT_PART_INSTALL/
             rm -rf $SNAPCRAFT_PART_INSTALL/snap
             mv $SNAPCRAFT_PART_INSTALL/var/snap/toolbox/common/etc $SNAPCRAFT_PART_INSTALL/
