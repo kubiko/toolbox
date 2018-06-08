@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.1.4"
+version: "0.1.5"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -270,7 +270,11 @@ apps:
 
     fdtget:
         command: usr/bin/fdtget
+        plugs: *default
 
+    strace:
+        command: usr/bin/strace
+        plugs: *default
 parts:
     tools:
         source: scripts
@@ -300,6 +304,7 @@ parts:
           - libgpm2
           - dmsetup
           - device-tree-compiler
+          - strace
         filesets:
           fat:
             - -usr/lib/gcc
