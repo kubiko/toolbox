@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.1.5"
+version: "0.1.6"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -254,27 +254,42 @@ apps:
 
     dtdiff:
         command: usr/bin/dtdiff
-        plugs: *default
+        plugs:
+            - home
 
     fdtput:
         command: usr/bin/fdtput
-        plugs: *default
+        plugs:
+            - home
 
     dtc:
         command: usr/bin/dtc
-        plugs: *default
+        plugs:
+            - hardware-observe
+            - home
 
     fdtdump:
         command: usr/bin/fdtdump
-        plugs: *default
+        plugs:
+            - home
 
     fdtget:
         command: usr/bin/fdtget
-        plugs: *default
+        plugs:
+            - home
 
     strace:
         command: usr/bin/strace
-        plugs: *default
+        plugs:
+            - log-observe
+
+    rsync:
+        command: usr/bin/rsync
+        plugs:
+            - home
+            - removable-media
+            - optical-drive
+
 parts:
     tools:
         source: scripts
@@ -305,6 +320,7 @@ parts:
           - dmsetup
           - device-tree-compiler
           - strace
+          - rsync
         filesets:
           fat:
             - -usr/lib/gcc
