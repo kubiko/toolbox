@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.1.6"
+version: "0.1.7"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -290,6 +290,17 @@ apps:
             - removable-media
             - optical-drive
 
+    iperf3:
+        command: usr/bin/iperf3
+        plugs:
+            - home
+            - network
+            - network-bind
+            - network-control
+            - network-observe
+            - network-setup-control
+            - network-setup-observe
+
 parts:
     tools:
         source: scripts
@@ -321,6 +332,7 @@ parts:
           - device-tree-compiler
           - strace
           - rsync
+          - iperf3
         filesets:
           fat:
             - -usr/lib/gcc
