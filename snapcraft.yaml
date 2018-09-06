@@ -8,6 +8,10 @@ confinement: strict
 grade: stable
 
 apps:
+    help:
+        command: bin/toolbox-help
+        adapter: none
+
     nano:
         command: nano
         plugs: &default-storage [home, removable-media]

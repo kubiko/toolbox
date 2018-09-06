@@ -1,0 +1,9 @@
+#!/bin/bash
+
+
+echo -e "Set of helpful tools\n"
+echo -e "To connect interfaces run: $SNAP/bin/connect-interfaces"
+echo -e "To setup aliases run $SNAP/bin/set-aliases"
+echo -e "To remove aliases run $SNAP/bin/unset-aliases"
+
+
