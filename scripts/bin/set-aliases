@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# loop through snap.yaml and setup aliases
+
+snap_root=$(dirname $0)
+snap_name=$(grep 'name: ' ${snap_root}/../meta/snap.yaml | awk '{ print $2}')
+
+echo "This is helper script and it shoud be called by user directly!"
+echo "Creating aliases for ${snap_name}"
+grep ":$"   ${snap_root}/../meta/snap.yaml | grep -e plugs -e apps -e architectures -v  | sed -e 's/://g' -e 's/ //g' | while read line
+do
+    if [ -f /snap/bin/${snap_name}.${line} ]; then
+        ln -sf ${snap_name}.${line} /snap/bin/${line}
+    fi
+done
+

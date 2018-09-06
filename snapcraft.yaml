@@ -1,282 +1,272 @@
 name: toolbox
-version: "0.1.8"
+version: "0.3.0"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
 
 confinement: strict
-grade: devel
+grade: stable
 
 apps:
     nano:
         command: nano
-        plugs: &default [home, process-control, system-observe, mount-observe,hardware-observe,framebuffer, network-control, physical-memory-control, raw-usb, removable-media, system-trace, uhid ]
+        plugs: &default-storage [home, removable-media]
 
     wget:
         command: wget
-        plugs: *default
+        plugs: &default-storage-net [home, removable-media, network]
 
     ag:
         command: ag
-        plugs: *default
+        plugs: *default-storage
 
     mc:
         command: mc
-        plugs: *default
+        plugs: *default-storage-net
 
     mcdiff:
         command: mcdiff
-        plugs: *default
+        plugs: *default-storage-net
 
     mcedit:
         command: mcedit
-        plugs: *default
+        plugs: *default-storage-net
 
     mcview:
         command: mcview
-        plugs: *default
+        plugs: *default-storage-net
 
     pastebinit:
         command: pastebinit
-        plugs: *default
+        plugs: *default-storage-net
 
     curl:
         command: curl
-        plugs: *default
+        plugs: *default-storage-net
 
     lsusb:
         command: lsusb
-        plugs: *default
+        plugs: [ raw-usb ]
 
     usb-devices:
         command: usb-devices
-        plugs: *default
+        plugs: [ raw-usb ]
 
     usbhid-dump:
         command: usbhid-dump
-        plugs: *default
+        plugs: [ raw-usb ]
 
     cppfilt:
         command: c++filt
-        plugs: *default
+        plugs: *default-storage
 
     elfedit:
         command: elfedit
-        plugs: *default
+        plugs: *default-storage
 
     readelf:
         command: readelf
-        plugs: *default
+        plugs: *default-storage
 
     ld:
         command: ld
-        plugs: *default
+        plugs: *default-storage
 
     ld-bfd:
         command: ld.bfd
-        plugs: *default
+        plugs: *default-storage
 
     strings:
         command: strings
-        plugs: *default
+        plugs: *default-storage
 
     size:
         command: size
-        plugs: *default
+        plugs: *default-storage
 
     strip:
         command: strip
-        plugs: *default
+        plugs: *default-storage
 
     objcopy:
         command: objcopy
-        plugs: *default
+        plugs: *default-storage
 
     objdump:
         command: objdump
-        plugs: *default
+        plugs: *default-storage
 
     addr2line:
         command: addr2line
-        plugs: *default
+        plugs: *default-storage
 
     dwp:
         command: dwp
-        plugs: *default
+        plugs: *default-storage
 
     as:
         command: as
-        plugs: *default
+        plugs: *default-storage
 
     ar:
         command: ar
-        plugs: *default
+        plugs: *default-storage
 
     gold:
         command: gold
-        plugs: *default
+        plugs: *default-storage
 
     ld-gold:
         command: ld.gold
-        plugs: *default
+        plugs: *default-storage
 
     nm:
         command: nm
-        plugs: *default
+        plugs: *default-storage
 
     gprof:
         command: gprof
-        plugs: *default
+        plugs: [ home, process-control, system-observe, mount-observe,hardware-observe, system-trace, physical-memory-control ]
 
     ranlib:
         command: ranlib
-        plugs: *default
+        plugs: *default-storage
 
     set-path:
         command: bin/set-path
-        plugs: *default
+        plugs: *default-storage
 
     screen:
         command: screen
-        plugs: *default
+        plugs: [ home, network, hardware-observe, serial-port, raw-usb ]
 
     tree:
         command: tree
-        plugs: *default
+        plugs: *default-storage
 
     zip:
         command: zip
-        plugs: *default
+        plugs: *default-storage
 
     unzip:
         command: unzip
-        plugs: *default
+        plugs: *default-storage
 
     vim:
         command: vim.basic
-        plugs: *default
+        plugs: *default-storage
 
     vim-tiny:
         command: vim.tiny
-        plugs: *default
+        plugs: *default-storage
 
     vimdiff:
         command: vim.basic -d
-        plugs: *default
-
-    lsof:
-        command: lsof
-        plugs: *default
+        plugs: *default-storage
 
     iotop:
         command: iotop
-        plugs: *default
+        plugs: &default-system [home, process-control, system-observe, mount-observe,hardware-observe,framebuffer, physical-memory-control, raw-usb, removable-media, system-trace]
+
+    lsof:
+        command: lsof
+        plugs: *default-system
 
     hdparm:
         command: hdparm
-        plugs: *default
+        plugs: &default-hw [home, system-observe, mount-observe, hardware-observe, removable-media]
 
     rhash:
         command: rhash
-        plugs: *default
+        plugs: &default-hash [home, removable-media, hardware-random-control ]
 
     gost-hash:
         command: gost-hash
-        plugs: *default
+        plugs: *default-hash
 
     has160-hash:
         command: has160-hash
-        plugs: *default
+        plugs: *default-hash
 
     sfv-hash:
         command: sfv-hash
-        plugs: *default
+        plugs: *default-hash
 
     tiger-hash:
         command: tiger-hash
-        plugs: *default
+        plugs: *default-hash
 
     tth-hash:
         command: tth-hash
-        plugs: *default
+        plugs: *default-hash
 
     whirlpool-hash:
         command: whirlpool-hash
-        plugs: *default
+        plugs: *default-hash
 
     clean-journalctl:
         command: journalctl --vacuum-time=1seconds
-        plugs: *default
-
-    ethtool:
-        command: sbin/ethtool
-        plugs: *default
+        plugs: *default-system
 
     i2cset:
         command: usr/sbin/i2cset
-        plugs: *default
+        plugs: *default-hw
 
     i2cdump:
         command: usr/sbin/i2cdump
-        plugs: *default
+        plugs: *default-hw
 
     i2cdetect:
         command: usr/sbin/i2cdetect
-        plugs: *default
+        plugs: *default-hw
 
     i2cget:
         command: usr/sbin/i2cget
-        plugs: *default
+        plugs: *default-hw
 
     cryptsetup:
         command: sbin/cryptsetup
-        plugs: *default
+        plugs: *default-hw
 
     veritysetup:
         command: sbin/veritysetup
-        plugs: *default
+        plugs: *default-hw
 
     cryptsetup-reencrypt:
         command: sbin/cryptsetup-reencrypt
-        plugs: *default
+        plugs: *default-hw
 
     luksformat:
         command: usr/sbin/luksformat
-        plugs: *default
+        plugs: *default-hw
 
     dmsetup:
         command: sbin/dmsetup
-        plugs: *default
+        plugs: *default-hw
 
     convert-dtsv0:
         command: usr/bin/convert-dtsv0
-        plugs: *default
+        plugs: *default-hw
 
     dtdiff:
         command: usr/bin/dtdiff
-        plugs:
-            - home
+        plugs: *default-hw
 
     fdtput:
         command: usr/bin/fdtput
-        plugs:
-            - home
+        plugs: *default-hw
 
     dtc:
         command: usr/bin/dtc
-        plugs:
-            - hardware-observe
-            - home
+        plugs: *default-hw
 
     fdtdump:
         command: usr/bin/fdtdump
-        plugs:
-            - home
+        plugs: *default-hw
 
     fdtget:
         command: usr/bin/fdtget
-        plugs:
-            - home
+        plugs: *default-hw
 
     strace:
         command: usr/bin/strace
@@ -292,134 +282,55 @@ apps:
 
     iperf3:
         command: usr/bin/iperf3
-        plugs:
-            - home
-            - network
-            - network-bind
-            - network-control
-            - network-observe
-            - network-setup-control
-            - network-setup-observe
+        plugs: &default-net [ home, network, network-bind, network-control, network-observe, network-setup-control, network-setup-observe ]
 
     netstat:
         command: bin/netstat
-        plugs:
-            - home
-            - network
-            - network-bind
-            - network-control
-            - network-observe
-            - network-setup-control
-            - network-setup-observe
+        plugs: *default-net
 
     arp:
         command: usr/sbin/arp
-        plugs:
-            - home
-            - network
-            - network-bind
-            - network-control
-            - network-observe
-            - network-setup-control
-            - network-setup-observe
+        plugs: *default-net
+
     nameif:
         command: sbin/nameif
-        plugs:
-            - home
-            - network
-            - network-bind
-            - network-control
-            - network-observe
-            - network-setup-control
-            - network-setup-observe
+        plugs: *default-net
 
     ipmaddr:
         command: sbin/ipmaddr
-        plugs:
-            - home
-            - network
-            - network-bind
-            - network-control
-            - network-observe
-            - network-setup-control
-            - network-setup-observe
+        plugs: *default-net
 
     plipconfig:
         command: sbin/plipconfig
-        plugs:
-            - home
-            - network
-            - network-bind
-            - network-control
-            - network-observe
-            - network-setup-control
-            - network-setup-observe
+        plugs: *default-net
 
     ifconfig:
         command: sbin/ifconfig
-        plugs:
-            - home
-            - network
-            - network-bind
-            - network-control
-            - network-observe
-            - network-setup-control
-            - network-setup-observe
+        plugs: *default-net
 
     route:
         command: sbin/route
-        plugs:
-            - home
-            - network
-            - network-bind
-            - network-control
-            - network-observe
-            - network-setup-control
-            - network-setup-observe
+        plugs: *default-net
 
     mii-tool:
         command: sbin/mii-tool
-        plugs:
-            - home
-            - network
-            - network-bind
-            - network-control
-            - network-observe
-            - network-setup-control
-            - network-setup-observe
+        plugs: *default-net
 
     iptunnel:
         command: sbin/iptunnel
-        plugs:
-            - home
-            - network
-            - network-bind
-            - network-control
-            - network-observe
-            - network-setup-control
-            - network-setup-observe
+        plugs: *default-net
 
     rarp:
         command: sbin/rarp
-        plugs:
-            - home
-            - network
-            - network-bind
-            - network-control
-            - network-observe
-            - network-setup-control
-            - network-setup-observe
+        plugs: *default-net
 
     slattach:
         command: sbin/slattach
-        plugs:
-            - home
-            - network
-            - network-bind
-            - network-control
-            - network-observe
-            - network-setup-control
-            - network-setup-observe
+        plugs: *default-net
+
+    ethtool:
+        command: sbin/ethtool
+        plugs: *default-net
 
 parts:
     tools:

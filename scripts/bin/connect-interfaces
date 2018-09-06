@@ -1,4 +1,32 @@
 #!/bin/bash
 
 echo "Connecting interfaces"
-grep " - " /snap/toolbox/current/meta/snap.yaml | sort | uniq |sed -e 's/^[ \t]*//' | sed -e 's/- /toolbox:/' | while read line; do snap connect $line core; done
+snap_root=$(dirname $0)
+snap_name=$(grep 'name: ' ${snap_root}/../meta/snap.yaml | awk '{ print $2}')
+
+echo "This is helper script and it shoud be called by user directly!"
+echo "Connecting interfaces for ${snap_name}"
+
+  core_slots=$(snap interfaces core | grep ":" | awk '{ print $1 }' | cut -c 2-)
+  grep " - " ${snap_root}/../meta/snap.yaml | sort | uniq |sed -e 's/^[ \t]*//' | awk '{ print $2}' | while read line
+  do
+      unset slot_candidate
+      if [ "x$(echo ${core_slots} | grep -w ${line})" = "x" ]; then
+          echo "core snap does not provide slot for '${line}' interface"
+	  if [ "${line}" = "bluez" ]; then
+            snap connect ${snap_name}:${line} bluez
+	  else
+            slot_candidate=$(snap interfaces  | awk '{ print $1}' | awk -v sl="${line}"  -F ":" '{ if($2 ==sl) print $1":"$2}')
+            if [ "x${slot_candidate}" != "x" ]; then
+               echo -e "\tTrying slot '${slot_candidate}'"
+               snap connect ${snap_name}:${line} ${slot_candidate}
+            else
+               echo -e "\tno good candidate found skipping"
+            fi
+          fi
+      else
+          echo "connecting '${snap_name}:$line' to core"
+          snap connect ${snap_name}:${line} core
+      fi
+  done
+
