@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.3.1"
+version: "0.3.5"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -136,10 +136,6 @@ apps:
         command: ranlib
         plugs: *default-storage
 
-    set-path:
-        command: bin/set-path
-        plugs: *default-storage
-
     screen:
         command: screen
         plugs: [ home, network, hardware-observe, serial-port, raw-usb ]
@@ -210,7 +206,8 @@ apps:
 
     clean-journalctl:
         command: journalctl --vacuum-time=1seconds
-        plugs: *default-system
+        plugs: 
+            - log-observe
 
     i2cset:
         command: usr/sbin/i2cset
@@ -356,6 +353,10 @@ apps:
         command: usr/bin/peekfd
         plugs: *default-system
 
+    htop:
+        command: usr/bin/htop
+        plugs: *default-system
+
 parts:
     tools:
         source: scripts
@@ -390,6 +391,8 @@ parts:
           - iperf3
           - net-tools
           - psmisc
+          - libdb5.3
+          - htop
         filesets:
           fat:
             - -usr/lib/gcc
@@ -398,6 +401,16 @@ parts:
             - $fat
         prime:
             - $fat
+        override-build: |
+            snapcraftctl build
+            echo "Checking if usr/bin/peekfd exists"
+            # interestingly on arm64 there is no usr/bin/peekfd, account for this
+            if [ ! -f ${SNAPCRAFT_PART_INSTALL}/usr/bin/peekfd ]; then
+                echo "adding stub for usr/bin/peekfd"
+                echo "#!/bin/bash" > ${SNAPCRAFT_PART_INSTALL}/usr/bin/peekfd
+                echo "echo 'peekfd is not supported on arm64'" >> ${SNAPCRAFT_PART_INSTALL}/usr/bin/peekfd
+                chmod +x ${SNAPCRAFT_PART_INSTALL}/usr/bin/peekfd
+            fi
 
     mc:
         source: https://github.com/MidnightCommander/mc.git
@@ -412,10 +425,10 @@ parts:
             - gettext
         override-build: |
             snapcraftctl build
-            mv $SNAPCRAFT_PART_INSTALL/snap/toolbox/current/usr $SNAPCRAFT_PART_INSTALL/
-            rm -rf $SNAPCRAFT_PART_INSTALL/snap
-            mv $SNAPCRAFT_PART_INSTALL/var/snap/toolbox/common/etc $SNAPCRAFT_PART_INSTALL/
-            rm -rf $SNAPCRAFT_PART_INSTALL/var
+            mv ${SNAPCRAFT_PART_INSTALL}/snap/toolbox/current/usr ${SNAPCRAFT_PART_INSTALL}/
+            rm -rf ${SNAPCRAFT_PART_INSTALL}/snap
+            mv ${SNAPCRAFT_PART_INSTALL}/var/snap/toolbox/common/etc ${SNAPCRAFT_PART_INSTALL}/
+            rm -rf ${SNAPCRAFT_PART_INSTALL}/var
 
     usbutils:
         source: https://github.com/gregkh/usbutils.git
