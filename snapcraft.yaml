@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.3.0"
+version: "0.3.1"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -336,6 +336,26 @@ apps:
         command: sbin/ethtool
         plugs: *default-net
 
+    fuser:
+        command: bin/fuser
+        plugs: *default-system
+
+    killall:
+        command: usr/bin/killall
+        plugs: *default-system
+
+    pstree:
+        command: usr/bin/pstree
+        plugs: *default-system
+
+    prtstat:
+        command: usr/bin/prtstat
+        plugs: *default-system
+
+    peekfd:
+        command: usr/bin/peekfd
+        plugs: *default-system
+
 parts:
     tools:
         source: scripts
@@ -369,6 +389,7 @@ parts:
           - rsync
           - iperf3
           - net-tools
+          - psmisc
         filesets:
           fat:
             - -usr/lib/gcc
