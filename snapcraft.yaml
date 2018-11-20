@@ -1,11 +1,21 @@
 name: toolbox
-version: "0.3.5"
+version: "0.4.1"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
 
 confinement: strict
 grade: stable
+architectures:
+    - build-on: armhf
+    - build-on: arm64
+    - build-on: i386
+    - build-on: amd64
+    - build-on: ppc64el
+
+environment:
+    PATH:            $SNAP/usr/lib/jvm/default-java/bin:$SNAP/usr/lib/jvm/default-java/jre/bin:$SNAP/opengrok-tools/bin:$PATH
+    LD_LIBRARY_PATH: $SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/${SNAPCRAFT_ARCH_TRIPLET}:$SNAP/usr/lib/${SNAPCRAFT_ARCH_TRIPLET}
 
 apps:
     help:
@@ -13,195 +23,242 @@ apps:
         adapter: none
 
     nano:
-        command: nano
+        command: bin/nano
+        adapter: none
         plugs: &default-storage [home, removable-media]
 
     wget:
-        command: wget
+        command: usr/bin/wget
+        adapter: none
         plugs: &default-storage-net [home, removable-media, network]
 
     ag:
-        command: ag
+        command: usr/bin/ag
+        adapter: none
         plugs: *default-storage
 
     mc:
-        command: mc
+        command: usr/bin/mc
+        adapter: none
         plugs: *default-storage-net
 
     mcdiff:
-        command: mcdiff
+        command: usr/bin/mcdiff
+        adapter: none
         plugs: *default-storage-net
 
     mcedit:
-        command: mcedit
+        command: usr/bin/mcedit
+        adapter: none
         plugs: *default-storage-net
 
     mcview:
-        command: mcview
+        command: usr/bin/mcview
+        adapter: none
         plugs: *default-storage-net
 
     pastebinit:
-        command: pastebinit
+        command: usr/bin/pastebinit
+        adapter: none
         plugs: *default-storage-net
 
     curl:
-        command: curl
+        command: usr/bin/curl
+        adapter: none
         plugs: *default-storage-net
 
     lsusb:
-        command: lsusb
+        command: usr/bin/lsusb
+        adapter: none
         plugs: [ raw-usb ]
 
     usb-devices:
-        command: usb-devices
+        command: usr/bin/usb-devices
+        adapter: none
         plugs: [ raw-usb ]
 
     usbhid-dump:
-        command: usbhid-dump
+        command: usr/bin/usbhid-dump
+        adapter: none
         plugs: [ raw-usb ]
 
     cppfilt:
-        command: c++filt
+        command: usr/bin/c++filt
         plugs: *default-storage
 
     elfedit:
-        command: elfedit
+        command: usr/bin/elfedit
+        adapter: none
         plugs: *default-storage
 
     readelf:
-        command: readelf
+        command: usr/bin/readelf
+        adapter: none
         plugs: *default-storage
 
     ld:
-        command: ld
+        command: usr/bin/ld
+        adapter: none
         plugs: *default-storage
 
     ld-bfd:
-        command: ld.bfd
+        command: usr/bin/ld.bfd
+        adapter: none
         plugs: *default-storage
 
     strings:
-        command: strings
+        command: usr/bin/strings
+        adapter: none
         plugs: *default-storage
 
     size:
-        command: size
+        command: usr/bin/size
+        adapter: none
         plugs: *default-storage
 
     strip:
-        command: strip
+        command: usr/bin/strip
+        adapter: none
         plugs: *default-storage
 
     objcopy:
-        command: objcopy
+        command: usr/bin/objcopy
+        adapter: none
         plugs: *default-storage
 
     objdump:
-        command: objdump
+        command: usr/bin/objdump
+        adapter: none
         plugs: *default-storage
 
     addr2line:
-        command: addr2line
+        command: usr/bin/addr2line
+        adapter: none
         plugs: *default-storage
 
     dwp:
-        command: dwp
+        command: usr/bin/dwp
+        adapter: none
         plugs: *default-storage
 
     as:
-        command: as
+        command: usr/bin/as
+        adapter: none
         plugs: *default-storage
 
     ar:
-        command: ar
+        command: usr/bin/ar
+        adapter: none
         plugs: *default-storage
 
     gold:
-        command: gold
+        command: usr/bin/gold
+        adapter: none
         plugs: *default-storage
 
     ld-gold:
-        command: ld.gold
+        command: usr/bin/ld.gold
+        adapter: none
         plugs: *default-storage
 
     nm:
-        command: nm
+        command: usr/bin/nm
+        adapter: none
         plugs: *default-storage
 
     gprof:
-        command: gprof
+        command: usr/bin/gprof
+        adapter: none
         plugs: [ home, process-control, system-observe, mount-observe,hardware-observe, system-trace, physical-memory-control ]
 
     ranlib:
-        command: ranlib
+        command: usr/bin/ranlib
+        adapter: none
         plugs: *default-storage
 
     screen:
-        command: screen
+        command: usr/bin/screen
+        adapter: none
         plugs: [ home, network, hardware-observe, serial-port, raw-usb ]
 
     tree:
-        command: tree
+        command: usr/bin/tree
+        adapter: none
         plugs: *default-storage
 
     zip:
-        command: zip
+        command: usr/bin/zip
+        adapter: none
         plugs: *default-storage
 
     unzip:
-        command: unzip
+        command: usr/bin/unzip
+        adapter: none
         plugs: *default-storage
 
     vim:
-        command: vim.basic
+        command: usr/bin/vim.basic
+        adapter: none
         plugs: *default-storage
 
     vim-tiny:
-        command: vim.tiny
+        command: usr/bin/vim.tiny
+        adapter: none
         plugs: *default-storage
 
     vimdiff:
-        command: vim.basic -d
+        command: usr/bin/vim.basic -d
+        adapter: none
         plugs: *default-storage
 
     iotop:
-        command: iotop
+        command: usr/sbin/iotop
+        adapter: none
         plugs: &default-system [home, process-control, system-observe, mount-observe,hardware-observe,framebuffer, physical-memory-control, raw-usb, removable-media, system-trace]
 
     lsof:
-        command: lsof
+        command: usr/bin/lsof
+        adapter: none
         plugs: *default-system
 
     hdparm:
-        command: hdparm
+        command: sbin/hdparm
+        adapter: none
         plugs: &default-hw [home, system-observe, mount-observe, hardware-observe, removable-media]
 
     rhash:
-        command: rhash
+        command: usr/bin/rhash
+        adapter: none
         plugs: &default-hash [home, removable-media, hardware-random-control ]
 
     gost-hash:
-        command: gost-hash
+        command: usr/bin/gost-hash
+        adapter: none
         plugs: *default-hash
 
     has160-hash:
-        command: has160-hash
+        command: usr/bin/has160-hash
+        adapter: none
         plugs: *default-hash
 
     sfv-hash:
-        command: sfv-hash
+        command: usr/bin/sfv-hash
+        adapter: none
         plugs: *default-hash
 
     tiger-hash:
-        command: tiger-hash
+        command: usr/bin/tiger-hash
+        adapter: none
         plugs: *default-hash
 
     tth-hash:
-        command: tth-hash
+        command: usr/bin/tth-hash
+        adapter: none
         plugs: *default-hash
 
     whirlpool-hash:
-        command: whirlpool-hash
+        command: usr/bin/whirlpool-hash
+        adapter: none
         plugs: *default-hash
 
     clean-journalctl:
@@ -211,71 +268,88 @@ apps:
 
     i2cset:
         command: usr/sbin/i2cset
+        adapter: none
         plugs: *default-hw
 
     i2cdump:
         command: usr/sbin/i2cdump
+        adapter: none
         plugs: *default-hw
 
     i2cdetect:
         command: usr/sbin/i2cdetect
+        adapter: none
         plugs: *default-hw
 
     i2cget:
         command: usr/sbin/i2cget
+        adapter: none
         plugs: *default-hw
 
     cryptsetup:
         command: sbin/cryptsetup
+        adapter: none
         plugs: *default-hw
 
     veritysetup:
         command: sbin/veritysetup
+        adapter: none
         plugs: *default-hw
 
     cryptsetup-reencrypt:
         command: sbin/cryptsetup-reencrypt
+        adapter: none
         plugs: *default-hw
 
     luksformat:
         command: usr/sbin/luksformat
+        adapter: none
         plugs: *default-hw
 
     dmsetup:
         command: sbin/dmsetup
+        adapter: none
         plugs: *default-hw
 
     convert-dtsv0:
         command: usr/bin/convert-dtsv0
+        adapter: none
         plugs: *default-hw
 
     dtdiff:
         command: usr/bin/dtdiff
+        adapter: none
         plugs: *default-hw
 
     fdtput:
         command: usr/bin/fdtput
+        adapter: none
         plugs: *default-hw
 
     dtc:
         command: usr/bin/dtc
+        adapter: none
         plugs: *default-hw
 
     fdtdump:
         command: usr/bin/fdtdump
+        adapter: none
         plugs: *default-hw
 
     fdtget:
         command: usr/bin/fdtget
+        adapter: none
         plugs: *default-hw
 
     strace:
         command: usr/bin/strace
+        adapter: none
         plugs:
             - log-observe
 
     rsync:
         command: usr/bin/rsync
+        adapter: none
         plugs:
             - home
             - removable-media
@@ -283,78 +357,102 @@ apps:
 
     iperf3:
         command: usr/bin/iperf3
+        adapter: none
         plugs: &default-net [ home, network, network-bind, network-control, network-observe, network-setup-control, network-setup-observe ]
 
     netstat:
         command: bin/netstat
+        adapter: none
         plugs: *default-net
 
     arp:
         command: usr/sbin/arp
+        adapter: none
         plugs: *default-net
 
     nameif:
         command: sbin/nameif
+        adapter: none
         plugs: *default-net
 
     ipmaddr:
         command: sbin/ipmaddr
+        adapter: none
         plugs: *default-net
 
     plipconfig:
         command: sbin/plipconfig
+        adapter: none
         plugs: *default-net
 
     ifconfig:
         command: sbin/ifconfig
+        adapter: none
         plugs: *default-net
 
     route:
         command: sbin/route
+        adapter: none
         plugs: *default-net
 
     mii-tool:
         command: sbin/mii-tool
+        adapter: none
         plugs: *default-net
 
     iptunnel:
         command: sbin/iptunnel
+        adapter: none
         plugs: *default-net
 
     rarp:
         command: sbin/rarp
+        adapter: none
         plugs: *default-net
 
     slattach:
         command: sbin/slattach
+        adapter: none
         plugs: *default-net
 
     ethtool:
         command: sbin/ethtool
+        adapter: none
         plugs: *default-net
 
     fuser:
         command: bin/fuser
+        adapter: none
         plugs: *default-system
 
     killall:
         command: usr/bin/killall
+        adapter: none
         plugs: *default-system
 
     pstree:
         command: usr/bin/pstree
+        adapter: none
         plugs: *default-system
 
     prtstat:
         command: usr/bin/prtstat
+        adapter: none
         plugs: *default-system
 
     peekfd:
         command: usr/bin/peekfd
+        adapter: none
         plugs: *default-system
 
     htop:
         command: usr/bin/htop
+        adapter: none
+        plugs: *default-system
+
+    devmem2:
+        command: usr/bin/devmem2
+        adapter: none
         plugs: *default-system
 
 parts:
@@ -393,6 +491,7 @@ parts:
           - psmisc
           - libdb5.3
           - htop
+          - devmem2
         filesets:
           fat:
             - -usr/lib/gcc
