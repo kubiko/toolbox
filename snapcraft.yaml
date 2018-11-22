@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.4.1"
+version: "0.4.2"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -455,6 +455,11 @@ apps:
         adapter: none
         plugs: *default-system
 
+    busybox:
+        command: bin/busybox
+        adapter: none
+        plugs: *default-system
+
 parts:
     tools:
         source: scripts
@@ -492,6 +497,7 @@ parts:
           - libdb5.3
           - htop
           - devmem2
+          - busybox-static
         filesets:
           fat:
             - -usr/lib/gcc
