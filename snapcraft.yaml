@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.4.3"
+version: "0.4.4"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -14,7 +14,7 @@ architectures:
     - build-on: ppc64el
 
 environment:
-    PATH:            $SNAP/usr/lib/jvm/default-java/bin:$SNAP/usr/lib/jvm/default-java/jre/bin:$SNAP/opengrok-tools/bin:$PATH
+    PATH:            $SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH
     LD_LIBRARY_PATH: $SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/${SNAPCRAFT_ARCH_TRIPLET}:$SNAP/usr/lib/${SNAPCRAFT_ARCH_TRIPLET}
 
 apps:
