@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.4.2"
+version: "0.4.3"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -460,6 +460,26 @@ apps:
         adapter: none
         plugs: *default-system
 
+    lshw:
+        command: usr/bin/lshw
+        adapter: none
+        plugs: *default-system
+
+    lspci:
+        command: usr/bin/lspci
+        adapter: none
+        plugs: *default-system
+
+    pcimodules:
+        command: usr/bin/pcimodules
+        adapter: none
+        plugs: *default-system
+
+    setpci:
+        command: usr/bin/setpci
+        adapter: none
+        plugs: *default-system
+
 parts:
     tools:
         source: scripts
@@ -498,6 +518,8 @@ parts:
           - htop
           - devmem2
           - busybox-static
+          - lshw
+          - pciutils
         filesets:
           fat:
             - -usr/lib/gcc
