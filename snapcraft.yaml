@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.4.4"
+version: "0.4.5"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -480,6 +480,11 @@ apps:
         adapter: none
         plugs: *default-system
 
+    resty:
+        command: bin/bash --init-file ${SNAP}/usr/bin/resty
+        adapter: none
+        plugs: *default-system
+
 parts:
     tools:
         source: scripts
@@ -576,3 +581,11 @@ parts:
             git submodule init
             git submodule update
             autoreconf --install --symlink
+
+    resty:
+        plugin: nil
+        source: https://github.com/micha/resty.git
+        override-build: |
+            mkdir -p ${SNAPCRAFT_PART_INSTALL}/usr/bin
+            cp pp pypp ${SNAPCRAFT_PART_INSTALL}/usr/bin
+            cp resty ${SNAPCRAFT_PART_INSTALL}/usr/bin
