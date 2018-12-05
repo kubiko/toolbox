@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.4.5"
+version: "0.4.6"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -36,7 +36,7 @@ apps:
         command: usr/bin/ag
         adapter: none
         plugs: *default-storage
-
+        completer: usr/share/bash-completion/completions/ag
     mc:
         command: usr/bin/mc
         adapter: none
@@ -481,9 +481,30 @@ apps:
         plugs: *default-system
 
     resty:
-        command: bin/bash --init-file ${SNAP}/usr/bin/resty
+        command: bin/bash --init-file $SNAP/usr/bin/resty
         adapter: none
         plugs: *default-system
+
+    http:
+        command: usr/bin/http
+        adapter: none
+        plugs: *default-system
+        completer: usr/share/bash-completion/completions/httpie
+
+    dig:
+        command: usr/bin/dig
+        adapter: none
+        plugs: *default-net
+
+    nsupdate:
+        command: usr/bin/nsupdate
+        adapter: none
+        plugs: *default-net
+
+    nslookup:
+        command: usr/bin/nslookup
+        adapter: none
+        plugs: *default-net
 
 parts:
     tools:
@@ -525,6 +546,9 @@ parts:
           - busybox-static
           - lshw
           - pciutils
+          - bash
+          - httpie
+          - dnsutils
         filesets:
           fat:
             - -usr/lib/gcc
@@ -589,3 +613,5 @@ parts:
             mkdir -p ${SNAPCRAFT_PART_INSTALL}/usr/bin
             cp pp pypp ${SNAPCRAFT_PART_INSTALL}/usr/bin
             cp resty ${SNAPCRAFT_PART_INSTALL}/usr/bin
+            mkdir -p ${SNAPCRAFT_PART_INSTALL}/usr/share/bash-completion/completions/
+            curl -o ${SNAPCRAFT_PART_INSTALL}/usr/share/bash-completion/completions/httpie https://raw.githubusercontent.com/jakubroztocil/httpie/master/extras/httpie-completion.bash
