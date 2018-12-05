@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.4.6"
+version: "0.4.7"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -31,16 +31,19 @@ apps:
         command: usr/bin/wget
         adapter: none
         plugs: &default-storage-net [home, removable-media, network]
+        completer: usr/share/bash-completion/completions/wget
 
     ag:
         command: usr/bin/ag
         adapter: none
         plugs: *default-storage
         completer: usr/share/bash-completion/completions/ag
+
     mc:
         command: usr/bin/mc
         adapter: none
         plugs: *default-storage-net
+        completer: usr/share/bash-completion/completions/mc
 
     mcdiff:
         command: usr/bin/mcdiff
@@ -66,6 +69,7 @@ apps:
         command: usr/bin/curl
         adapter: none
         plugs: *default-storage-net
+        completer: usr/share/bash-completion/completions/curl
 
     lsusb:
         command: usr/bin/lsusb
@@ -110,6 +114,7 @@ apps:
         command: usr/bin/strings
         adapter: none
         plugs: *default-storage
+        completer: usr/share/bash-completion/completions/strings
 
     size:
         command: usr/bin/size
@@ -170,6 +175,7 @@ apps:
         command: usr/bin/gprof
         adapter: none
         plugs: [ home, process-control, system-observe, mount-observe,hardware-observe, system-trace, physical-memory-control ]
+        completer: usr/share/bash-completion/completions/gprof
 
     ranlib:
         command: usr/bin/ranlib
@@ -180,6 +186,7 @@ apps:
         command: usr/bin/screen
         adapter: none
         plugs: [ home, network, hardware-observe, serial-port, raw-usb ]
+        completer: usr/share/bash-completion/completions/screen
 
     tree:
         command: usr/bin/tree
@@ -220,6 +227,7 @@ apps:
         command: usr/bin/lsof
         adapter: none
         plugs: *default-system
+        completer: usr/share/bash-completion/completions/lsof
 
     hdparm:
         command: sbin/hdparm
@@ -263,7 +271,7 @@ apps:
 
     clean-journalctl:
         command: journalctl --vacuum-time=1seconds
-        plugs: 
+        plugs:
             - log-observe
 
     i2cset:
@@ -290,6 +298,7 @@ apps:
         command: sbin/cryptsetup
         adapter: none
         plugs: *default-hw
+        completer: usr/share/bash-completion/completions/cryptsetup
 
     veritysetup:
         command: sbin/veritysetup
@@ -346,6 +355,7 @@ apps:
         adapter: none
         plugs:
             - log-observe
+        completer: usr/share/bash-completion/completions/strace
 
     rsync:
         command: usr/bin/rsync
@@ -354,6 +364,7 @@ apps:
             - home
             - removable-media
             - optical-drive
+        completer: usr/share/bash-completion/completions/rsync
 
     iperf3:
         command: usr/bin/iperf3
@@ -394,11 +405,13 @@ apps:
         command: sbin/route
         adapter: none
         plugs: *default-net
+        completer: usr/share/bash-completion/completions/route
 
     mii-tool:
         command: sbin/mii-tool
         adapter: none
         plugs: *default-net
+        completer: usr/share/bash-completion/completions/mii-tool
 
     iptunnel:
         command: sbin/iptunnel
@@ -429,6 +442,7 @@ apps:
         command: usr/bin/killall
         adapter: none
         plugs: *default-system
+        completer: usr/share/bash-completion/completions/killall
 
     pstree:
         command: usr/bin/pstree
@@ -449,6 +463,7 @@ apps:
         command: usr/bin/htop
         adapter: none
         plugs: *default-system
+        completer: usr/share/bash-completion/completions/htop
 
     devmem2:
         command: usr/bin/devmem2
@@ -511,6 +526,7 @@ parts:
         source: scripts
         plugin: dump
         stage-packages:
+          - bash-completion
           - wget
           - nano
           - silversearcher-ag
@@ -549,6 +565,7 @@ parts:
           - bash
           - httpie
           - dnsutils
+          - util-linux
         filesets:
           fat:
             - -usr/lib/gcc
@@ -572,7 +589,7 @@ parts:
         source: https://github.com/MidnightCommander/mc.git
         plugin: autotools
         configflags:
-            - --prefix=/snap/toolbox/current/usr 
+            - --prefix=/snap/toolbox/current/usr
             - --sysconfdir=/var/snap/toolbox/common/etc
             - --without-x
         build-packages:
