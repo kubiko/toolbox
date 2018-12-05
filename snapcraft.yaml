@@ -626,6 +626,8 @@ parts:
     resty:
         plugin: nil
         source: https://github.com/micha/resty.git
+        build-packages:
+            - curl
         override-build: |
             mkdir -p ${SNAPCRAFT_PART_INSTALL}/usr/bin
             cp pp pypp ${SNAPCRAFT_PART_INSTALL}/usr/bin
