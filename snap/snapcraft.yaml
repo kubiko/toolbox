@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.4.9"
+version: "0.4.10"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -528,7 +528,7 @@ apps:
 
 parts:
     tools:
-        source: scripts
+        source: glue
         plugin: dump
         stage-packages:
           - bash-completion
@@ -572,8 +572,7 @@ parts:
           - dnsutils
           - util-linux
           - jq
-          - libjq1
-          - libonig4
+          - libonig2
         filesets:
           fat:
             - -usr/lib/gcc
@@ -612,7 +611,10 @@ parts:
             rm -rf ${SNAPCRAFT_PART_INSTALL}/var
 
     usbutils:
-        source: https://github.com/gregkh/usbutils.git
+        # source: https://github.com/gregkh/usbutils.git
+        source: https://git.launchpad.net/ubuntu/+source/usbutils
+        source-branch: ubuntu/xenial
+        source-type: git
         plugin: autotools
         build-packages:
             - libusb-1.0-0-dev
@@ -627,9 +629,7 @@ parts:
             - --localstatedir=/var/snap/toolbox/common/
         override-pull: |
             snapcraftctl pull
-            git submodule init
-            git submodule update
-            autoreconf --install --symlink
+            quilt push -afq --leave-rejects --quiltrc=../../../quiltrc
 
     resty:
         plugin: nil
