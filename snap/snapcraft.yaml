@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.4.10"
+version: "0.4.11"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -622,6 +622,7 @@ parts:
             - gawk
             - pkg-config
             - libudev-dev
+            - quilt
         stage-packages: [libusb-1.0-0]
         configflags:
             - --prefix=/usr
