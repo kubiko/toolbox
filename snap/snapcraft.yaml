@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.4.11"
+version: "0.4.12"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -526,6 +526,11 @@ apps:
         adapter: none
         plugs: *default-net
 
+    minicom:
+        command: usr/bin/minicom
+        adapter: none
+        plugs: *default-system
+
 parts:
     tools:
         source: glue
@@ -573,6 +578,7 @@ parts:
           - util-linux
           - jq
           - libonig2
+          - minicom
         filesets:
           fat:
             - -usr/lib/gcc
