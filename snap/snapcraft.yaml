@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.4.13"
+version: "0.5.1"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -12,6 +12,8 @@ architectures:
     - build-on: i386
     - build-on: amd64
     - build-on: ppc64el
+
+base: core18
 
 environment:
     PATH:            $SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH
@@ -577,7 +579,7 @@ parts:
           - dnsutils
           - util-linux
           - jq
-          - libonig2
+          - libonig4
           - minicom
         filesets:
           fat:
