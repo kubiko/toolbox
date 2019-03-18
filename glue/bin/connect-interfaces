@@ -1,32 +1,42 @@
 #!/bin/bash
 
-echo "Connecting interfaces"
-snap_root=$(dirname $0)
-snap_name=$(grep 'name: ' ${snap_root}/../meta/snap.yaml | awk '{ print $2}')
+unset snap_name
+if [ -z "${1}" ]; then
+    # chech if this script is part of snap, in which case apply
+    # to snap it's part of
+    snap_root=$(dirname $0)
+    if [ -f ${snap_root}/../meta/snap.yaml ]; then
+        snap_name=$(grep 'name: ' ${snap_root}/../meta/snap.yaml | awk '{ print $2}')
+    else
+        echo -e "Pass snap name for which to connect interfaces\n"
+        exit 0
+    fi
+else
+    snap_name=${1}
+fi
 
-echo "This is helper script and it shoud be called by user directly!"
-echo "Connecting interfaces for ${snap_name}"
+# validate we valid snap name
+if [ -z $(snap list ${snap_name} 2> /dev/null | awk '{print $1}' | grep "^${snap_name}$") ]; then
+    echo "'${snap_name}' is not valid snap name"
+    exit 0
+fi
 
-  core_slots=$(snap interfaces core | grep ":" | awk '{ print $1 }' | cut -c 2-)
-  grep " - " ${snap_root}/../meta/snap.yaml | sort | uniq |sed -e 's/^[ \t]*//' | awk '{ print $2}' | while read line
-  do
-      unset slot_candidate
-      if [ "x$(echo ${core_slots} | grep -w ${line})" = "x" ]; then
-          echo "core snap does not provide slot for '${line}' interface"
-	  if [ "${line}" = "bluez" ]; then
-            snap connect ${snap_name}:${line} bluez
-	  else
-            slot_candidate=$(snap interfaces  | awk '{ print $1}' | awk -v sl="${line}"  -F ":" '{ if($2 ==sl) print $1":"$2}')
-            if [ "x${slot_candidate}" != "x" ]; then
-               echo -e "\tTrying slot '${slot_candidate}'"
-               snap connect ${snap_name}:${line} ${slot_candidate}
-            else
-               echo -e "\tno good candidate found skipping"
-            fi
-          fi
-      else
-          echo "connecting '${snap_name}:$line' to core"
-          snap connect ${snap_name}:${line} core
-      fi
-  done
+echo -e "Connecting interfaces for ${snap_name}\n"
+
+snap connections ${snap_name} | awk '$3 == "-" {print $2}' | awk -F ":" '{print $2}' | while read plug
+do
+    unset slot_candidate
+    if [ -z $(snap connections system | awk '{print $1}' | uniq | tail -n +2 | grep -w "^${plug}$") ]; then
+        slot_candidate=$(snap connections | awk -v plug="${plug}" '$1 == plug {print $3}' | uniq)
+        if [ "x${slot_candidate}" != "x" ]; then
+            echo -e "\tTrying slot candidate '${slot_candidate}' for plug ${snap_name}:${plug}"
+            snap connect ${snap_name}:${plug} ${slot_candidate}
+        else
+            echo -e "\tno good candidate found for plug ${snap_name}:${plug}"
+        fi
+    else
+        echo -e "\tconnecting '${snap_name}:${plug}' to system"
+        snap connect ${snap_name}:${plug} system
+    fi
+done
 
