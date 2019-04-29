@@ -1,3 +1,6 @@
 #!/bin/bash
+echo "Update ~/.bashrc with follwing line"
 
+echo "export PATH=/snap/toolbox/current/bin:/snap/toolbox/current/sbin:/snap/toolbox/current/usr/bin:/snap/toolbox/current/usr/sbin:$PATH"
+echo "alias sudo='sudo env "PATH=\$PATH" '"
 export PATH=/snap/toolbox/current/bin:/snap/toolbox/current/sbin:/snap/toolbox/current/usr/bin:/snap/toolbox/current/usr/sbin:$PATH

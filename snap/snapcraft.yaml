@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.5.1"
+version: "0.5.2"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -530,6 +530,11 @@ apps:
 
     minicom:
         command: usr/bin/minicom
+        adapter: none
+        plugs: *default-system
+
+    set-path:
+        command: bin/set-path
         adapter: none
         plugs: *default-system
 
