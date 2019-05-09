@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.5.2"
+version: "0.5.3"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -538,6 +538,41 @@ apps:
         adapter: none
         plugs: *default-system
 
+    iwconfig:
+        command: sbin/iwconfig
+        adapter: none
+        plugs: *default-net
+
+    iwevent:
+        command: sbin/iwevent
+        adapter: none
+        plugs: *default-net
+
+    iwgetid:
+        command: sbin/iwgetid
+        adapter: none
+        plugs: *default-net
+
+    iwlist:
+        command: sbin/iwlist
+        adapter: none
+        plugs: *default-net
+
+    iwpriv:
+        command: sbin/iwpriv
+        adapter: none
+        plugs: *default-net
+
+    iwspy:
+        command: sbin/iwspy
+        adapter: none
+        plugs: *default-net
+
+    iw:
+        command: sbin/iw
+        adapter: none
+        plugs: *default-net
+
 parts:
     tools:
         source: glue
@@ -586,6 +621,8 @@ parts:
           - jq
           - libonig4
           - minicom
+          - wireless-tools
+          - iw
         filesets:
           fat:
             - -usr/lib/gcc
