@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.5.3"
+version: "0.5.4"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -619,10 +619,13 @@ parts:
           - dnsutils
           - util-linux
           - jq
-          - libonig4
           - minicom
           - wireless-tools
           - iw
+          - try:
+              - libonig4
+          - on ppc64el:
+              - usbutils
         filesets:
           fat:
             - -usr/lib/gcc
@@ -661,9 +664,8 @@ parts:
             rm -rf ${SNAPCRAFT_PART_INSTALL}/var
 
     usbutils:
-        # source: https://github.com/gregkh/usbutils.git
         source: https://git.launchpad.net/ubuntu/+source/usbutils
-        source-branch: ubuntu/xenial
+        source-branch: ubuntu/bionic
         source-type: git
         plugin: autotools
         build-packages:
@@ -680,7 +682,11 @@ parts:
             - --localstatedir=/var/snap/toolbox/common/
         override-pull: |
             snapcraftctl pull
-            quilt push -afq --leave-rejects --quiltrc=../../../quiltrc
+            quilt push -afq --leave-rejects --quiltrc=${SNAPCRAFT_PROJECT_DIR}/quiltrc
+        override-build: |
+           if [ -z $(uname -a | grep "ppc64el") ]; then
+               snapcraftctl build
+           fi
 
     resty:
         plugin: nil
