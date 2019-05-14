@@ -1,6 +1,6 @@
 #!/bin/bash
-echo "Update ~/.bashrc with follwing line"
-
-echo "export PATH=/snap/toolbox/current/bin:/snap/toolbox/current/sbin:/snap/toolbox/current/usr/bin:/snap/toolbox/current/usr/sbin:$PATH"
-echo "alias sudo='sudo env "PATH=\$PATH" '"
-export PATH=/snap/toolbox/current/bin:/snap/toolbox/current/sbin:/snap/toolbox/current/usr/bin:/snap/toolbox/current/usr/sbin:$PATH
+echo -e "\n# Update ~/.bashrc with follwing line" >&2
+echo -e "\n# toolbox tools PATH, LD_LIBRARY_PATH paths updates"
+echo "export PATH=/snap/${SNAP_INSTANCE_NAME}/current/bin:/snap/${SNAP_INSTANCE_NAME}/current/sbin:/snap/${SNAP_INSTANCE_NAME}/current/usr/bin:/snap/${SNAP_INSTANCE_NAME}/current/usr/sbin:\$PATH"
+echo "export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/snap/${SNAP_INSTANCE_NAME}/current/lib:/snap/${SNAP_INSTANCE_NAME}/current/usr/lib:/snap/${SNAP_INSTANCE_NAME}/current/lib/${ARCH_TRIPLET}:/snap/${SNAP_INSTANCE_NAME}/current/usr/lib/${ARCH_TRIPLET}"
+echo "alias sudo='sudo env "PATH=\$PATH" LD_LIBRARY_PATH=\$LD_LIBRARY_PATH'"

@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.5.4"
+version: "0.5.5"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -18,6 +18,7 @@ base: core18
 environment:
     PATH:            $SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH
     LD_LIBRARY_PATH: $SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/${SNAPCRAFT_ARCH_TRIPLET}:$SNAP/usr/lib/${SNAPCRAFT_ARCH_TRIPLET}
+    ARCH_TRIPLET:    ${SNAPCRAFT_ARCH_TRIPLET}
 
 apps:
     help:
