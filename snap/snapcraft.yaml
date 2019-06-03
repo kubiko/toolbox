@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.5.5"
+version: "0.5.6"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -235,7 +235,7 @@ apps:
     hdparm:
         command: sbin/hdparm
         adapter: none
-        plugs: &default-hw [home, system-observe, mount-observe, hardware-observe, removable-media]
+        plugs: &default-hw [home, system-observe, mount-observe, hardware-observe, removable-media, gpio, i2c, spi ]
 
     rhash:
         command: usr/bin/rhash
