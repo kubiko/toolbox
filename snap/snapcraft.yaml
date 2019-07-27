@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.5.7"
+version: "0.5.8"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -589,6 +589,11 @@ apps:
         adapter: none
         plugs: *default-system
 
+    rngtest:
+        command: usr/bin/rngtest
+        adapter: none
+        plugs: *default-system
+
 parts:
     tools:
         source: glue
@@ -639,6 +644,7 @@ parts:
           - wireless-tools
           - iw
           - watchdog
+          - rng-tools5
           - try:
               - libonig4
           - on ppc64el:
