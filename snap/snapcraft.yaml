@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.5.9"
+version: "0.5.10"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -594,6 +594,46 @@ apps:
         adapter: none
         plugs: *default-system
 
+    mkimage:
+        command: usr/bin/mkimage
+        adapter: none
+        plugs: *default-system
+
+    fw-printenv:
+        command: usr/bin/fw_printenv
+        adapter: none
+        plugs: *default-system
+
+    fw-setenv:
+        command: usr/bin/fw_setenv
+        adapter: none
+        plugs: *default-system
+
+    mkenvimage:
+        command: usr/bin/mkenvimage
+        adapter: none
+        plugs: *default-system
+
+    kwboot:
+        command: usr/bin/kwboot
+        adapter: none
+        plugs: *default-system
+
+    dumpimage:
+        command: usr/bin/dumpimage
+        adapter: none
+        plugs: *default-system
+
+    mkknlimg:
+        command: usr/bin/mkknlimg
+        adapter: none
+        plugs: *default-system
+
+    mksunxiboot:
+        command: usr/bin/mksunxiboot
+        adapter: none
+        plugs: *default-system
+
 parts:
     tools:
         source: glue
@@ -645,6 +685,7 @@ parts:
           - iw
           - watchdog
           - rng-tools5
+          - u-boot-tools
           - try:
               - libonig4
           - on ppc64el:
