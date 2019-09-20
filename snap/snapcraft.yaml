@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.5.11"
+version: "0.5.12"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -537,7 +537,10 @@ apps:
     set-path:
         command: bin/set-path
         adapter: none
-        plugs: *default-system
+
+    set-snap-path:
+        command: bin/set-snap-path
+        adapter: none
 
     iwconfig:
         command: sbin/iwconfig

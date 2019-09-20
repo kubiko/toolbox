@@ -1,0 +1,13 @@
+#!/bin/bash
+if [ -z "${1}" ]; then
+    echo "Pass snap name!!!"
+    exit
+fi
+echo -e "\n# Update ~/.bashrc with follwing lines" >&2
+echo -e "\n# ${1} PATH, LD_LIBRARY_PATH paths updates"
+echo "SNAP_NAME=${1}"
+echo "SNAP_PATH=\"/snap/\${SNAP_NAME}/current\""
+echo "ARCH_TRIPLE=$(basename $(ls -d /lib/*-linux-*))"
+echo "export PATH=\${SNAP_PATH}/bin:\${SNAP_PATH}/sbin:\${SNAP_PATH}/usr/bin:\${SNAP_PATH}/usr/sbin:\$PATH"
+echo "export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:\${SNAP_PATH}/lib:\${SNAP_PATH}/usr/lib:\${SNAP_PATH}/lib/\${ARCH_TRIPLE}:\${SNAP_PATH}/usr/lib/\${ARCH_TRIPLE}"
+echo "alias sudo='sudo env "PATH=\$PATH" LD_LIBRARY_PATH=\$LD_LIBRARY_PATH'"
