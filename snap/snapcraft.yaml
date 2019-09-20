@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.5.10"
+version: "0.5.11"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -634,6 +634,16 @@ apps:
         adapter: none
         plugs: *default-system
 
+    icdiff:
+        command: usr/bin/icdiff
+        adapter: none
+        plugs: *default-system
+
+    git-icdiff:
+        command: usr/bin/git-icdiff
+        adapter: none
+        plugs: *default-system
+
 parts:
     tools:
         source: glue
@@ -686,6 +696,7 @@ parts:
           - watchdog
           - rng-tools5
           - u-boot-tools
+          - icdiff
           - try:
               - libonig4
           - on ppc64el:
