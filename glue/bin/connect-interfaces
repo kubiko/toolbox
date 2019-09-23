@@ -31,6 +31,10 @@ do
         if [ "x${slot_candidate}" != "x" ]; then
             echo -e "\tTrying slot candidate '${slot_candidate}' for plug ${snap_name}:${plug}"
             snap connect ${snap_name}:${plug} ${slot_candidate}
+        elif [ "system-files" = "$(snap connections ${snap_name} | grep ${plug} | awk '{print $1}')" ]; then
+            snap connect ${snap_name}:${plug}
+        elif [ "personal-files" = "$(snap connections ${snap_name} | grep ${plug} | awk '{print $1}')" ]; then
+            snap connect ${snap_name}:${plug}
         else
             echo -e "\tno good candidate found for plug ${snap_name}:${plug}"
         fi
