@@ -1,35 +1,125 @@
 #!/bin/bash
-SNAP=/snap/toolbox/current
+SNAP="$(dirname $(which ${0}))/.."
 print_usage() {
     echo -e "setup ssh tunnet to remote machine"
-    echo -e "required parameters"
-    echo -e "\tTARGET: name of remote target e.g. ssh-server-1"
-    echo -e "\tTARGET_IP: addres or IP address of remote server"
-    echo -e "\tMACHINE_ALIAS: local machine alias, e.g. pi3-gateway"
-    echo -e "\tREMOTE_PORT: port on remote machine for connection to this machine, e.g. 2210"
-    echo -e "\tUSERNAME: username on remote server e.g. ubuntu"
-    echo -e "optional parameters"
-    echo -e "\tLOCAL_ADDR: local address, default localhost"
-    echo -e "\tLOCAL_PORT: local ssh port, default 22"
-    echo -e "\tSSH_TARGET_PORT: remote ssh port, default 22"
+    echo -e "required parameters can be passed as parameters or env variables, e.g."
+    echo -e "$ $(basename ${0}) --target <target name> --target-ip <ip address> --remote-port <port> --remote-username <username>"
+    echo -e "$ TARGET=<target name> TARGET_IP=<ip address> REMOTE_PORT=<port> USERNAME=<username> $(basename ${0})"
+    echo -e ""
+    echo -e "\t--target : name of remote target e.g. ssh-server-1. This will be able used to identify systemd service"
+    echo -e "\t\tenv variable name: TARGET"
+    echo -e "\t--target-ip: addres or IP address of remote server. address will be added to /etc/hosts \$TARGET alias"
+    echo -e "\t\tenv variable name: TARGET_IP"
+    echo -e "\t--remote-port: port on remote machine for connection from remote to this machine, e.g. 2210"
+    echo -e "\t\tenv variable name: REMOTE_PORT"
+    echo -e "\t--remote-username: username on remote server to be used for ssh to the TARGET machine e.g. ubuntu"
+    echo -e "\t\tenv variable name: USERNAME"
+    echo -e "\noptional parameters"
+    echo -e "\t--machine-alias: local machine alias, e.g. pi3-gateway. Alias is used if new ssh key is generated"
+    echo -e "\t\tthis parameter is required if there are no ssh keys on this machine"
+    echo -e "\t\tenv variable name: MACHINE_ALIAS"
+    echo -e "\t--local-address: local address, default localhost"
+    echo -e "\t\tenv variable name: LOCAL_ADDR"
+    echo -e "\t--local-port: local ssh port, default 22"
+    echo -e "\t\tenv variable name: LOCAL_PORT"
+    echo -e "\t--ssh-target-port: remote ssh port on TARGET machine, default 22"
+    echo -e "\t\tenv variable name: SSH_TARGET_PORT"
 }
 
-# default and required values
-if [ -z "${TARGET}" ] || [ -z "${TARGET_IP}" ] || [ -z "${MACHINE_ALIAS}" ] || [ -z "${REMOTE_PORT}" ] || [ -z "${USERNAME}" ]; then
-    echo "missing compulsory parameter"
+while [ "$1" != "" ]; do
+    case $1 in
+        --target)
+            TARGET="${2}"
+            shift
+            ;;
+        --target-ip)
+            TARGET_IP="${2}"
+            shift
+            ;;
+        --remote-port)
+            REMOTE_PORT="${2}"
+            shift
+            ;;
+        --remote-username)
+            USERNAME="${2}"
+            shift
+            ;;
+        --machine-alias)
+            MACHINE_ALIAS="${2}"
+            shift
+            ;;
+        --local-address)
+            LOCAL_ADDR="${2}"
+            shift
+            ;;
+        --local-port)
+            LOCAL_PORT="${2}"
+            shift
+            ;;
+        --ssh-target-port)
+            SSH_TARGET_PORT
+            shift
+            ;;
+        --help | -h)
+            print_usage
+            exit
+            ;;
+
+        *)
+            echo "Unknown parameter '${1}'"
+            print_usage
+            exit
+            ;;
+    esac
+    shift
+done
+
+# check we have all required values
+if [ -z "${TARGET}" ]; then
+    echo "missing compulsory parameter: TARGET"
     print_usage
     exit 0
 fi
+if [ -z "${TARGET_IP}" ]; then
+    echo "missing compulsory parameter: TARGET_IP"
+    print_usage
+    exit 0
+fi
+if [ -z "${MACHINE_ALIAS}" ] && [ ! -e ~/.ssh/id_rsa.pub ] ; then
+    echo "missing compulsory parameter: MACHINE_ALIAS, since there are no existing ssh keys on this machine"
+    print_usage
+    exit 0
+fi
+if [ -z "${REMOTE_PORT}" ]; then
+    echo "missing compulsory parameter: REMOTE_PORT"
+    print_usage
+    exit 0
+fi
+if [ -z "${USERNAME}" ]; then
+    echo "missing compulsory parameter: USERNAME"
+    print_usage
+    exit 0
+fi
+
 if [ "${1}" == "-h" ]; then
     print_usage
     exit 0
 fi
-[ -z "${LOCAL_PORT}" ] && LOCAL_PORT="22"
+
 [ -z "${LOCAL_ADDR}" ] && LOCAL_ADDR="localhost"
 [ -z "${LOCAL_PORT}" ] && LOCAL_PORT="22"
 # target port on remote machine to connect to
 [ -z "${SSH_TARGET_PORT}" ] && SSH_TARGET_PORT="22"
 
+if [ ! -e ~/.ssh/id_rsa.pub ]; then
+    echo "There are no ssh key(s) on this machine, generating one"
+    echo "pub key will have to be copied to remore machine"
+    ssh-keygen -t rsa -C "${USER}@${MACHINE_ALIAS}" -N ""
+    echo "remeber to make sure follwing key is added at remote host to ~/.ssh/authorized_keys"
+    cat ~/.ssh/id_rsa.pub
+else
+    echo -e "Using existing ssh keys"
+fi
 
 cp ${SNAP}/secure-tunnel ${HOME}/secure-tunnel@${TARGET}
 sed -i \
@@ -41,7 +131,7 @@ sed -i \
     -e 's/${SSH_TARGET_PORT}/'"${SSH_TARGET_PORT}"'/g' \
     ${HOME}/secure-tunnel@${TARGET}
 
-echo "setup service...."
+echo "seting up secure-tunne service...."
 sudo cp ${SNAP}/secure-tunnel@.service /etc/systemd/system/secure-tunnel@.service
 sudo sed -i 's#${HOME}#'"${HOME}"'#g'  /etc/systemd/system/secure-tunnel@.service
 sudo sed -i 's/${USER}/'"${USER}"'/g'  /etc/systemd/system/secure-tunnel@.service
@@ -50,13 +140,25 @@ if [ -z "$(grep ${TARGET} /etc/hosts)" ]; then
     echo "${TARGET_IP} ${TARGET}" | sudo tee -a  /etc/hosts
 fi
 
-if [ ! -e ~/.ssh/id_rsa.pub ]; then
-    ssh-keygen -t rsa -C "${USER}@${MACHINE_ALIAS}"
+echo -e "\nstarting up [secure-tunnel@${TARGET}] service...."
+sudo systemctl daemon-reload
+sudo systemctl start secure-tunnel@${TARGET} || true
+sudo systemctl enable secure-tunnel@${TARGET} || true
+
+echo  -e "waiting for service [secure-tunnel@${TARGET}] status update"
+sleep 2
+while [ "activating" = "$(sudo systemctl status secure-tunnel@${TARGET} | grep Active | awk '{print $2}')" ]
+do
+ sleep 1
+done
+sleep 1
+if [ "$(sudo systemctl status secure-tunnel@${TARGET} | grep Active | awk '{print $2 }')" != "active" ]; then
+    echo -e "\nService is having trouble to start, make sure you have following key in ~/.ssh/authorized_keys on remote machine"
+    cat ~/.ssh/id_rsa.pub
+    echo -e "Once key is added you can restart and check service status with following commands"
+    echo -e "sudo systemctl start secure-tunnel@${TARGET}"
+    echo -e "sudo systemctl status secure-tunnel@${TARGET}"
+else
+    echo -e "you are all set, service seems to be running fine"
+    sudo systemctl status secure-tunnel@${TARGET} || true
 fi
-echo "pub key to copy to remote machine"
-cat ~/.ssh/id_rsa.pub
-
-sudo systemctl start secure-tunnel@{$TARGET}
-sudo systemctl status secure-tunnel@{$TARGET}
-
-sudo systemctl enable secure-tunnel@{$TARGET}
