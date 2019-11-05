@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.5.14"
+version: "0.5.15"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -652,6 +652,56 @@ apps:
         adapter: none
         plugs: *default-system
 
+    xz:
+        command: usr/bin/xz
+        adapter: none
+        plugs: *default-system
+
+    xzdiff:
+        command: usr/bin/xzdiff
+        adapter: none
+        plugs: *default-system
+
+    xzgrep:
+        command: usr/bin/xzgrep
+        adapter: none
+        plugs: *default-system
+
+    xzless:
+        command: usr/bin/xzless
+        adapter: none
+        plugs: *default-system
+
+    xzmore:
+        command: usr/bin/xzmore
+        adapter: none
+        plugs: *default-system
+
+    unxz:
+        command: usr/bin/unxz
+        adapter: none
+        plugs: *default-system
+
+    xzcat:
+        command: usr/bin/xzcat
+        adapter: none
+        plugs: *default-system
+
+    xzcmp:
+        command: usr/bin/xzcmp
+        adapter: none
+        plugs: *default-system
+
+    xzegrep:
+        command: usr/bin/xzegrep
+        adapter: none
+        plugs: *default-system
+
+    xzfgrep:
+        command: usr/bin/xzfgrep
+        adapter: none
+        plugs: *default-system
+
 parts:
     tools:
         source: glue
@@ -706,6 +756,7 @@ parts:
           - u-boot-tools
           - icdiff
           - cpio
+          - xz-utils
           - try:
               - libonig4
           - on ppc64el:
