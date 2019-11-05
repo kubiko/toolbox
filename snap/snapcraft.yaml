@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.5.13"
+version: "0.5.14"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -647,6 +647,11 @@ apps:
         adapter: none
         plugs: *default-system
 
+    cpio:
+        command: bin/cpio
+        adapter: none
+        plugs: *default-system
+
 parts:
     tools:
         source: glue
@@ -700,6 +705,7 @@ parts:
           - rng-tools5
           - u-boot-tools
           - icdiff
+          - cpio
           - try:
               - libonig4
           - on ppc64el:
