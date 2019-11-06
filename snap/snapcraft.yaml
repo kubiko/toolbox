@@ -629,7 +629,6 @@ apps:
 
     mkknlimg:
         command: usr/bin/mkknlimg
-        adapter: none
         plugs: *default-system
 
     mksunxiboot:
@@ -757,6 +756,7 @@ parts:
           - icdiff
           - cpio
           - xz-utils
+          - libslang2
           - try:
               - libonig4
           - on ppc64el:
