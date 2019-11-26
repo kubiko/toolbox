@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.5.15"
+version: "0.5.16"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -701,6 +701,21 @@ apps:
         adapter: none
         plugs: *default-system
 
+    ssh-import-id:
+        command: usr/bin/ssh-import-id
+        plugs:
+          - ssh-keys
+
+    ssh-import-id-gh:
+        command: usr/bin/ssh-import-id-gh
+        plugs:
+          - ssh-keys
+
+    ssh-import-id-lp:
+        command: usr/bin/ssh-import-id-lp
+        plugs:
+          - ssh-keys
+
 parts:
     tools:
         source: glue
@@ -757,6 +772,7 @@ parts:
           - cpio
           - xz-utils
           - libslang2
+          - ssh-import-id
           - try:
               - libonig4
           - on ppc64el:
