@@ -1,0 +1,74 @@
+#!/bin/sh
+set -e
+
+# lxd-ssh
+# Wrapper for using ssh/scp/etc with lxd
+# Author: Robie Basak <robie.basak@canonical.com>
+# Last-Update: 2017-10-11
+
+# Instructions:
+#
+# 1) Use "lxc profile edit default" or similar to put a cloud-init snippet that
+#    gives permission to your ssh public key in new instances.
+#
+#    Example:
+#    $ lxc profile edit default
+#          config:
+#            user.user-data: |
+#              #cloud-config
+#              ssh_authorized_keys:
+#                - ssh-rsa AAAA...
+#
+# 2) Put this script (lxd-ssh) somewhere; ideally in your path
+#
+# 3) Then put something like the following in ~/.ssh/config:
+#        Hostname *.lxd
+#            User ubuntu
+#            ProxyCommand lxd-ssh %h
+#
+# Now the following should Just Work:
+#     $ lxc launch ubuntu:xenial foo
+#     Creating foo
+#     Starting foo
+#     $ ssh foo.lxd
+#     ...
+#     ubuntu@foo:~$
+#
+# scp, git remotes and other ssh-using commands should Just Work too.
+#
+# Known issues:
+# 1) It takes a few moments for the container to create its host key and start
+#    sshd. Until then attempts to ssh will result in an error.
+echo "ONDRA"
+hostname="$1"
+case "$hostname" in
+    *.lxd) ;;
+    *)
+        echo "Hostname supplied ($hostname) does not end in .lxd"
+        exit 1
+        ;;
+esac
+
+container=${hostname%.lxd}
+
+sync_host_keys() {
+    local hostname=$1
+    local container=$2
+
+    cleanup() { rm -rf "$tmpdir"; }
+    tmpdir=`mktemp -d lxd-ssh.XXXXX`
+    trap cleanup INT TERM
+    lxc exec "$container" -- sh -c 'cat /etc/ssh/*.pub 2>/dev/null || echo "Container ssh host keys not found; has it had enough time to boot?" >&2' | while read a b c; do echo -n "$hostname ";echo "$a $b";done > "$tmpdir/known_hosts_additions" && \
+    	ssh-keygen -H -f "$tmpdir/known_hosts_additions" 2>/dev/null && \
+            cat ~/.ssh/known_hosts "$tmpdir/known_hosts_additions" > ~/.ssh/known_hosts.$$ && \
+            mv ~/.ssh/known_hosts.$$ ~/.ssh/known_hosts
+    cleanup
+}
+
+if ! ssh-keygen -F "$hostname" </dev/null >/dev/null; then
+    sync_host_keys "$hostname" "$container" </dev/null >/dev/null
+fi
+
+exec lxc exec "$container" -- sshd -i
+
+
