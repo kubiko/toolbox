@@ -716,6 +716,21 @@ apps:
         plugs:
           - ssh-keys
 
+    sysbench:
+        command: usr/bin/sysbench
+        adapter: none
+        plugs: *default-system
+
+    stress-ng:
+        command: usr/bin/stress-ng
+        adapter: none
+        plugs: *default-system
+
+    phoronix-test-suite:
+        command: usr/bin/phoronix-test-suite
+        adapter: none
+        plugs: *default-system
+
 parts:
     tools:
         source: glue
@@ -773,6 +788,9 @@ parts:
           - xz-utils
           - libslang2
           - ssh-import-id
+          - sysbench
+          - stress-ng
+          - phoronix-test-suite
           - try:
               - libonig4
           - on ppc64el:
