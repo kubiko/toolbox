@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.5.20"
+version: "0.5.21"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -1178,6 +1178,7 @@ parts:
         plugin: make
         build-packages:
             - libnuma-dev
+            - python2.7
         stage-packages:
             - libnuma1
         organize:
