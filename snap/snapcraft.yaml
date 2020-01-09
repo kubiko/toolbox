@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.5.21"
+version: "0.5.30"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -898,108 +898,6 @@ apps:
         plugs:
           *default-system
 
-    cyclictest:
-        command: usr/bin/cyclictest
-        adapter: none
-        plugs:
-          *default-system
-
-    hwlatdetect:
-        command: usr/lib/python2.7/dist-packages/hwlatdetect.py
-        adapter: none
-        plugs:
-          *default-system
-
-    hackbench:
-        command: usr/bin/hackbench
-        adapter: none
-        plugs:
-          *default-system
-
-    pi-stress:
-        command: usr/bin/pi_stress
-        adapter: none
-        plugs:
-          *default-system
-
-    pip-stress:
-        command: usr/bin/pip_stress
-        adapter: none
-        plugs:
-          *default-system
-
-    pmqtest:
-        command: usr/bin/pmqtest
-        adapter: none
-        plugs:
-          *default-system
-
-    ptsematest:
-        command: usr/bin/ptsematest
-        adapter: none
-        plugs:
-          *default-system
-
-    ptsematest:
-        command: usr/bin/ptsematest
-        adapter: none
-        plugs:
-          *default-system
-
-    rt-migrate-test:
-        command: usr/bin/rt-migrate-test
-        adapter: none
-        plugs:
-          *default-system
-
-    sendme:
-        command: usr/bin/sendme
-        adapter: none
-        plugs:
-          *default-system
-
-    signaltest:
-        command: usr/bin/signaltest
-        adapter: none
-        plugs:
-          *default-system
-
-    sigwaittest:
-        command: usr/bin/sigwaittest
-        adapter: none
-        plugs:
-          *default-system
-
-    svsematest:
-        command: usr/bin/svsematest
-        adapter: none
-        plugs:
-          *default-system
-
-
-    phoronix-test-suite:
-        command: bin/phoronix-init
-        adapter: none
-        plugs:
-          - home
-          - network
-          - network-observe
-          - process-control
-          - system-observe
-          - mount-observe
-          - hardware-observe
-          - framebuffer
-          - physical-memory-control
-          - raw-usb
-          - removable-media
-          - system-trace
-        environment:
-            PHP_BIN: $SNAP/usr/bin/php7.2
-            PHPRC:   $SNAP/usr/lib/php/7.2/phoronix-php.ini
-            PHP_INI_SCAN_DIR: $SNAP/etc/php/7.2/cli/conf.d
-            PTS_USER_PATH_OVERRIDE: $SNAP_USER_DATA/
-            PTS_TEST_INSTALL_ROOT_PATH: $SNAP_USER_DATA/.phoronix-test-suite/
-
 parts:
     tools:
         source: glue
@@ -1059,17 +957,6 @@ parts:
           - ssh-import-id
           - sysbench
           - stress-ng
-          - php7.2-cli
-          - php7.2-common
-          - php-curl
-          - php-fpdf
-          - php-gd
-          - php-json
-          - php-sqlite3
-          - php-xml
-          - p7zip
-          - bison
-          - bzip2
           - try:
               - libonig4
           - on ppc64el:
@@ -1092,32 +979,7 @@ parts:
                 echo "echo 'peekfd is not supported on arm64'" >> ${SNAPCRAFT_PART_INSTALL}/usr/bin/peekfd
                 chmod +x ${SNAPCRAFT_PART_INSTALL}/usr/bin/peekfd
             fi
-            # configure php
-            ln -sf php7.2 ${SNAPCRAFT_PART_INSTALL}/usr/bin/php
-            PHORONIX_PHP_INI="${SNAPCRAFT_PART_INSTALL}/usr/lib/php/7.2/phoronix-php.ini"
-            PHP_EXTENSION_DIR=usr/lib/php/20170718
-            cp ${SNAPCRAFT_PART_INSTALL}/usr/lib/php/7.2/php.ini-production.cli ${PHORONIX_PHP_INI}
-            echo "extension_dir = \${SNAP}/${PHP_EXTENSION_DIR}" >> ${PHORONIX_PHP_INI}
-            echo "include_path = .:\${SNAP}/usr/share/php" >> ${PHORONIX_PHP_INI}
-            echo "user_home_directory = \${SNAP_USER_DATA}" >> ${PHORONIX_PHP_INI}
-            ls ${SNAPCRAFT_PART_INSTALL}/${PHP_EXTENSION_DIR} | grep -v wddx | grep -v opcache |xargs -I{} echo "extension = {}" >> ${PHORONIX_PHP_INI}
 
-    phoronix:
-        plugin: dump
-        source: https://github.com/phoronix-test-suite/phoronix-test-suite/releases/download/v9.2.1/phoronix-test-suite_9.2.1_all.deb
-        source-type: deb
-        override-build: |
-            snapcraftctl build
-            # update path in phoronix-test-suite
-            sed -i \
-                's/PTS_DIR=\/usr/PTS_DIR=$SNAP\/usr/g' \
-                ${SNAPCRAFT_PART_INSTALL}/usr/bin/phoronix-test-suite
-            sed -i \
-                "s/$log_file = '\/var\/.*/$log_file = PTS_USER_PATH;/g" \
-                ${SNAPCRAFT_PART_INSTALL}/usr/share/phoronix-test-suite/pts-core/objects/client/pts_logger.php
-            sed -i \
-                's|export PTS_DIR=.*|export PTS_DIR=${SNAP}/usr/share/phoronix-test-suite/|g' \
-                ${SNAPCRAFT_PART_INSTALL}/usr/bin/phoronix-test-suite
     mc:
         source: https://github.com/MidnightCommander/mc.git
         plugin: autotools
@@ -1172,17 +1034,3 @@ parts:
             cp resty ${SNAPCRAFT_PART_INSTALL}/usr/bin
             mkdir -p ${SNAPCRAFT_PART_INSTALL}/usr/share/bash-completion/completions/
             curl -o ${SNAPCRAFT_PART_INSTALL}/usr/share/bash-completion/completions/httpie https://raw.githubusercontent.com/jakubroztocil/httpie/master/extras/httpie-completion.bash
-
-    rt-test:
-        source: git://git.kernel.org/pub/scm/linux/kernel/git/clrkwllms/rt-tests.git
-        plugin: make
-        build-packages:
-            - libnuma-dev
-            - python2.7
-        stage-packages:
-            - libnuma1
-        organize:
-            usr/local/: usr/
-        override-build: |
-            snapcraftctl build
-            ln -sf ../lib/python2.7/dist-packages/hwlatdetect.py ${SNAPCRAFT_PART_INSTALL}/usr/local/bin/hwlatdetect

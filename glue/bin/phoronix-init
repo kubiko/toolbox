@@ -1,4 +1,0 @@
-#!/bin/bash
-
-mkdir -p ${PTS_TEST_INSTALL_ROOT_PATH}
-exec "${SNAP}/usr/bin/phoronix-test-suite" "$@"
