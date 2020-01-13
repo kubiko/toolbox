@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.5.31"
+version: "0.5.32"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -970,6 +970,12 @@ apps:
         plugs:
           *default-system
 
+    lkvm:
+        command: bin/lkvm
+        adapter: none
+        plugs:
+          *default-system
+
 parts:
     tools:
         source: glue
@@ -1120,3 +1126,26 @@ parts:
         override-build: |
             snapcraftctl build
             rm ${SNAPCRAFT_PART_INSTALL}/usr/local/bin/hwlatdetect
+
+    kvm-tool:
+        source: git://git.kernel.org/pub/scm/linux/kernel/git/will/kvmtool.git
+        source-type: git
+        plugin: make
+        organize:
+            '*/*/bin/lkvm': bin/lkvm
+        stage:
+            - -home
+        build-attributes:
+            - keep-execstack
+        stage-packages:
+            - libsdl1.2debian
+            - libsndfile1
+            - libvorbis0a
+            - libvorbisenc2
+            - libx11-6
+            - libxau6
+            - libxcb1
+            - libxdmcp6
+            - libxext6
+            - libxi6
+            - libxxf86vm1
