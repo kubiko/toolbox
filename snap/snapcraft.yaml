@@ -106,11 +106,6 @@ apps:
         plugs:
           - raw-usb
 
-    cppfilt:
-        command: usr/bin/c++filt
-        plugs:
-          *default-storage
-
     elfedit:
         command: usr/bin/elfedit
         adapter: none
@@ -358,6 +353,7 @@ apps:
 
     clean-journalctl:
         command: journalctl --vacuum-time=1seconds
+        adapter: full
         plugs:
           - log-observe
 
@@ -782,11 +778,6 @@ apps:
         plugs:
           *default-system
 
-    mkknlimg:
-        command: usr/bin/mkknlimg
-        plugs:
-          *default-system
-
     mksunxiboot:
         command: usr/bin/mksunxiboot
         adapter: none
@@ -1125,7 +1116,6 @@ parts:
             usr/local/: usr/
         override-build: |
             snapcraftctl build
-            rm ${SNAPCRAFT_PART_INSTALL}/usr/local/bin/hwlatdetect
 
     kvm-tool:
         source: git://git.kernel.org/pub/scm/linux/kernel/git/will/kvmtool.git
