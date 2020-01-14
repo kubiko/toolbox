@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.5.32"
+version: "0.5.33"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -1125,8 +1125,6 @@ parts:
             '*/*/bin/lkvm': bin/lkvm
         stage:
             - -home
-        build-attributes:
-            - keep-execstack
         stage-packages:
             - libsdl1.2debian
             - libsndfile1
