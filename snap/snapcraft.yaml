@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.5.33"
+version: "0.5.36"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -961,8 +961,14 @@ apps:
         plugs:
           *default-system
 
-    lkvm:
-        command: bin/lkvm
+    kvm-ok:
+        command: usr/sbin/kvm-ok
+        adapter: none
+        plugs:
+          *default-system
+
+    check-bios-nx:
+        command: usr/sbin/check-bios-nx
         adapter: none
         plugs:
           *default-system
@@ -1026,6 +1032,7 @@ parts:
           - ssh-import-id
           - sysbench
           - stress-ng
+          - cpu-checker
           - try:
               - libonig4
           - on ppc64el:
@@ -1034,6 +1041,11 @@ parts:
           fat:
             - -usr/lib/gcc
             - -usr/share/vim
+            - -usr/lib/*/perl
+            - -usr/share/locale
+            - -usr/share/doc
+            - -usr/share/perl
+            - -usr/share/man/
         stage:
             - $fat
         prime:
@@ -1048,6 +1060,9 @@ parts:
                 echo "echo 'peekfd is not supported on arm64'" >> ${SNAPCRAFT_PART_INSTALL}/usr/bin/peekfd
                 chmod +x ${SNAPCRAFT_PART_INSTALL}/usr/bin/peekfd
             fi
+            sed -i \
+                's|/usr/share/bash-completion|${SNAP_TOOLBOX}/usr/share/bash-completion|g' \
+                ${SNAPCRAFT_PART_INSTALL}/etc/profile.d/bash_completion.sh
 
     mc:
         source: https://github.com/MidnightCommander/mc.git
@@ -1116,26 +1131,5 @@ parts:
             usr/local/: usr/
         override-build: |
             snapcraftctl build
-
-    kvm-tool:
-        source: git://git.kernel.org/pub/scm/linux/kernel/git/will/kvmtool.git
-        source-type: git
-        plugin: make
-        build-packages:
-            - libfdt-dev
-        organize:
-            '*/*/bin/lkvm': bin/lkvm
         stage:
-            - -home
-        stage-packages:
-            - libsdl1.2debian
-            - libsndfile1
-            - libvorbis0a
-            - libvorbisenc2
-            - libx11-6
-            - libxau6
-            - libxcb1
-            - libxdmcp6
-            - libxext6
-            - libxi6
-            - libxxf86vm1
+            - -usr/bin/hwlatdetect
