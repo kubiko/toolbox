@@ -1121,6 +1121,8 @@ parts:
         source: git://git.kernel.org/pub/scm/linux/kernel/git/will/kvmtool.git
         source-type: git
         plugin: make
+        build-packages:
+            - libfdt-dev
         organize:
             '*/*/bin/lkvm': bin/lkvm
         stage:
