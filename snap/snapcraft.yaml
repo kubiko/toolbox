@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.5.37"
+version: "0.5.38"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -1071,10 +1071,6 @@ parts:
             - --prefix=/snap/toolbox/current/usr
             - --sysconfdir=/var/snap/toolbox/common/etc
             - --without-x
-        build-packages:
-            - libglib2.0-dev
-            - libslang2-dev
-            - gettext
         override-build: |
             snapcraftctl build
             mv ${SNAPCRAFT_PART_INSTALL}/snap/toolbox/current/usr ${SNAPCRAFT_PART_INSTALL}/
@@ -1087,13 +1083,6 @@ parts:
         source-branch: ubuntu/bionic
         source-type: git
         plugin: autotools
-        build-packages:
-            - libusb-1.0-0-dev
-            - zlib1g
-            - gawk
-            - pkg-config
-            - libudev-dev
-            - quilt
         stage-packages: [libusb-1.0-0]
         configflags:
             - --prefix=/usr
@@ -1110,8 +1099,6 @@ parts:
     resty:
         plugin: nil
         source: https://github.com/micha/resty.git
-        build-packages:
-            - curl
         override-build: |
             mkdir -p ${SNAPCRAFT_PART_INSTALL}/usr/bin
             cp pp pypp ${SNAPCRAFT_PART_INSTALL}/usr/bin
@@ -1122,9 +1109,6 @@ parts:
     rt-tests:
         source: git://git.kernel.org/pub/scm/linux/kernel/git/clrkwllms/rt-tests.git
         plugin: make
-        build-packages:
-            - libnuma-dev
-            - python2.7
         stage-packages:
             - libnuma1
         organize:
@@ -1142,3 +1126,18 @@ parts:
             cp mountinfo-tool ${SNAPCRAFT_PART_INSTALL}/
         organize:
             mountinfo-tool: bin/mountinfo-tool
+
+build-packages:
+    - curl
+    - libnuma-dev
+    - python2.7
+    - libusb-1.0-0-dev
+    - zlib1g
+    - gawk
+    - pkg-config
+    - libudev-dev
+    - quilt
+    - wget
+    - libglib2.0-dev
+    - libslang2-dev
+    - gettext
