@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.5.36"
+version: "0.5.37"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -1133,3 +1133,12 @@ parts:
             snapcraftctl build
         stage:
             - -usr/bin/hwlatdetect
+
+    mountinfo-tool:
+        plugin: nil
+        override-pull: |
+            wget https://raw.githubusercontent.com/snapcore/snapd/master/tests/lib/bin/mountinfo-tool
+        override-build: |
+            cp mountinfo-tool ${SNAPCRAFT_PART_INSTALL}/
+        organize:
+            mountinfo-tool: bin/mountinfo-tool
