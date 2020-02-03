@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.5.38"
+version: "0.5.39"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -1126,6 +1126,16 @@ parts:
             cp mountinfo-tool ${SNAPCRAFT_PART_INSTALL}/
         organize:
             mountinfo-tool: bin/mountinfo-tool
+
+    lk-boot-env:
+        plugin: nil
+        override-pull: |
+          snapcraftctl pull
+          wget https://raw.githubusercontent.com/snapcore/snapd/master/include/lk/snappy_boot_v1.h
+          wget https://raw.githubusercontent.com/kubiko/if6640-gadget/18/snap-boot-sel/lk-boot-env.c
+        override-build: |
+            mkdir -p ${SNAPCRAFT_PART_INSTALL}/bin
+            gcc lk-boot-env.c -I/usr/include/ -Iapp/aboot -o ${SNAPCRAFT_PART_INSTALL}/bin/lk-boot-env
 
 build-packages:
     - curl
