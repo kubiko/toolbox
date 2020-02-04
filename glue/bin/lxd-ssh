@@ -5,6 +5,9 @@ set -e
 # Wrapper for using ssh/scp/etc with lxd
 # Author: Robie Basak <robie.basak@canonical.com>
 # Last-Update: 2017-10-11
+# url: https://gist.githubusercontent.com/basak/72b87a5b619a100ace1476715bfc5b18/raw/d716f711a152a71d9a0eaae5fb932f83ff1c03d7/lxd-ssh.sh
+
+# modified by OK to work on Ubuntu Core and lxd installed as snap (with sudo lxc)
 
 # Instructions:
 #
@@ -22,9 +25,11 @@ set -e
 # 2) Put this script (lxd-ssh) somewhere; ideally in your path
 #
 # 3) Then put something like the following in ~/.ssh/config:
-#        Hostname *.lxd
-#            User ubuntu
-#            ProxyCommand lxd-ssh %h
+#    Host *.lxd
+#      User ubuntu
+#      ProxyCommand lxd-ssh %h
+#      StrictHostKeyChecking no
+#      IdentityFile ~/.ssh/id_rsa.pub
 #
 # Now the following should Just Work:
 #     $ lxc launch ubuntu:xenial foo
@@ -39,7 +44,6 @@ set -e
 # Known issues:
 # 1) It takes a few moments for the container to create its host key and start
 #    sshd. Until then attempts to ssh will result in an error.
-echo "ONDRA"
 hostname="$1"
 case "$hostname" in
     *.lxd) ;;
@@ -58,7 +62,7 @@ sync_host_keys() {
     cleanup() { rm -rf "$tmpdir"; }
     tmpdir=`mktemp -d lxd-ssh.XXXXX`
     trap cleanup INT TERM
-    lxc exec "$container" -- sh -c 'cat /etc/ssh/*.pub 2>/dev/null || echo "Container ssh host keys not found; has it had enough time to boot?" >&2' | while read a b c; do echo -n "$hostname ";echo "$a $b";done > "$tmpdir/known_hosts_additions" && \
+    sudo lxc exec "$container" -- sh -c 'cat /etc/ssh/*.pub 2>/dev/null || echo "Container ssh host keys not found; has it had enough time to boot?" >&2' | while read a b c; do echo -n "$hostname ";echo "$a $b";done > "$tmpdir/known_hosts_additions" && \
     	ssh-keygen -H -f "$tmpdir/known_hosts_additions" 2>/dev/null && \
             cat ~/.ssh/known_hosts "$tmpdir/known_hosts_additions" > ~/.ssh/known_hosts.$$ && \
             mv ~/.ssh/known_hosts.$$ ~/.ssh/known_hosts
@@ -69,6 +73,6 @@ if ! ssh-keygen -F "$hostname" </dev/null >/dev/null; then
     sync_host_keys "$hostname" "$container" </dev/null >/dev/null
 fi
 
-exec lxc exec "$container" -- sshd -i
+exec sudo lxc exec "$container" -- sshd -i
 
 
