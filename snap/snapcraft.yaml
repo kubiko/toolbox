@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.5.39"
+version: "0.5.40"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -1033,6 +1033,8 @@ parts:
           - sysbench
           - stress-ng
           - cpu-checker
+          - mosh
+          - tmux
           - try:
               - libonig4
           - on ppc64el:
