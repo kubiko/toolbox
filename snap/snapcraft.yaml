@@ -1145,6 +1145,9 @@ parts:
         source-type: git
         configflags:
           - "LDFLAGS=-static"
+        stage:
+          - bin/mosh-server
+          - bin/mosh
 
 build-packages:
     - curl
@@ -1162,3 +1165,5 @@ build-packages:
     - gettext
     - protobuf-compiler
     - libprotobuf-dev
+    - libncurses5-dev
+    - libssl-dev
