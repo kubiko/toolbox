@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.5.43"
+version: "0.5.44"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -1033,7 +1033,6 @@ parts:
           - sysbench
           - stress-ng
           - cpu-checker
-          - mosh
           - tmux
           - byobu
           - try:
@@ -1140,6 +1139,13 @@ parts:
             mkdir -p ${SNAPCRAFT_PART_INSTALL}/bin
             gcc lk-boot-env.c -I/usr/include/ -Iapp/aboot -o ${SNAPCRAFT_PART_INSTALL}/bin/lk-boot-env
 
+    mosh:
+        plugin: autotools
+        source: https://github.com/mobile-shell/mosh.git
+        source-type: git
+        configflags:
+          - "LDFLAGS=-static"
+
 build-packages:
     - curl
     - libnuma-dev
@@ -1154,3 +1160,5 @@ build-packages:
     - libglib2.0-dev
     - libslang2-dev
     - gettext
+    - protobuf-compiler
+    - libprotobuf-dev
