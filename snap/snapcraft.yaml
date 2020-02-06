@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.5.46"
+version: "0.5.47"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -671,6 +671,8 @@ apps:
     set-path:
         command: bin/set-path
         adapter: none
+        plugs:
+          - home
 
     set-snap-path:
         command: bin/set-snap-path
