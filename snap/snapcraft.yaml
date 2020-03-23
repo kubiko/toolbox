@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.5.47"
+version: "0.5.48"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -975,6 +975,30 @@ apps:
         plugs:
           *default-system
 
+    cgdisk:
+        command: sbin/cgdisk
+        adapter: none
+        plugs:
+          *default-system
+
+    fixparts:
+        command: sbin/fixparts
+        adapter: none
+        plugs:
+          *default-system
+
+    gdisk:
+        command: sbin/gdisk
+        adapter: none
+        plugs:
+          *default-system
+
+    sgdisk:
+        command: sbin/sgdisk
+        adapter: none
+        plugs:
+          *default-system
+
 parts:
     tools:
         source: glue
@@ -1037,6 +1061,7 @@ parts:
           - cpu-checker
           - tmux
           - byobu
+          - gdisk
           - try:
               - libonig4
           - on ppc64el:
