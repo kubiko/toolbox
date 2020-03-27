@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.5.48"
+version: "0.5.49"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -1092,6 +1092,9 @@ parts:
             sed -i \
                 's|/usr/share/bash-completion|${SNAP_TOOLBOX}/usr/share/bash-completion|g' \
                 ${SNAPCRAFT_PART_INSTALL}/etc/profile.d/bash_completion.sh
+            # source lxd bash completion if present
+            echo "[ -f /snap/lxd/current/etc/bash_completion.d/snap.lxd.lxc ] && . /snap/lxd/current/etc/bash_completion.d/snap.lxd.lxc" \
+                 >> ${SNAPCRAFT_PART_INSTALL}/etc/profile.d/bash_completion.sh 
 
     mc:
         source: https://github.com/MidnightCommander/mc.git
