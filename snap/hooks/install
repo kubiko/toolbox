@@ -1,0 +1,3 @@
+#!/bin/bash
+mkdir -p ${SNAP_COMMON}/etc/mc
+cp ${SNAP}/etc/mc/sfs.ini ${SNAP_COMMON}/etc/mc/
