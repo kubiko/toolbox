@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.5.51"
+version: "0.5.52"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -1063,6 +1063,7 @@ parts:
           - byobu
           - gdisk
           - smartmontools
+          - file
           - try:
               - libonig4
           - on ppc64el:
