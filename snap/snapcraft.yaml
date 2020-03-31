@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.5.52"
+version: "0.6.0"
 summary: set of usefull shell tools
 description: |
  set of usefull shell tools
@@ -29,7 +29,6 @@ apps:
         command: bin/nano
         adapter: none
         plugs:
-          &default-storage
             - home
             - removable-media
 
@@ -37,7 +36,6 @@ apps:
         command: usr/bin/wget
         adapter: none
         plugs:
-          &default-storage-net
             - home
             - removable-media
             - network
@@ -47,412 +45,43 @@ apps:
         command: usr/bin/ag
         adapter: none
         plugs:
-          *default-storage
+            - home
+            - removable-media
         completer: usr/share/bash-completion/completions/ag
-
-    mc:
-        command: usr/bin/mc
-        adapter: none
-        plugs:
-          *default-storage-net
-        completer: usr/share/bash-completion/completions/mc
-
-    mcdiff:
-        command: usr/bin/mcdiff
-        adapter: none
-        plugs:
-          *default-storage-net
-
-    mcedit:
-        command: usr/bin/mcedit
-        adapter: none
-        plugs:
-          *default-storage-net
-
-    mcview:
-        command: usr/bin/mcview
-        adapter: none
-        plugs:
-          *default-storage-net
-
-    pastebinit:
-        command: usr/bin/pastebinit
-        adapter: none
-        plugs:
-          *default-storage-net
-
-    curl:
-        command: usr/bin/curl
-        adapter: none
-        plugs:
-          *default-storage-net
-        completer: usr/share/bash-completion/completions/curl
-
-    lsusb:
-        command: usr/bin/lsusb
-        adapter: none
-        plugs:
-          - raw-usb
-
-    usb-devices:
-        command: usr/bin/usb-devices
-        adapter: none
-        plugs:
-          - raw-usb
-
-    usbhid-dump:
-        command: usr/bin/usbhid-dump
-        adapter: none
-        plugs:
-          - raw-usb
-
-    elfedit:
-        command: usr/bin/elfedit
-        adapter: none
-        plugs:
-          *default-storage
-
-    readelf:
-        command: usr/bin/readelf
-        adapter: none
-        plugs:
-          *default-storage
-
-    ld:
-        command: usr/bin/ld
-        adapter: none
-        plugs:
-          *default-storage
-
-    ld-bfd:
-        command: usr/bin/ld.bfd
-        adapter: none
-        plugs:
-          *default-storage
-
-    strings:
-        command: usr/bin/strings
-        adapter: none
-        plugs:
-          *default-storage
-        completer: usr/share/bash-completion/completions/strings
-
-    size:
-        command: usr/bin/size
-        adapter: none
-        plugs:
-          *default-storage
-
-    strip:
-        command: usr/bin/strip
-        adapter: none
-        plugs:
-          *default-storage
-
-    objcopy:
-        command: usr/bin/objcopy
-        adapter: none
-        plugs:
-          *default-storage
-
-    objdump:
-        command: usr/bin/objdump
-        adapter: none
-        plugs:
-          *default-storage
-
-    addr2line:
-        command: usr/bin/addr2line
-        adapter: none
-        plugs:
-          *default-storage
-
-    dwp:
-        command: usr/bin/dwp
-        adapter: none
-        plugs:
-          *default-storage
-
-    as:
-        command: usr/bin/as
-        adapter: none
-        plugs:
-          *default-storage
-
-    ar:
-        command: usr/bin/ar
-        adapter: none
-        plugs:
-          *default-storage
-
-    gold:
-        command: usr/bin/gold
-        adapter: none
-        plugs:
-          *default-storage
-
-    ld-gold:
-        command: usr/bin/ld.gold
-        adapter: none
-        plugs:
-          *default-storage
-
-    nm:
-        command: usr/bin/nm
-        adapter: none
-        plugs:
-          *default-storage
-
-    gprof:
-        command: usr/bin/gprof
-        adapter: none
-        plugs:
-          - home
-          - process-control
-          - system-observe
-          - mount-observe
-          - hardware-observe
-          - system-trace
-          - physical-memory-control
-        completer: usr/share/bash-completion/completions/gprof
-
-    ranlib:
-        command: usr/bin/ranlib
-        adapter: none
-        plugs:
-          *default-storage
-
-    screen:
-        command: usr/bin/screen
-        adapter: none
-        plugs:
-          - home
-          - network
-          - hardware-observe
-          - serial-port
-          - raw-usb
-        completer: usr/share/bash-completion/completions/screen
 
     tree:
         command: usr/bin/tree
         adapter: none
         plugs:
-          *default-storage
+            - home
+            - removable-media
 
     zip:
         command: usr/bin/zip
         adapter: none
         plugs:
-          *default-storage
+            - home
+            - removable-media
 
     unzip:
         command: usr/bin/unzip
         adapter: none
         plugs:
-          *default-storage
-
-    vim:
-        command: usr/bin/vim.basic
-        adapter: none
-        plugs:
-          *default-storage
-
-    vim-tiny:
-        command: usr/bin/vim.tiny
-        adapter: none
-        plugs:
-          *default-storage
-
-    vimdiff:
-        command: usr/bin/vim.basic -d
-        adapter: none
-        plugs:
-          *default-storage
-
-    iotop:
-        command: usr/sbin/iotop
-        adapter: none
-        plugs:
-          &default-system
-            - home
-            - process-control
-            - system-observe
-            - mount-observe
-            - hardware-observe
-            - framebuffer
-            - physical-memory-control
-            - raw-usb
-            - removable-media
-            - system-trace
-
-    lsof:
-        command: usr/bin/lsof
-        adapter: none
-        plugs:
-          *default-system
-        completer: usr/share/bash-completion/completions/lsof
-
-    hdparm:
-        command: sbin/hdparm
-        adapter: none
-        plugs:
-          &default-hw
-            - home
-            - system-observe
-            - mount-observe
-            - hardware-observe
-            - removable-media
-            - gpio
-            - i2c
-            - spi
-
-    rhash:
-        command: usr/bin/rhash
-        adapter: none
-        plugs:
-          &default-hash
             - home
             - removable-media
-            - hardware-random-control
-
-    gost-hash:
-        command: usr/bin/gost-hash
-        adapter: none
-        plugs:
-          *default-hash
-
-    has160-hash:
-        command: usr/bin/has160-hash
-        adapter: none
-        plugs:
-          *default-hash
-
-    sfv-hash:
-        command: usr/bin/sfv-hash
-        adapter: none
-        plugs:
-          *default-hash
-
-    tiger-hash:
-        command: usr/bin/tiger-hash
-        adapter: none
-        plugs:
-          *default-hash
-
-    tth-hash:
-        command: usr/bin/tth-hash
-        adapter: none
-        plugs:
-          *default-hash
-
-    whirlpool-hash:
-        command: usr/bin/whirlpool-hash
-        adapter: none
-        plugs:
-          *default-hash
 
     clean-journalctl:
         command: journalctl --vacuum-time=1seconds
         adapter: full
         plugs:
-          - log-observe
-
-    i2cset:
-        command: usr/sbin/i2cset
-        adapter: none
-        plugs:
-          *default-hw
-
-    i2cdump:
-        command: usr/sbin/i2cdump
-        adapter: none
-        plugs:
-          *default-hw
-
-    i2cdetect:
-        command: usr/sbin/i2cdetect
-        adapter: none
-        plugs:
-          *default-hw
-
-    i2cget:
-        command: usr/sbin/i2cget
-        adapter: none
-        plugs:
-          *default-hw
-
-    cryptsetup:
-        command: sbin/cryptsetup
-        adapter: none
-        plugs:
-          *default-hw
-        completer: usr/share/bash-completion/completions/cryptsetup
-
-    veritysetup:
-        command: sbin/veritysetup
-        adapter: none
-        plugs:
-          *default-hw
-
-    cryptsetup-reencrypt:
-        command: sbin/cryptsetup-reencrypt
-        adapter: none
-        plugs:
-          *default-hw
-
-    luksformat:
-        command: usr/sbin/luksformat
-        adapter: none
-        plugs:
-          *default-hw
-
-    dmsetup:
-        command: sbin/dmsetup
-        adapter: none
-        plugs:
-          *default-hw
-
-    convert-dtsv0:
-        command: usr/bin/convert-dtsv0
-        adapter: none
-        plugs:
-          *default-hw
-
-    dtdiff:
-        command: usr/bin/dtdiff
-        adapter: none
-        plugs:
-          *default-hw
-
-    fdtput:
-        command: usr/bin/fdtput
-        adapter: none
-        plugs:
-          *default-hw
-
-    dtc:
-        command: usr/bin/dtc
-        adapter: none
-        plugs:
-          *default-hw
-
-    fdtdump:
-        command: usr/bin/fdtdump
-        adapter: none
-        plugs:
-          *default-hw
-
-    fdtget:
-        command: usr/bin/fdtget
-        adapter: none
-        plugs:
-          *default-hw
+            - log-observe
 
     strace:
         command: usr/bin/strace
         adapter: none
         plugs:
             - log-observe
+            - process-control
         completer: usr/share/bash-completion/completions/strace
 
     rsync:
@@ -464,540 +93,140 @@ apps:
             - optical-drive
         completer: usr/share/bash-completion/completions/rsync
 
-    iperf3:
-        command: usr/bin/iperf3
-        adapter: none
-        plugs:
-          &default-net
-            - home
-            - network
-            - network-bind
-            - network-control
-            - network-observe
-            - network-setup-control
-            - network-setup-observe
-
     netstat:
         command: bin/netstat
         adapter: none
         plugs:
-          *default-net
-
-    arp:
-        command: usr/sbin/arp
-        adapter: none
-        plugs:
-          *default-net
-
-    nameif:
-        command: sbin/nameif
-        adapter: none
-        plugs:
-          *default-net
-
-    ipmaddr:
-        command: sbin/ipmaddr
-        adapter: none
-        plugs:
-         *default-net
-
-    plipconfig:
-        command: sbin/plipconfig
-        adapter: none
-        plugs:
-          *default-net
+            - network
+            - network-bind
+            - network-observe
+            - network-setup-observe
+            - network-status
 
     ifconfig:
         command: sbin/ifconfig
         adapter: none
         plugs:
-          *default-net
+            - network
+            - network-bind
+            - network-observe
+            - network-setup-observe
+            - network-status
 
     route:
         command: sbin/route
         adapter: none
         plugs:
-          *default-net
+            - network
+            - network-bind
+            - network-observe
+            - network-setup-observe
+            - network-status
         completer: usr/share/bash-completion/completions/route
-
-    mii-tool:
-        command: sbin/mii-tool
-        adapter: none
-        plugs:
-          *default-net
-        completer: usr/share/bash-completion/completions/mii-tool
 
     iptunnel:
         command: sbin/iptunnel
         adapter: none
         plugs:
-          *default-net
-
-    rarp:
-        command: sbin/rarp
-        adapter: none
-        plugs:
-          *default-net
-
-    slattach:
-        command: sbin/slattach
-        adapter: none
-        plugs:
-          *default-net
+            - network
+            - network-bind
+            - network-observe
+            - network-setup-observe
+            - network-status
 
     ethtool:
         command: sbin/ethtool
         adapter: none
         plugs:
-          *default-net
-
-    fuser:
-        command: bin/fuser
-        adapter: none
-        plugs:
-          *default-system
-
-    killall:
-        command: usr/bin/killall
-        adapter: none
-        plugs:
-          *default-system
-        completer: usr/share/bash-completion/completions/killall
-
-    pstree:
-        command: usr/bin/pstree
-        adapter: none
-        plugs:
-          *default-system
-
-    prtstat:
-        command: usr/bin/prtstat
-        adapter: none
-        plugs:
-          *default-system
-
-    peekfd:
-        command: usr/bin/peekfd
-        adapter: none
-        plugs:
-          *default-system
-
-    htop:
-        command: usr/bin/htop
-        adapter: none
-        plugs:
-          *default-system
-        completer: usr/share/bash-completion/completions/htop
-
-    devmem2:
-        command: usr/bin/devmem2
-        adapter: none
-        plugs:
-          *default-system
-
-    busybox:
-        command: bin/busybox
-        adapter: none
-        plugs:
-          *default-system
-
-    lshw:
-        command: usr/bin/lshw
-        adapter: none
-        plugs:
-          *default-system
-
-    lspci:
-        command: usr/bin/lspci
-        adapter: none
-        plugs:
-          *default-system
-
-    pcimodules:
-        command: usr/bin/pcimodules
-        adapter: none
-        plugs:
-          *default-system
-
-    setpci:
-        command: usr/bin/setpci
-        adapter: none
-        plugs:
-          *default-system
-
-    resty:
-        command: bin/bash --init-file $SNAP/usr/bin/resty
-        adapter: none
-        plugs:
-          *default-system
-
-    http:
-        command: usr/bin/http
-        adapter: none
-        plugs:
-          *default-system
-        completer: usr/share/bash-completion/completions/httpie
-
-    dig:
-        command: usr/bin/dig
-        adapter: none
-        plugs:
-          *default-net
-
-    nsupdate:
-        command: usr/bin/nsupdate
-        adapter: none
-        plugs:
-          *default-net
+            - network
+            - network-bind
+            - network-observe
+            - network-setup-observe
+            - network-status
 
     nslookup:
         command: usr/bin/nslookup
         adapter: none
         plugs:
-          *default-net
+            - network
+            - network-bind
+            - network-observe
+            - network-setup-observe
+            - network-status
 
     jq:
         command: usr/bin/jq
         adapter: none
         plugs:
-          *default-net
-
-    minicom:
-        command: usr/bin/minicom
-        adapter: none
-        plugs:
-          *default-system
+            - home
 
     set-path:
         command: bin/set-path
         adapter: none
         plugs:
-          - home
+            - home
 
     set-snap-path:
         command: bin/set-snap-path
         adapter: none
-
-    iwconfig:
-        command: sbin/iwconfig
-        adapter: none
         plugs:
-          *default-net
-
-    iwevent:
-        command: sbin/iwevent
-        adapter: none
-        plugs:
-          *default-net
-
-    iwgetid:
-        command: sbin/iwgetid
-        adapter: none
-        plugs:
-          *default-net
-
-    iwlist:
-        command: sbin/iwlist
-        adapter: none
-        plugs:
-          *default-net
-
-    iwpriv:
-        command: sbin/iwpriv
-        adapter: none
-        plugs:
-          *default-net
-
-    iwspy:
-        command: sbin/iwspy
-        adapter: none
-        plugs:
-          *default-net
-
-    iw:
-        command: sbin/iw
-        adapter: none
-        plugs:
-          *default-net
-
-    watchdog:
-        command: usr/sbin/watchdog
-        adapter: none
-        plugs:
-          *default-system
-
-    wd-identify:
-        command: usr/sbin/wd_identify
-        adapter: none
-        plugs:
-          *default-system
-
-    wd-keepalive:
-        command: usr/sbin/wd_keepalive
-        adapter: none
-        plugs:
-          *default-system
-
-    rngtest:
-        command: usr/bin/rngtest
-        adapter: none
-        plugs:
-          *default-system
+            - home
 
     mkimage:
         command: usr/bin/mkimage
         adapter: none
         plugs:
-          *default-system
-
-    fw-printenv:
-        command: usr/bin/fw_printenv
-        adapter: none
-        plugs:
-          *default-system
-
-    fw-setenv:
-        command: usr/bin/fw_setenv
-        adapter: none
-        plugs:
-          *default-system
-
-    mkenvimage:
-        command: usr/bin/mkenvimage
-        adapter: none
-        plugs:
-          *default-system
-
-    kwboot:
-        command: usr/bin/kwboot
-        adapter: none
-        plugs:
-          *default-system
-
-    dumpimage:
-        command: usr/bin/dumpimage
-        adapter: none
-        plugs:
-          *default-system
-
-    mksunxiboot:
-        command: usr/bin/mksunxiboot
-        adapter: none
-        plugs:
-          *default-system
-
-    icdiff:
-        command: usr/bin/icdiff
-        adapter: none
-        plugs:
-          *default-system
-
-    git-icdiff:
-        command: usr/bin/git-icdiff
-        adapter: none
-        plugs:
-          *default-system
-
-    cpio:
-        command: bin/cpio
-        adapter: none
-        plugs:
-          *default-system
-
-    xz:
-        command: usr/bin/xz
-        adapter: none
-        plugs:
-          *default-system
-
-    xzdiff:
-        command: usr/bin/xzdiff
-        adapter: none
-        plugs:
-          *default-system
-
-    xzgrep:
-        command: usr/bin/xzgrep
-        adapter: none
-        plugs:
-          *default-system
-
-    xzless:
-        command: usr/bin/xzless
-        adapter: none
-        plugs:
-          *default-system
-
-    xzmore:
-        command: usr/bin/xzmore
-        adapter: none
-        plugs:
-          *default-system
-
-    unxz:
-        command: usr/bin/unxz
-        adapter: none
-        plugs:
-          *default-system
-
-    xzcat:
-        command: usr/bin/xzcat
-        adapter: none
-        plugs:
-          *default-system
-
-    xzcmp:
-        command: usr/bin/xzcmp
-        adapter: none
-        plugs:
-          *default-system
-
-    xzegrep:
-        command: usr/bin/xzegrep
-        adapter: none
-        plugs:
-          *default-system
-
-    xzfgrep:
-        command: usr/bin/xzfgrep
-        adapter: none
-        plugs:
-          *default-system
+            - home
 
     ssh-import-id:
         command: usr/bin/ssh-import-id
         plugs:
-          - ssh-keys
+            - ssh-keys
 
     ssh-import-id-gh:
         command: usr/bin/ssh-import-id-gh
         plugs:
-          - ssh-keys
+            - ssh-keys
 
     ssh-import-id-lp:
         command: usr/bin/ssh-import-id-lp
         plugs:
-          - ssh-keys
+            - ssh-keys
 
     sysbench:
         command: usr/bin/sysbench
         adapter: none
         plugs:
-          *default-system
+            - process-control
+            - system-observe
 
     stress-ng:
         command: usr/bin/stress-ng
         adapter: none
         plugs:
-          *default-system
+            - process-control
+            - system-observe
 
     cyclictest:
         command: usr/bin/cyclictest
         adapter: none
         plugs:
-          *default-system
+            - process-control
+            - system-observe
 
     hackbench:
         command: usr/bin/hackbench
         adapter: none
         plugs:
-          *default-system
+            - process-control
+            - system-observe
 
     pi-stress:
         command: usr/bin/pi_stress
         adapter: none
         plugs:
-          *default-system
-
-    pip-stress:
-        command: usr/bin/pip_stress
-        adapter: none
-        plugs:
-          *default-system
-
-    pmqtest:
-        command: usr/bin/pmqtest
-        adapter: none
-        plugs:
-          *default-system
-
-    ptsematest:
-        command: usr/bin/ptsematest
-        adapter: none
-        plugs:
-          *default-system
-
-    ptsematest:
-        command: usr/bin/ptsematest
-        adapter: none
-        plugs:
-          *default-system
-
-    rt-migrate-test:
-        command: usr/bin/rt-migrate-test
-        adapter: none
-        plugs:
-          *default-system
-
-    sendme:
-        command: usr/bin/sendme
-        adapter: none
-        plugs:
-          *default-system
-
-    signaltest:
-        command: usr/bin/signaltest
-        adapter: none
-        plugs:
-          *default-system
-
-    sigwaittest:
-        command: usr/bin/sigwaittest
-        adapter: none
-        plugs:
-          *default-system
-
-    svsematest:
-        command: usr/bin/svsematest
-        adapter: none
-        plugs:
-          *default-system
-
-    kvm-ok:
-        command: usr/sbin/kvm-ok
-        adapter: none
-        plugs:
-          *default-system
-
-    check-bios-nx:
-        command: usr/sbin/check-bios-nx
-        adapter: none
-        plugs:
-          *default-system
-
-    cgdisk:
-        command: sbin/cgdisk
-        adapter: none
-        plugs:
-          *default-system
-
-    fixparts:
-        command: sbin/fixparts
-        adapter: none
-        plugs:
-          *default-system
-
-    gdisk:
-        command: sbin/gdisk
-        adapter: none
-        plugs:
-          *default-system
-
-    sgdisk:
-        command: sbin/sgdisk
-        adapter: none
-        plugs:
-          *default-system
+            - process-control
+            - system-observe
 
 parts:
     tools:
