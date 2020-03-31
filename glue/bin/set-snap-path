@@ -15,6 +15,7 @@ echo "SNAP_TOOLBOX=\${SNAP_PATH}"
 echo "alias sudo='sudo env "PATH=\$PATH" LD_LIBRARY_PATH=\$LD_LIBRARY_PATH'"
 echo "XDG_DATA_DIRS=/usr/local/share:/usr/share:/snap/snapd/current/usr/share:\${SNAP_PATH}/usr/share"
 echo "source ${SNAP_PATH}/etc/profile.d/bash_completion.sh"
+echo "source ${SNAP_PATH}/bin/snapcraft-lxd-wrapper"
 echo "# end of modifications done by toolbox snap"
 
 # check if we need to update global environment
