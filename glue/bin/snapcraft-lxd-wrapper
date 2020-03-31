@@ -1,0 +1,192 @@
+#!/bin/bash
+
+IDENTITY_FILE="${HOME}/.ssh/id_rsa-lxd"
+PUBLIC_KEY=${IDENTITY_FILE}.pub
+SSH_CONFIG="${HOME}/.ssh/config"
+
+print_help_lxd_ensure_snapcraft_container () {
+  echo -e "lxd_ensure_snapcraft_container: helper script to ensure lxc container is created and running"
+  echo -e "Provided container is used for safe snap compilation(and cross compilation)"
+  echo -e "\tusage: lxd_ensure_snapcraft_container <Ubuntu Series> <name of the container to be created>"
+}
+
+print_help_lxd_snapcraft () {
+  echo "lxd_snapcraft executes snapcraft in current directory inside defined container"
+  echo "name of container is passed through env variable 'snapcraft_lxd_container_name"
+  echo "If container name is not defined, new container 'snapcraft-<ubuntu series> is created'"
+  echo "Ubuntu series is determined from snapcraft project in current directory"
+}
+
+ensure_ssh_setup () {
+  echo "Checking if we have ssh key for lxd containers"
+  # get ssh keys ready
+  if [ ! -f ${IDENTITY_FILE} ]; then
+    ssh-keygen -t rsa -C "${USER}@lxd" -N "" -f ${IDENTITY_FILE}
+    cat ${PUBLIC_KEY} >> ${HOME}/.ssh/authorized_keys
+  fi
+
+  if [ ! -f ${SSH_CONFIG} ] || [ -z "$(grep 'Host *.lxd' ${SSH_CONFIG})" ]; then
+    echo -e \
+      "Host *.lxd\n  User ubuntu\n  ProxyCommand lxd-ssh %h\n  StrictHostKeyChecking no\n  IdentityFile ${IDENTITY_FILE}" \
+      >> ${SSH_CONFIG}
+    chmod 600 ${SSH_CONFIG}
+  fi
+
+  # make sure we have lxd-ssh in path
+  if [ -z "$(which lxd-ssh)" ];then
+    curl -s https://raw.githubusercontent.com/kubiko/toolbox/master/glue/bin/lxd-ssh > ~/bin/lxd-ssh
+    chmod +x ~/bin/lxd-ssh
+  fi
+}
+
+# ensure lxd is installed
+lxd_ensure () {
+  # check if lxd is installed
+  if [ -n "$(which lxd)" ]; then
+    # lxd is installed, assuming all is configured
+    return
+  fi
+}
+
+# install and configure lxd
+lxd_install () {
+  echo "Installing lxd..."
+  snap install lxd
+
+  # make sure user is in lxd group
+  if [ -e /var/lib/extrausers/group ] && [ -z "$(grep lxd:x:999:${USER} /var/lib/extrausers/group)" ]; then
+    echo "Adding current user to lxd group"
+    sudo sed -i 's|lxd:x:999:.*|lxd:x:999:'"${USER}"'|g' /var/lib/extrausers/group
+    newgrp lxd
+  fi
+
+  # make sure lxd is initialised
+  local lxd_dump="$(lxd init --dump)"
+  if [ -n "$(echo "${lxd_dump}" | grep 'storage_pools: \[\]')" ]; then
+      echo "Initialising lxd..."
+      lxd init --auto --storage-backend=dir
+      echo -e "#cloud-config\nssh_authorized_keys:\n - $(cat ${PUBLIC_KEY})" | lxc profile set default user.user-data -
+      lxc profile show default
+  elif [ -n "$(echo "${lxd_dump}" | grep $(cat ${PUBLIC_KEY}))" ]; then
+      echo -e "#cloud-config\nssh_authorized_keys:\n - $(cat ${PUBLIC_KEY})" | lxc profile set default user.user-data -
+  fi
+  ensure_ssh_setup
+}
+
+lxd_ensure_snapcraft_container () {
+  # normalise series, we only support UC16/18/20 and related LTS
+  # 20.04 -> focal
+  # 18.04 -> bionic
+  # 16.04 -> xenial
+  case $1 in
+    20.04 | focal)
+      local ubuntu_series="focal"
+      ;;
+    18.04 | bionic)
+      local ubuntu_series="bionic"
+      ;;
+    16.04 | xenial)
+      local ubuntu_series="xenial"
+      ;;
+    *)
+      echo "Unknown Ubuntu version(series)"
+      print_help_lxd_ensure_snapcraft_container
+      exit
+      ;;
+  esac
+
+  if [ -z "${2}" ]; then
+    echo "Missing container name"
+    print_help_lxd_ensure_snapcraft_container
+    exit 0
+  fi
+  local container_name="${2}"
+
+  local container_status=$(lxc info ${container_name} 2>&1 | awk '$1 ~ "Status" { print $2}')
+  if [ -n "${container_status}" ]; then
+    echo -e "Container ${container_name} already exists, making sure it's running"
+    if [ "Running" != "${container_status}" ]; then
+      lxc start ${container_name}
+    fi
+    return
+  fi
+
+  # container does not exist, create it
+  lxc init ubuntu:${ubuntu_series} ${container_name}
+  echo "Configuring new container..."
+  lxc config set ${container_name} raw.idmap 'both 1000 1000'
+  lxc config device add ${container_name} home disk source=$HOME path=/home/ubuntu/host
+  lxc config device add ${container_name} sshconf disk source=$HOME/.ssh path=/home/ubuntu/.ssh
+
+  echo "Waiting for container to start..."
+  lxc start ${container_name}
+  # wait 5 more seconds before proceeding
+  sleep 5
+  lxc exec ${container_name} -- sh -c 'cp -r /etc/skel/. /home/ubuntu'
+  lxc exec ${container_name} -- sh -c 'echo "export SNAPCRAFT_BUILD_ENVIRONMENT=host" >> /etc/environment'
+  lxc exec ${container_name} -- sed -i 's|PATH=\"\(.*\)\"|PATH=\"\1\:/snap/bin\"|g' /etc/environment
+
+  # check if we need cross compilation source
+  if [ -n "$(uname -a | grep "x86_64")" ]; then
+    # configure cross compilation
+    local tmp_sources=$(mktemp -u -q)
+    curl https://people.canonical.com/~okubik/sources-${ubuntu_series}.lxc.list > ${tmp_sources}
+    lxc file push ${tmp_sources} ${container_name}/etc/apt/sources.list
+    [ -e ${tmp_sources} ] && rm ${tmp_sources}
+    # override template as well, as sometimes snapcraft tries to be too smart
+    lxc exec ${container_name} -- sh -c 'cp /etc/apt/sources.list /etc/cloud/templates/sources.list.ubuntu.tmpl'
+    lxc exec ${container_name} -- sh -c 'dpkg --add-architecture arm64'
+    lxc exec ${container_name} -- sh -c 'dpkg --add-architecture armhf'
+  fi
+  lxc exec ${container_name} -- sh -c 'apt-get update'
+
+  # install snapcraft
+  ssh -q -t ${container_name}.lxd "sudo snap install snapcraft --classic"
+
+  # finishing touches
+  lxc exec ${container_name} -- sh -c 'chown ubuntu:ubuntu /home/ubuntu'
+  lxc exec ${container_name} -- sh -c 'find /home/ubuntu/ -maxdepth 1 -type f -name ".*" -exec chown ubuntu:ubuntu {} \;'
+}
+
+lxd_snapcraft () {
+  if [ -z "${snapcraft_lxd_container_name}" ]; then
+    # if there is snapcraft.yaml or snap/snapcraft.yaml
+    # try to determine which container to use
+    [ -e snapcraft.yaml ] && local SNAPCRAFT_YAML="snapcraft.yaml"
+    [ -e snap/snapcraft.yaml ] && local SNAPCRAFT_YAML="snap/snapcraft.yaml"
+    if [ -n "${SNAPCRAFT_YAML}" ]; then
+      case $(grep 'base:' ${SNAPCRAFT_YAML} | awk '{print $2}') in
+        core16|core)
+          local container_name="snapcraft-xenial"
+          local ubuntu_series="xenial"
+          ;;
+        core18)
+          local container_name="snapcraft-bionic"
+          local ubuntu_series="bionic"
+          ;;
+        core20)
+          local container_name="snapcraft-focal"
+          local ubuntu_series="focal"
+          ;;
+        *)
+          echo "Base not defined, assuming Core 16"
+          local container_name="snapcraft-xenial"
+          local ubuntu_series="xenial"
+          ;;
+      esac
+    else
+      echo -e "Not in snapcraft project directory, or container name defined\n"
+      print_help_lxd_snapcraft
+      return
+    fi
+  else
+    local container_name="${snapcraft_lxd_container_name}"
+  fi
+  # check if lxd is installed, if installed assume it's configured as well
+  [ -z "$(which lxd)" ] && lxd_install
+  # make sure container is created and running
+  lxd_ensure_snapcraft_container ${ubuntu_series} ${container_name}
+  echo -e "Running snapcraft in \"${container_name}\" container"
+  ssh -q ${container_name}.lxd "cd $(pwd | sed 's|'"${HOME}"'|/home/ubuntu/host|g'); snapcraft $@"
+}
+
