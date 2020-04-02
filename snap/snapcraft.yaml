@@ -2,15 +2,14 @@ name: toolbox
 version: "0.6.1"
 summary: Swiss knife of shell tools
 description: |
- set of usefull shell tools to be used on Ubuntu/Ubuntu core
- After install run follwing commands to enable all built in tools in your shell
- $ snap connect toolbox:home
- $ toolbox.set-path >> ~/.bashrc
- If global env should be updated, you will be asked to run
- $ sudo cp ${PWD}/environment /writable/system-data/etc/environment
- Logout and log back in
- Now all included toolls should be in your path, and running unconfined :)
- This is one time setup, when new tools are added they are automatically inluded in the path
+Set of usefull shell tools to be used on Ubuntu/Ubuntu core After install run follwing commands to enable all built in tools in your shell.
+$ snap connect toolbox:home
+$ toolbox.set-path &gt;&gt; ~/.bashrc
+If global env should be updated, you will be asked to run:
+$ sudo cp ${PWD}/environment /writable/system-data/etc/environment
+Logout and log back in.
+Now all included tools should be in your path, and running unconfined :)
+This is one time setup, when new tools are added they are automatically included in the path.
 
 confinement: strict
 grade: stable
