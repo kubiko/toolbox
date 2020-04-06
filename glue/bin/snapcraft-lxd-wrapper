@@ -112,7 +112,7 @@ lxd_ensure_snapcraft_container () {
   fi
 
   # container does not exist, create it
-  lxc init ubuntu:${ubuntu_series} ${container_name}
+  lxc init ubuntu-daily:${ubuntu_series} ${container_name}
   echo "Configuring new container..."
   lxc config set ${container_name} raw.idmap 'both 1000 1000'
   lxc config device add ${container_name} home disk source=$HOME path=/home/ubuntu/host
