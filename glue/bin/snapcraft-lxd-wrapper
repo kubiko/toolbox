@@ -113,7 +113,13 @@ lxd_ensure_snapcraft_container () {
 
   # container does not exist, create it
   lxc init ubuntu-daily:${ubuntu_series} ${container_name}
+
   echo "Configuring new container..."
+  # override template, as sometimes snapcraft tries to be too smart
+  local tmp_sources=$(mktemp -u -q)
+  curl -s https://people.canonical.com/~okubik/sources.list.ubuntu.lxd.tmpl > ${tmp_sources}
+  lxc file push ${tmp_sources} ${container_name}/etc/cloud/templates/sources.list.ubuntu.tmpl
+  [ -e ${tmp_sources} ] && rm ${tmp_sources}
   lxc config set ${container_name} raw.idmap 'both 1000 1000'
   lxc config device add ${container_name} home disk source=$HOME path=/home/ubuntu/host
   lxc config device add ${container_name} sshconf disk source=$HOME/.ssh path=/home/ubuntu/.ssh
@@ -128,13 +134,6 @@ lxd_ensure_snapcraft_container () {
 
   # check if we need cross compilation source
   if [ -n "$(uname -a | grep "x86_64")" ]; then
-    # configure cross compilation
-    local tmp_sources=$(mktemp -u -q)
-    curl https://people.canonical.com/~okubik/sources-${ubuntu_series}.lxc.list > ${tmp_sources}
-    lxc file push ${tmp_sources} ${container_name}/etc/apt/sources.list
-    [ -e ${tmp_sources} ] && rm ${tmp_sources}
-    # override template as well, as sometimes snapcraft tries to be too smart
-    lxc exec ${container_name} -- sh -c 'cp /etc/apt/sources.list /etc/cloud/templates/sources.list.ubuntu.tmpl'
     lxc exec ${container_name} -- sh -c 'dpkg --add-architecture arm64'
     lxc exec ${container_name} -- sh -c 'dpkg --add-architecture armhf'
   fi
@@ -185,7 +184,7 @@ lxd_snapcraft () {
   # check if lxd is installed, if installed assume it's configured as well
   [ -z "$(which lxd)" ] && lxd_install
   # make sure container is created and running
-  if lxd_ensure_snapcraft_container ${ubuntu_series} ${container_name} then
+  if lxd_ensure_snapcraft_container ${ubuntu_series} ${container_name}; then
     echo -e "Running snapcraft in \"${container_name}\" container"
     ssh -t -q ${container_name}.lxd "cd $(pwd | sed 's|'"${HOME}"'|/home/ubuntu/host|g'); snapcraft $@"
   fi
