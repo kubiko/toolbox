@@ -91,14 +91,14 @@ lxd_ensure_snapcraft_container () {
     *)
       echo "Unknown Ubuntu version(series)"
       print_help_lxd_ensure_snapcraft_container
-      exit
+      return 1
       ;;
   esac
 
   if [ -z "${2}" ]; then
     echo "Missing container name"
     print_help_lxd_ensure_snapcraft_container
-    exit 0
+    return 1
   fi
   local container_name="${2}"
 
@@ -108,7 +108,7 @@ lxd_ensure_snapcraft_container () {
     if [ "Running" != "${container_status}" ]; then
       lxc start ${container_name}
     fi
-    return
+    return 0
   fi
 
   # container does not exist, create it
@@ -185,8 +185,9 @@ lxd_snapcraft () {
   # check if lxd is installed, if installed assume it's configured as well
   [ -z "$(which lxd)" ] && lxd_install
   # make sure container is created and running
-  lxd_ensure_snapcraft_container ${ubuntu_series} ${container_name}
-  echo -e "Running snapcraft in \"${container_name}\" container"
-  ssh -t -q ${container_name}.lxd "cd $(pwd | sed 's|'"${HOME}"'|/home/ubuntu/host|g'); snapcraft $@"
+  if lxd_ensure_snapcraft_container ${ubuntu_series} ${container_name} then
+    echo -e "Running snapcraft in \"${container_name}\" container"
+    ssh -t -q ${container_name}.lxd "cd $(pwd | sed 's|'"${HOME}"'|/home/ubuntu/host|g'); snapcraft $@"
+  fi
 }
 
