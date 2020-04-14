@@ -27,9 +27,9 @@ ensure_ssh_setup () {
     cat ${PUBLIC_KEY} >> ${HOME}/.ssh/authorized_keys
   fi
 
-  if [ ! -f ${SSH_CONFIG} ] || [ -z "$(grep 'Host *.lxd' ${SSH_CONFIG})" ]; then
+  if [ ! -f ${SSH_CONFIG} ] || [ -z "$(grep -Pzo  'Host \*.lxd\n  User ubuntu\n  ProxyCommand lxd-ssh %h\n  StrictHostKeyChecking no\n  IdentityFile ' ${SSH_CONFIG} | tr -d  '\0')" ]; then
     echo -e \
-      "Host *.lxd\n  User ubuntu\n  ProxyCommand lxd-ssh %h\n  StrictHostKeyChecking no\n  IdentityFile ${IDENTITY_FILE}" \
+      "\nHost *.lxd\n  User ubuntu\n  ProxyCommand lxd-ssh %h\n  StrictHostKeyChecking no\n  IdentityFile ${IDENTITY_FILE}\n" \
       >> ${SSH_CONFIG}
     chmod 600 ${SSH_CONFIG}
   fi
