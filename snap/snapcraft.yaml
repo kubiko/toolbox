@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.6.7"
+version: "0.6.8"
 summary: Swiss knife of shell tools
 description: |
   Set of usefull shell tools to be used on Ubuntu/Ubuntu core After install run follwing commands to enable all built in tools in your shell.
@@ -355,9 +355,9 @@ parts:
         plugin: autotools
         stage-packages: [libusb-1.0-0]
         configflags:
-            - --prefix=/usr
-            - --libdir=/usr/lib
-            - --localstatedir=/var/snap/toolbox/common/
+            - --prefix=/snap/${SNAPCRAFT_PROJECT_NAME}/current/usr
+            - --libdir=/snap/${SNAPCRAFT_PROJECT_NAME}/current/usr/lib
+            - --localstatedir=/var/snap/${SNAPCRAFT_PROJECT_NAME}/common/
         override-pull: |
             snapcraftctl pull
             quilt push -afq --leave-rejects --quiltrc=${SNAPCRAFT_PROJECT_DIR}/quiltrc
@@ -365,7 +365,10 @@ parts:
            if [ -z $(uname -a | grep "ppc64el") ]; then
                snapcraftctl build
            fi
-
+        organize:
+            snap/${SNAPCRAFT_PROJECT_NAME}/current/usr/: usr/
+        stage:
+            - -snap
     resty:
         plugin: nil
         source: https://github.com/micha/resty.git
