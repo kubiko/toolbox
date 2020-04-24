@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.6.6"
+version: "0.6.7"
 summary: Swiss knife of shell tools
 description: |
   Set of usefull shell tools to be used on Ubuntu/Ubuntu core After install run follwing commands to enable all built in tools in your shell.

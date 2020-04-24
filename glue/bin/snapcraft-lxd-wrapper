@@ -127,7 +127,7 @@ lxd_ensure_snapcraft_container () {
   fi
   local container_name="${2}"
 
-  if ! lxd_ensure_container_runnig ${container_name}; then
+  if lxd_ensure_container_runnig ${container_name}; then
     return "$?"
   fi
 
