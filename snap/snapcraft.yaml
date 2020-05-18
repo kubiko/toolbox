@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.6.8"
+version: "0.6.9"
 summary: Swiss knife of shell tools
 description: |
   Set of usefull shell tools to be used on Ubuntu/Ubuntu core After install run follwing commands to enable all built in tools in your shell.
@@ -300,6 +300,7 @@ parts:
           - gdisk
           - smartmontools
           - file
+          - abootimg
           - try:
               - libonig4
           - on ppc64el:
