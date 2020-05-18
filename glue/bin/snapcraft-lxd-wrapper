@@ -174,7 +174,10 @@ lxd_snapcraft () {
     [ -e snapcraft.yaml ] && local SNAPCRAFT_YAML="snapcraft.yaml"
     [ -e snap/snapcraft.yaml ] && local SNAPCRAFT_YAML="snap/snapcraft.yaml"
     if [ -n "${SNAPCRAFT_YAML}" ]; then
-      case $(grep 'base:' ${SNAPCRAFT_YAML} | awk '{print $2}') in
+      # use build-base and then base as means to determine build series
+      base=$(grep 'build-base:' ${SNAPCRAFT_YAML} | awk '{print $2}')
+      [ -z "${base}" ] && base=$(grep 'base:' ${SNAPCRAFT_YAML} | awk '{print $2}')
+      case ${base} in
         core16|core)
           local container_name="snapcraft-xenial"
           local ubuntu_series="xenial"
