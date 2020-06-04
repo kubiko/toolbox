@@ -395,7 +395,7 @@ parts:
     mountinfo-tool:
         plugin: nil
         override-pull: |
-            wget https://raw.githubusercontent.com/snapcore/snapd/master/tests/lib/bin/mountinfo-tool
+            wget https://raw.githubusercontent.com/snapcore/snapd/master/tests/lib/tools/mountinfo-tool
         override-build: |
             cp mountinfo-tool ${SNAPCRAFT_PART_INSTALL}/
         organize:
