@@ -6,10 +6,10 @@ IDENTITY_FILE="${HOME}/.ssh/id_rsa-lxd"
 PUBLIC_KEY=${IDENTITY_FILE}.pub
 SSH_CONFIG="${HOME}/.ssh/config"
 
-print_help_lxd_ensure_snapcraft_container () {
-  echo -e "lxd_ensure_snapcraft_container: helper script to ensure lxc container is created and running"
-  echo -e "Provided container is used for safe snap compilation(and cross compilation)"
-  echo -e "\tusage: lxd_ensure_snapcraft_container <Ubuntu Series> <name of the container to be created>"
+print_help_lxd_ensure_container () {
+  echo -e "lxd_ensure_container: helper script to ensure lxc container is created and running"
+  echo -e "\tusage: lxd_ensure_container <Ubuntu Series> <name of the container to be created>"
+  echo -e "\n\te.g.  $ lxd_ensure_container focal my-focal"
 }
 
 print_help_lxd_snapcraft () {
@@ -48,35 +48,40 @@ ensure_ssh_setup () {
 # ensure lxd is installed
 lxd_ensure () {
   # check if lxd is installed
-  if [ -n "$(which lxd)" ]; then
-    # lxd is installed, assuming all is configured
-    return
-  else
+  if [ -z "$(which lxd)" ]; then
     # install and configure lxd
     echo "Installing lxd..."
     snap install lxd
-
-    # make sure user is in lxd group
-    if [ -e /var/lib/extrausers/group ] && [ -z "$(grep lxd:x:999:${USER} /var/lib/extrausers/group)" ]; then
-      echo "Adding current user to lxd group"
-      sudo sed -i 's|lxd:x:999:.*|lxd:x:999:'"${USER}"'|g' /var/lib/extrausers/group
-      newgrp lxd
-    fi
-
-    # make sure we have configured ssh setup
-    ensure_ssh_setup
-
-    # make sure lxd is initialised
-    local lxd_dump="$(lxd init --dump)"
-    if [ -n "$(echo "${lxd_dump}" | grep 'storage_pools: \[\]')" ]; then
-      echo "Initialising lxd..."
-      lxd init --auto --storage-backend=dir
-      echo -e "#cloud-config\nssh_authorized_keys:\n - $(cat ${PUBLIC_KEY})" | lxc profile set default user.user-data -
-      lxc profile show default
-    elif [ -n "$(echo "${lxd_dump}" | grep $(cat ${PUBLIC_KEY}))" ]; then
-      echo -e "#cloud-config\nssh_authorized_keys:\n - $(cat ${PUBLIC_KEY})" | lxc profile set default user.user-data -
-    fi
   fi
+
+  # make sure user is in lxd group
+  if [ -e /var/lib/extrausers/group ] && [ -z "$(grep lxd:x:999:${USER} /var/lib/extrausers/group)" ]; then
+    echo "Adding current user to lxd group"
+    sudo sed -i 's|lxd:x:999:.*|lxd:x:999:'"${USER}"'|g' /var/lib/extrausers/group
+    echo "Re run last command as user group is going to be reloaded and current shell replaced with new one including lxd group "
+    exec sg lxd newgrp `id -gn`
+  fi
+
+  # make sure we have configured ssh setup
+  ensure_ssh_setup
+
+  # if lxd is configured bail out here
+  if [ -e ~/.lxd-wrapper-configured ]; then
+    return 0
+  fi
+
+  # make sure lxd is initialised
+  local lxd_dump="$(lxd init --dump)"
+  if [ -n "$(echo "${lxd_dump}" | grep 'storage_pools: \[\]')" ]; then
+    echo "Initialising lxd..."
+    lxd init --auto --storage-backend=dir
+    echo -e "#cloud-config\nssh_authorized_keys:\n - $(cat ${PUBLIC_KEY})" | lxc profile set default user.user-data -
+    lxc profile show default
+  elif [ -n "$(echo "${lxd_dump}" | grep $(cat ${PUBLIC_KEY}))" ]; then
+    echo -e "#cloud-config\nssh_authorized_keys:\n - $(cat ${PUBLIC_KEY})" | lxc profile set default user.user-data -
+  fi
+  # touch file to signal lxd was fully configured
+  touch ~/.lxd-wrapper-configured
 }
 
 lxd_ensure_container_runnig () {
@@ -98,7 +103,7 @@ lxd_ensure_container_runnig () {
   fi
 }
 
-lxd_ensure_snapcraft_container () {
+lxd_ensure_container () {
   # normalise series, we only support UC16/18/20 and related LTS
   # 20.04 -> focal
   # 18.04 -> bionic
@@ -115,14 +120,14 @@ lxd_ensure_snapcraft_container () {
       ;;
     *)
       echo "Unknown Ubuntu version(series)"
-      print_help_lxd_ensure_snapcraft_container
+      print_help_lxd_ensure_container
       return 1
       ;;
   esac
 
   if [ -z "${2}" ]; then
     echo "Missing container name"
-    print_help_lxd_ensure_snapcraft_container
+    print_help_lxd_ensure_container
     return 1
   fi
   local container_name="${2}"
@@ -144,10 +149,18 @@ lxd_ensure_snapcraft_container () {
   lxc config device add ${container_name} home disk source=$HOME path=/home/ubuntu/host
   lxc config device add ${container_name} sshconf disk source=$HOME/.ssh path=/home/ubuntu/.ssh
 
-  echo "Waiting for container to start..."
   lxc start ${container_name}
-  # wait 5 more seconds before proceeding
-  sleep 5
+  local wait_text="Waiting for container to start.."
+  echo -n -e "${wait_text}\r"
+  lxc start ${container_name}
+  while [ -z "$(lxc list ${container_name} -c 4 --format csv)" ]
+  do
+      wait_text="${wait_text}."
+      echo -n -e "${wait_text}\r"
+      sleep 1
+  done
+  echo -e "${wait_text}..DONE"
+
   lxc exec ${container_name} -- sh -c 'cp -r /etc/skel/. /home/ubuntu'
   lxc exec ${container_name} -- sh -c 'echo "export SNAPCRAFT_BUILD_ENVIRONMENT=host" >> /etc/environment'
   lxc exec ${container_name} -- sed -i 's|PATH=\"\(.*\)\"|PATH=\"\1\:/snap/bin\"|g' /etc/environment
@@ -159,12 +172,21 @@ lxd_ensure_snapcraft_container () {
   fi
   lxc exec ${container_name} -- sh -c 'apt-get update'
 
-  # install snapcraft
-  ssh -q -t ${container_name}.lxd "sudo snap install snapcraft --classic"
-
   # finishing touches
   lxc exec ${container_name} -- sh -c 'chown ubuntu:ubuntu /home/ubuntu'
   lxc exec ${container_name} -- sh -c 'find /home/ubuntu/ -maxdepth 1 -type f -name ".*" -exec chown ubuntu:ubuntu {} \;'
+
+  # wait till system is seeded to install snapcraft
+  wait_text="waiting for container to finish snap seeding"
+  while [ -z "$(lxc exec ${container_name} -- sh -c 'systemctl status snapd.seeded.service | grep "Active" | grep "exited"')" ]
+  do
+      wait_text="${wait_text}."
+      echo -n -e "${wait_text}\r"
+      sleep 1
+  done
+  echo -e "${wait_text}..DONE"
+  # install snapcraft
+  lxc exec ${container_name} -- sh -c 'snap install snapcraft --classic'
 }
 
 lxd_snapcraft () {
@@ -211,7 +233,7 @@ lxd_snapcraft () {
   if [ -z "${ubuntu_series}" ]; then
     lxd_ensure_container_runnig ${container_name}
   else
-    lxd_ensure_snapcraft_container ${ubuntu_series} ${container_name}
+    lxd_ensure_container ${ubuntu_series} ${container_name}
   fi
 
   # run snapcraft command if we have container ready
@@ -222,4 +244,3 @@ lxd_snapcraft () {
     return "$?"
   fi
 }
-
