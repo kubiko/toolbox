@@ -5,9 +5,7 @@ description: |
   Set of usefull shell tools to be used on Ubuntu/Ubuntu core After install run follwing commands to enable all built in tools in your shell.
   $ snap connect toolbox:home
   $ toolbox.set-path &gt;&gt; ~/.bashrc
-  If global env should be updated, you will be asked to run:
-  $ sudo cp ${PWD}/environment /writable/system-data/etc/environment
-  Logout and log back in.
+  Logout and log back in. Or $ source ~/.bashrc
   Now all included tools should be in your path, and running unconfined :)
   This is one time setup, when new tools are added they are automatically included in the path.
 
@@ -170,14 +168,6 @@ apps:
     set-path:
         command: bin/set-path
         adapter: none
-        plugs:
-            - home
-
-    set-snap-path:
-        command: bin/set-snap-path
-        adapter: none
-        plugs:
-            - home
 
     mkimage:
         command: usr/bin/mkimage
