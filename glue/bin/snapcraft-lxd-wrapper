@@ -8,8 +8,9 @@ SSH_CONFIG="${HOME}/.ssh/config"
 
 print_help_lxd_ensure_container () {
   echo -e "lxd_ensure_container: helper script to ensure lxc container is created and running"
-  echo -e "\tusage: lxd_ensure_container <Ubuntu Series> <name of the container to be created>"
+  echo -e "\tusage: lxd_ensure_container <Ubuntu Series> <name of the container to be created> [architecture]"
   echo -e "\n\te.g.  $ lxd_ensure_container focal my-focal"
+  echo -e "\n\tarchitecture parameter is optional"
 }
 
 print_help_lxd_snapcraft () {
@@ -19,12 +20,21 @@ print_help_lxd_snapcraft () {
   echo "Ubuntu series is determined from snapcraft project in current directory"
 }
 
-ensure_ssh_setup () {
+lxd_ensure_ssh_setup () {
   echo "Checking if we have ssh key for lxd containers"
   # get ssh keys ready
   if [ ! -f ${IDENTITY_FILE} ]; then
     ssh-keygen -t rsa -C "${USER}@lxd" -N "" -f ${IDENTITY_FILE}
-    cat ${PUBLIC_KEY} >> ${HOME}/.ssh/authorized_keys
+  fi
+  # ensure public key is in authorised_keys
+  if [ -z "$(grep "$(cat ${PUBLIC_KEY})" ${HOME}/.ssh/authorized_keys)" ]; then
+    # check is thre is new line in authorised keys so we don't mangle last key
+    if [ -z "$(tail -c 1 ${HOME}/.ssh/authorized_keys)" ]; then
+      cat ${PUBLIC_KEY} >> ${HOME}/.ssh/authorized_keys
+    else
+      echo >> ${HOME}/.ssh/authorized_keys
+      cat ${PUBLIC_KEY} >> ${HOME}/.ssh/authorized_keys
+    fi
   fi
 
   if [ ! -f ${SSH_CONFIG} ] || [ -z "$(grep -Pzo  'Host \*.lxd\n  User ubuntu\n  ProxyCommand lxd-ssh %h\n  StrictHostKeyChecking no\n  IdentityFile ' ${SSH_CONFIG} | tr -d  '\0')" ]; then
@@ -63,7 +73,7 @@ lxd_ensure () {
   fi
 
   # make sure we have configured ssh setup
-  ensure_ssh_setup
+  lxd_ensure_ssh_setup
 
   # if lxd is configured bail out here
   if [ -e ~/.lxd-wrapper-configured ]; then
@@ -134,6 +144,11 @@ lxd_ensure_container () {
 
   if lxd_ensure_container_runnig ${container_name}; then
     return "$?"
+  fi
+
+  if [ -n "${3}" ]; then
+    # create container of defined architecture
+    ubuntu_series="${ubuntu_series}/${3}"
   fi
 
   # container does not exist, create it
