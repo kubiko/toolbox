@@ -301,6 +301,7 @@ parts:
           - smartmontools
           - file
           - abootimg
+          - libmagic1
           - try:
               - libonig4
           - on ppc64el:
