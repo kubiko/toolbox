@@ -60,6 +60,7 @@ lxd_ensure () {
   # check if lxd is installed
   if [ -z "$(which lxd)" ]; then
     # install and configure lxd
+    [ -e ~/.lxd-wrapper-configured ] && rm ~/.lxd-wrapper-configured
     echo "Installing lxd..."
     snap install lxd
   fi
@@ -168,6 +169,7 @@ lxd_ensure_container () {
   local wait_text="Waiting for container to start.."
   echo -n -e "${wait_text}\r"
   lxc start ${container_name}
+  sleep 1
   while [ -z "$(lxc list ${container_name} -c 4 --format csv)" ]
   do
       wait_text="${wait_text}."

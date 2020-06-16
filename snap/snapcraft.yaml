@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.6.15"
+version: "0.6.16"
 summary: Swiss knife of shell tools
 description: |
   Set of usefull shell tools to be used on Ubuntu/Ubuntu core After install run follwing commands to enable all built in tools in your shell.
@@ -324,7 +324,7 @@ parts:
                 ${SNAPCRAFT_PART_INSTALL}/etc/profile.d/bash_completion.sh
             # source lxd bash completion if present
             echo "[ -f /snap/lxd/current/etc/bash_completion.d/snap.lxd.lxc ] && . /snap/lxd/current/etc/bash_completion.d/snap.lxd.lxc" \
-                 >> ${SNAPCRAFT_PART_INSTALL}/etc/profile.d/bash_completion.sh 
+                 >> ${SNAPCRAFT_PART_INSTALL}/etc/profile.d/bash_completion.sh
 
     mc:
         source: https://github.com/MidnightCommander/mc.git
