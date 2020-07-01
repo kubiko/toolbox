@@ -202,7 +202,11 @@ lxd_ensure_container () {
       sleep 1
   done
   echo -e "${wait_text}..DONE"
-  # install snapcraft
+  # disable automatic snapshots, not really needed for disposable container
+  lxc exec ${container_name} -- sh -c 'snap set system snapshots.automatic.retention=no'
+  # for some reason container has preinstalled lxd snap, remove it
+  lxc exec ${container_name} -- sh -c 'snap remove lxd'
+  # install snapcraft snap from stable
   lxc exec ${container_name} -- sh -c 'snap install snapcraft --classic'
 }
 
