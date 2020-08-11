@@ -57,12 +57,19 @@ lxd_ensure_ssh_setup () {
 
 # ensure lxd is installed
 lxd_ensure () {
-  # check if lxd is installed
+  # check if lxd is installed. And make sure we are not using lxd from deb
   if [ -z "$(which lxd)" ]; then
     # install and configure lxd
     [ -e ~/.lxd-wrapper-configured ] && rm ~/.lxd-wrapper-configured
     echo "Installing lxd..."
     snap install lxd
+  else
+    if [ -f /usr/bin/lxc ] || [ -f /usr/bin/lxd ];
+      echo "There is deb version of lxd installed. Please remove it by runnig:"
+      echo "$ sudo apt-get remove lxd"
+      echo "$ sudo apt-get remove lxd-client"
+      exit 0
+    fi
   fi
 
   # make sure user is in lxd group
@@ -88,7 +95,7 @@ lxd_ensure () {
     lxd init --auto --storage-backend=dir
     echo -e "#cloud-config\nssh_authorized_keys:\n - $(cat ${PUBLIC_KEY})" | lxc profile set default user.user-data -
     lxc profile show default
-  elif [ -n "$(echo "${lxd_dump}" | grep $(cat ${PUBLIC_KEY}))" ]; then
+  elif [ -z "$(echo "${lxd_dump}" | grep "$(cat ${PUBLIC_KEY})")" ]; then
     echo -e "#cloud-config\nssh_authorized_keys:\n - $(cat ${PUBLIC_KEY})" | lxc profile set default user.user-data -
   fi
   # touch file to signal lxd was fully configured
