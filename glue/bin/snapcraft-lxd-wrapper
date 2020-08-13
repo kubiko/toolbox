@@ -64,7 +64,7 @@ lxd_ensure () {
     echo "Installing lxd..."
     snap install lxd
   else
-    if [ -f /usr/bin/lxc ] || [ -f /usr/bin/lxd ];
+    if [ -f /usr/bin/lxc ] || [ -f /usr/bin/lxd ]; then
       echo "There is deb version of lxd installed. Please remove it by runnig:"
       echo "$ sudo apt-get remove lxd"
       echo "$ sudo apt-get remove lxd-client"
