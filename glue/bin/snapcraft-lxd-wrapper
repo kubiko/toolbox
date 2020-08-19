@@ -51,6 +51,13 @@ lxd_ensure_ssh_setup () {
       export PATH=$PATH:${HOME}/bin
     fi
     curl -s https://raw.githubusercontent.com/kubiko/toolbox/master/glue/bin/lxd-ssh > ~/bin/lxd-ssh
+    if [ ! -s ~/bin/lxd-ssh ]; then
+      rm ~/bin/lxd-ssh
+      echo "curl does not work, is there proxy configured?"
+      echo "Does following line work:"
+      echo -e "\t$ curl -s https://raw.githubusercontent.com/kubiko/toolbox/master/glue/bin/lxd-ssh"
+      exit 0
+    fi
     chmod +x ~/bin/lxd-ssh
   fi
 }
@@ -73,11 +80,18 @@ lxd_ensure () {
   fi
 
   # make sure user is in lxd group
-  if [ -e /var/lib/extrausers/group ] && [ -z "$(grep lxd:x:999:${USER} /var/lib/extrausers/group)" ]; then
-    echo "Adding current user to lxd group"
-    sudo sed -i 's|lxd:x:999:.*|lxd:x:999:'"${USER}"'|g' /var/lib/extrausers/group
-    echo "Re run last command as user group is going to be reloaded and current shell replaced with new one including lxd group "
-    exec sg lxd newgrp `id -gn`
+  if [ -z "$(groups | grep lxd )" ]; then
+    if [ -e /var/lib/extrausers/group ] && [ -z "$(grep lxd:x:999:${USER} /var/lib/extrausers/group)" ]; then
+      echo "Adding current user to lxd group"
+      sudo sed -i 's|lxd:x:999:.*|lxd:x:999:'"${USER}"'|g' /var/lib/extrausers/group
+      echo "Re run last command as user group is going to be reloaded and current shell replaced with new one including lxd group "
+      exec sg lxd newgrp `id -gn`
+    else
+      echo "Adding ${USER} to lxd group, sudo needed"
+      sudo usermod -a -G lxd ${USER}
+      echo "Re run last command as user group is going to be reloaded and current shell replaced with new one including lxd group "
+      newgrp lxd
+    fi
   fi
 
   # make sure we have configured ssh setup
