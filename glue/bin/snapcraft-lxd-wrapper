@@ -182,7 +182,7 @@ lxd_ensure_container () {
   curl -s https://people.canonical.com/~okubik/sources.list.ubuntu.lxd.tmpl > ${tmp_sources}
   lxc file push ${tmp_sources} ${container_name}/etc/cloud/templates/sources.list.ubuntu.tmpl
   [ -e ${tmp_sources} ] && rm ${tmp_sources}
-  lxc config set ${container_name} raw.idmap 'both 1000 1000'
+  lxc config set ${container_name} raw.idmap 'both $(id -u) 1000'
   lxc config device add ${container_name} home disk source=$HOME path=/home/ubuntu/host
   lxc config device add ${container_name} sshconf disk source=$HOME/.ssh path=/home/ubuntu/.ssh
 
@@ -202,6 +202,41 @@ lxd_ensure_container () {
   lxc exec ${container_name} -- sh -c 'cp -r /etc/skel/. /home/ubuntu'
   lxc exec ${container_name} -- sh -c 'echo "export SNAPCRAFT_BUILD_ENVIRONMENT=host" >> /etc/environment'
   lxc exec ${container_name} -- sed -i 's|PATH=\"\(.*\)\"|PATH=\"\1\:/snap/bin\"|g' /etc/environment
+
+  # if host has proxy, configure it inside container as well
+  if [ -n "${http_proxy}" ]; then
+    lxc exec ${container_name} -- sh -c "echo 'export http_proxy=${http_proxy}' >> /etc/environment"
+    lxc exec ${container_name} -- sh -c "snap set system proxy.http=$http_proxy"
+    if [ -n "${https_proxy}" ];then
+      lxc exec ${container_name} -- sh -c "echo 'export https_proxy=${https_proxy}' >> /etc/environment"
+      lxc exec ${container_name} -- sh -c "snap set system proxy.https=${http_proxy}"
+    else
+      lxc exec ${container_name} -- sh -c "echo 'export https_proxy=${http_proxy}' >> /etc/environment"
+      lxc exec ${container_name} -- sh -c "snap set system proxy.https=${https_proxy}"
+    fi
+    if [ -n "${ftp_proxy}" ];then
+      lxc exec ${container_name} -- sh -c "echo 'export ftp_proxy=${ftp_proxy}' >> /etc/environment"
+    else
+      lxc exec ${container_name} -- sh -c "echo 'export ftp_proxy=${http_proxy}' >> /etc/environment"
+    fi
+    lxc exec ${container_name} -- sh -c "echo 'Acquire::http::Proxy \"$http_proxy\";' > /etc/apt/apt.conf.d/proxy"
+    # if proxy points to local host, bind host port into the container
+    if [[ $http_proxy =~ "localhost:" ]]; then
+      case ${http_proxy} in
+        localhost:*)
+          local proxy_port="$(echo ${http_proxy} | cut -c 11-)"
+          ;;
+        http://localhost:*)
+          local proxy_port="$(echo ${http_proxy} | cut -c 18-)"
+          ;;
+      esac
+      lxc config device add ${container_name} hostproxy proxy \
+             listen=tcp:127.0.0.1:${proxy_port} \
+             connect=tcp:127.0.0.1:${proxy_port} \
+             bind=guest
+    fi
+  fi
+  # done configuring proxy
 
   # check if we need cross compilation source
   if [ -n "$(uname -a | grep "x86_64")" ]; then
