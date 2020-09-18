@@ -335,6 +335,9 @@ parts:
             # source lxd bash completion if present
             echo "[ -f /snap/lxd/current/etc/bash_completion.d/snap.lxd.lxc ] && . /snap/lxd/current/etc/bash_completion.d/snap.lxd.lxc" \
                  >> ${SNAPCRAFT_PART_INSTALL}/etc/profile.d/bash_completion.sh
+            # source git-ondra bash completion if present
+            echo "[ -f /snap/git-ondra/current/git-completion.bash ] && . /snap/git-ondra/current/git-completion.bash" \
+                 >> ${SNAPCRAFT_PART_INSTALL}/etc/profile.d/bash_completion.sh
 
     mc:
         source: https://github.com/MidnightCommander/mc.git
