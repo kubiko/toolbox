@@ -9,8 +9,20 @@ SSH_CONFIG="${HOME}/.ssh/config"
 print_help_lxd_ensure_container () {
   echo -e "lxd_ensure_container: helper script to ensure lxc container is created and running"
   echo -e "\tusage: lxd_ensure_container <Ubuntu Series> <name of the container to be created> [architecture]"
+  echo -e "\t\t: Ubuntu Series: version of Ubuntu, e.g. bionic (18.04), focal (20.04.), etc"
+  echo -e "\t\t: Container name to create"
+  echo -e "\t\t: architecture: optional and only when applicable, e.g. armhf on arm64 host"
   echo -e "\n\te.g.  $ lxd_ensure_container focal my-focal"
-  echo -e "\n\tarchitecture parameter is optional"
+  echo -e "\nCreated container will be automatically configured with following"
+  echo -e "\t\t- enable multiarch on amd64 host"
+  echo -e "\t\t- install ccache and share with host ccache"
+  echo -e "\t\t- share host .ssh with container"
+  echo -e "\t\t- share host home under 'host' directory in the container"
+  echo -e "\t\t- if proxy config is detected on host, it's shared with container (including sharing of host authenticator)"
+  echo -e "\t\t- install snapcraft inside the container"
+  echo -e "\t\t- if ther is git snap installed, share snap's gitconfig with the container"
+  echo -e "\t\t- cleanup the container"
+  echo -e "\t\t- and more...."
 }
 
 print_help_lxd_snapcraft () {
@@ -190,6 +202,14 @@ lxd_ensure_container () {
     lxc config device add ${container_name} xorg-socket disk source=/tmp/.X11-unix/X0 path=/tmp/.X11-unix/X0
   fi
 
+  # share ccache
+  lxc config device add ${container_name} ccache disk source=$HOME/.ccache path=/home/ubuntu/.ccache
+
+  # if there is git snap install, share gitconfig with container
+  if [ -e ${HOME}/snap/git-ondra/current/.gitconfig ]; then
+    lxc config device add ${container_name} gitconfig source=${HOME}/snap/git-ondra/current/.gitconfig path=/home/ubuntu/.gitconfig
+  fi
+
   lxc start ${container_name}
   local wait_text="Waiting for container to start.."
   echo -n -e "${wait_text}\r"
@@ -253,6 +273,9 @@ lxd_ensure_container () {
   lxc exec ${container_name} -- sh -c 'apt-get remove -y lxd-client'
   lxc exec ${container_name} -- sh -c 'apt-get -y autoremove'
   lxc exec ${container_name} -- sh -c 'apt-get purge'
+
+  # install ccache
+  lxc exec ${container_name} -- sh -c 'apt-get -y install ccache'
 
   # finishing touches
   lxc exec ${container_name} -- sh -c 'chown ubuntu:ubuntu /home/ubuntu'
