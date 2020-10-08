@@ -40,11 +40,9 @@ lxd_ensure_ssh_setup () {
   fi
   # ensure public key is in authorised_keys
   # don't assume there is always ${HOME}/.ssh/authorized_keys
-  if [ ! -e ${HOME}/.ssh/authorized_keys ]
-     || [ -z "$(grep "$(cat ${PUBLIC_KEY})" ${HOME}/.ssh/authorized_keys)" ]; then
+  if [ ! -e ${HOME}/.ssh/authorized_keys ] || [ -z "$(grep "$(cat ${PUBLIC_KEY})" ${HOME}/.ssh/authorized_keys)" ]; then
     # check is thre is new line in authorised keys so we don't mangle last key
-    if [ ! -e ${HOME}/.ssh/authorized_keys ]
-       || [ -z "$(tail -c 1 ${HOME}/.ssh/authorized_keys)" ]; then
+    if [ ! -e ${HOME}/.ssh/authorized_keys ] || [ -z "$(tail -c 1 ${HOME}/.ssh/authorized_keys)" ]; then
       cat ${PUBLIC_KEY} >> ${HOME}/.ssh/authorized_keys
     else
       echo >> ${HOME}/.ssh/authorized_keys
