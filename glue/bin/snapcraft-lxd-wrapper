@@ -260,6 +260,10 @@ lxd_ensure_container () {
              connect=tcp:127.0.0.1:${proxy_port} \
              bind=guest
     fi
+    if [ -f ${HOME}/.netrc ]; then
+      echo "Sharing host netrc auth file with container"
+      lxc config device add ${container_name} netrc disk source=$HOME/.netrc path=/home/ubuntu/.netrc
+    fi
   fi
   # done configuring proxy
 
