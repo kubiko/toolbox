@@ -207,8 +207,8 @@ lxd_ensure_container () {
   lxc config device add ${container_name} ccache disk source=$HOME/.ccache path=/home/ubuntu/.ccache
 
   # if there is git snap install, share gitconfig with container
-  if [ -e ${HOME}/snap/git-ondra/current/.gitconfig ]; then
-    lxc config device add ${container_name} gitconfig source=${HOME}/snap/git-ondra/current/.gitconfig path=/home/ubuntu/.gitconfig
+  if [ -e ${HOME}/snap/git-ondra/common/.gitconfig ]; then
+    lxc config device add ${container_name} gitconfig disk source=${HOME}/snap/git-ondra/common/.gitconfig path=/home/ubuntu/.gitconfig
   fi
 
   lxc start ${container_name}
