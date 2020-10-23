@@ -15,7 +15,7 @@ print_help_lxd_ensure_container () {
   echo -e "\n\te.g.  $ lxd_ensure_container focal my-focal"
   echo -e "\nCreated container will be automatically configured with following"
   echo -e "\t\t- enable multiarch on amd64 host"
-  echo -e "\t\t- install ccache and share with host ccache"
+  echo -e "\t\t- install ccache"
   echo -e "\t\t- share host .ssh with container"
   echo -e "\t\t- share host home under 'host' directory in the container"
   echo -e "\t\t- if proxy config is detected on host, it's shared with container (including sharing of host authenticator)"
@@ -202,9 +202,6 @@ lxd_ensure_container () {
   if [ -e /tmp/.X11-unix/X0 ]; then
     lxc config device add ${container_name} xorg-socket disk source=/tmp/.X11-unix/X0 path=/tmp/.X11-unix/X0
   fi
-
-  # share ccache
-  lxc config device add ${container_name} ccache disk source=$HOME/.ccache path=/home/ubuntu/.ccache
 
   # if there is git snap install, share gitconfig with container
   if [ -e ${HOME}/snap/git-ondra/common/.gitconfig ]; then
