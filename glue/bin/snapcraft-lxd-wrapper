@@ -9,7 +9,7 @@ SSH_CONFIG="${HOME}/.ssh/config"
 print_help_lxd_ensure_container () {
   echo -e "lxd_ensure_container: helper script to ensure lxc container is created and running"
   echo -e "\tusage: lxd_ensure_container <Ubuntu Series> <name of the container to be created> [architecture]"
-  echo -e "\t\t: Ubuntu Series: version of Ubuntu, e.g. bionic (18.04), focal (20.04.), etc"
+  echo -e "\t\t: Ubuntu Series: version of Ubuntu, e.g. xenial (16.04), bionic (18.04), focal (20.04.), etc"
   echo -e "\t\t: Container name to create"
   echo -e "\t\t: architecture: optional and only when applicable, e.g. armhf on arm64 host"
   echo -e "\n\te.g.  $ lxd_ensure_container focal my-focal"
@@ -164,9 +164,8 @@ lxd_ensure_container () {
       local ubuntu_series="xenial"
       ;;
     *)
-      echo "Unknown Ubuntu version(series)"
-      print_help_lxd_ensure_container
-      return 1
+      echo "Could not check Ubuntu series, still giving it try)"
+      local ubuntu_series="${1}"
       ;;
   esac
 
