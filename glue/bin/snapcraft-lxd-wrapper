@@ -195,6 +195,8 @@ lxd_ensure_container () {
   lxc file push ${tmp_sources} ${container_name}/etc/cloud/templates/sources.list.ubuntu.tmpl
   [ -e ${tmp_sources} ] && rm ${tmp_sources}
   echo -en "uid $(id -u) 1000\ngid $(id -g) 1000" | lxc config set ${container_name} raw.idmap -
+  echo -e "Consider updating security config is debootstrap support is expected"
+  echo -e "\t$ lxc config set ${container_name} security.syscalls.intercept.mknod=true"
   lxc config device add ${container_name} home disk source=$HOME path=/home/ubuntu/host
   lxc config device add ${container_name} sshconf disk source=$HOME/.ssh path=/home/ubuntu/.ssh
   # if there is X server socket on host, make it avaiable in the container for GUI apps
