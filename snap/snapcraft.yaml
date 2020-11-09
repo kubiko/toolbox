@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.6.33"
+version: "0.6.34"
 summary: Swiss knife of shell tools
 description: |
   Set of usefull shell tools to be used on Ubuntu/Ubuntu core After install run follwing commands to enable all built in tools in your shell.
@@ -299,6 +299,7 @@ parts:
           - smartmontools
           - file
           - abootimg
+          - mkbootimg
           - libmagic1
           - netdiscover
           - bsdmainutils
