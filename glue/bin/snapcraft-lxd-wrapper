@@ -332,6 +332,12 @@ lxd_snapcraft () {
           local ubuntu_series="xenial"
           ;;
       esac
+      # force kernel builds to run on focal, hopefully we use new custom plugin
+      if [ "kernel" = "$(sed -n 's/^type:.*kernel/kernel/p' ${SNAPCRAFT_YAML})" ]; then
+        echo "Building kernel, defaulting to focal"
+        local container_name="snapcraft-focal"
+        local ubuntu_series="focal"
+      fi
     else
       echo -e "Not in snapcraft project directory, or container name defined\n"
       print_help_lxd_snapcraft
