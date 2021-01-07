@@ -75,12 +75,6 @@ apps:
             - home
             - removable-media
 
-    clean-journalctl:
-        command: journalctl --vacuum-time=1seconds
-        adapter: full
-        plugs:
-            - log-observe
-
     strace:
         command: usr/bin/strace
         adapter: none
