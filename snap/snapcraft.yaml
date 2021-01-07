@@ -281,27 +281,29 @@ parts:
               - sysbench
           - on ppc64el:
               - usbutils
-        filesets:
-          fat:
-            - -usr/lib/gcc
-            - -usr/share/vim
-            - -usr/share/locale
-            - -usr/share/doc
-            - -usr/share/man/
-            - -usr/bin/perl*
-            - -usr/lib/*/perl*
-            - -usr/lib/*/libperl*
-            - -usr/share/perl*
-            - -usr/bin/py*
-            - -usr/lib/python*
-            - -usr/lib/*/libpython*
-            - -usr/share/python*
-            - usr/lib/python3/dist-packages/ssh_import_id*
-
         stage:
-            - $fat
-        prime:
-            - $fat
+          - -bin/bash
+          - -usr/lib/gcc
+          - -usr/share/vim
+          - -usr/share/locale
+          - -usr/share/doc
+          - -usr/share/man/
+          - -usr/bin/perl*
+          - -usr/lib/*/perl*
+          - -usr/lib/*/libperl*
+          - -usr/share/perl*
+          - -usr/bin/py*
+          - -usr/lib/*/libpython*
+          - -usr/lib/python3/dist-packages/R*
+          - -usr/lib/python3/dist-packages/c*
+          - -usr/lib/python3/dist-packages/h*
+          - -usr/lib/python3/dist-packages/idna*
+          - -usr/lib/python3/dist-packages/pygments
+          - -usr/lib/python3/dist-packages/r*
+          - -usr/lib/python3/dist-packages/six*
+          - -usr/lib/python3/dist-packages/u*
+          - -usr/lib/python3.6
+          - -usr/share/python*
         override-build: |
             snapcraftctl build
             echo "Checking if usr/bin/peekfd exists"
