@@ -177,21 +177,6 @@ apps:
         plugs:
             - home
 
-    ssh-import-id:
-        command: usr/bin/ssh-import-id
-        plugs:
-            - ssh-keys
-
-    ssh-import-id-gh:
-        command: usr/bin/ssh-import-id-gh
-        plugs:
-            - ssh-keys
-
-    ssh-import-id-lp:
-        command: usr/bin/ssh-import-id-lp
-        plugs:
-            - ssh-keys
-
     stress-ng:
         command: usr/bin/stress-ng
         adapter: none
@@ -311,6 +296,8 @@ parts:
             - -usr/lib/python*
             - -usr/lib/*/libpython*
             - -usr/share/python*
+            - usr/lib/python3/dist-packages/ssh_import_id*
+
         stage:
             - $fat
         prime:
@@ -436,7 +423,11 @@ build-packages:
     - libglib2.0-dev
     - libslang2-dev
     - gettext
+    - libtool
+    - g++
     - protobuf-compiler
     - libprotobuf-dev
+    - libboost-dev
     - libncurses5-dev
+    - zlib1g-dev
     - libssl-dev
