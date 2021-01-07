@@ -313,11 +313,17 @@ parts:
           fat:
             - -usr/lib/gcc
             - -usr/share/vim
-            - -usr/lib/*/perl
             - -usr/share/locale
             - -usr/share/doc
-            - -usr/share/perl
             - -usr/share/man/
+            - -usr/bin/perl*
+            - -usr/lib/*/perl*
+            - -usr/lib/*/libperl*
+            - -usr/share/perl*
+            - -usr/bin/py*
+            - -usr/lib/python*
+            - -usr/lib/*/libpython*
+            - -usr/share/python*
         stage:
             - $fat
         prime:
