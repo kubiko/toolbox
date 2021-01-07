@@ -198,13 +198,6 @@ apps:
         plugs:
             - ssh-keys
 
-    sysbench:
-        command: usr/bin/sysbench
-        adapter: none
-        plugs:
-            - process-control
-            - system-observe
-
     stress-ng:
         command: usr/bin/stress-ng
         adapter: none
@@ -290,7 +283,6 @@ parts:
           - xz-utils
           - libslang2
           - ssh-import-id
-          - sysbench
           - stress-ng
           - cpu-checker
           - tmux
@@ -307,6 +299,7 @@ parts:
           - initramfs-tools-core
           - try:
               - libonig4
+              - sysbench
           - on ppc64el:
               - usbutils
         filesets:
