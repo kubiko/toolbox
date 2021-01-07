@@ -195,10 +195,15 @@ lxd_ensure_container () {
   lxc file push ${tmp_sources} ${container_name}/etc/cloud/templates/sources.list.ubuntu.tmpl
   [ -e ${tmp_sources} ] && rm ${tmp_sources}
   echo -en "uid $(id -u) 1000\ngid $(id -g) 1000" | lxc config set ${container_name} raw.idmap -
-  echo -e "Enabling debootstrap support"
-  lxc config set ${container_name} security.syscalls.intercept.mknod=true
-  lxc config device add ${container_name} home disk source=$HOME path=/home/ubuntu/host
-  lxc config device add ${container_name} sshconf disk source=$HOME/.ssh path=/home/ubuntu/.ssh
+  # check if kernel version is 5.x, enough to enable mknod interception, to support debootstrap
+  # we cannot enable it for all the kernels, container would refuse to boot
+  if [ "$(uname -a | awk '{print $3}' | awk -F . '{print $1}')" -ge 5 ]; then
+    echo -e "Enabling debootstrap support"
+    lxc config set ${container_name} security.syscalls.intercept.mknod=true
+    lxc config set ${container_name} security.syscalls.intercept.setxattr=true
+    lxc config device add ${container_name} home disk source=$HOME path=/home/ubuntu/host
+    lxc config device add ${container_name} sshconf disk source=$HOME/.ssh path=/home/ubuntu/.ssh
+  fi
   # if there is X server socket on host, make it avaiable in the container for GUI apps
   if [ -e /tmp/.X11-unix/X0 ]; then
     lxc config device add ${container_name} xorg-socket disk source=/tmp/.X11-unix/X0 path=/tmp/.X11-unix/X0
