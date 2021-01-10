@@ -24,5 +24,7 @@ echo "source ${SNAP_PATH}/bin/snapcraft-lxd-wrapper" >&2
 echo "source ${SNAP_PATH}/bin/snapcraft-lxd-wrapper"
 echo "alias vim='vim.basic'" >&2
 echo "alias vim='vim.basic'"
+echo "export PYTHONPATH=\"\${SNAP_PATH}/usr/lib/python3/dist-packages\"" >&2
+echo "export PYTHONPATH=\"\${SNAP_PATH}/usr/lib/python3/dist-packages\""
 echo "# end of modifications done by toolbox snap" >&2
 echo "# end of modifications done by toolbox snap"
