@@ -323,6 +323,10 @@ parts:
             # source git-ondra bash completion if present
             echo "[ -f /snap/git-ondra/current/git-completion.bash ] && . /snap/git-ondra/current/git-completion.bash" \
                  >> ${SNAPCRAFT_PART_INSTALL}/etc/profile.d/bash_completion.sh
+            # fix pastebin to work with toolbox snap install
+            sed -i \
+                's|/usr/local/etc/pastebin.d|/snap/toolbox/current/usr/share/pastebin.d|g' \
+                ${SNAPCRAFT_PART_INSTALL}/usr/bin/pastebinit
 
     mc:
         source: https://github.com/MidnightCommander/mc.git
