@@ -354,7 +354,9 @@ build-packages:
   - help2man
   - jq
   - libboost-dev
+  - libext2fs-dev
   - libglib2.0-dev
+  - libgpm-dev
   - libltdl-dev
   - liblz4-dev
   - liblzma-dev
