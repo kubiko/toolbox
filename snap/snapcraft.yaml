@@ -18,7 +18,7 @@ architectures:
     - build-on: amd64
     - build-on: ppc64el
 
-base: core18
+base: core20
 
 environment:
     PATH:            $SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH
