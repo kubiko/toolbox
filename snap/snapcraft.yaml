@@ -196,16 +196,16 @@ parts:
 
     usbutils:
         source: https://git.launchpad.net/ubuntu/+source/usbutils
-        source-branch: applied/ubuntu/bionic
+        source-branch: applied/ubuntu/focal
         source-type: git
         plugin: autotools
         stage-packages: [libusb-1.0-0]
-        configflags:
+        autotools-configure-parameters:
             - --prefix=/snap/${SNAPCRAFT_PROJECT_NAME}/current/usr
             - --libdir=/snap/${SNAPCRAFT_PROJECT_NAME}/current/usr/lib
             - --localstatedir=/var/snap/${SNAPCRAFT_PROJECT_NAME}/common/
         override-build: |
-           if [ -z $(uname -a | grep "ppc64el") ]; then
+           if [ -z $(uname -m | grep "ppc64el") ]; then
                snapcraftctl build
            fi
         organize:
