@@ -262,13 +262,9 @@ parts:
     source: https://github.com/mobile-shell/mosh.git
     source-type: git
     stage-packages:
-      - libprotobuf10
-    override-build: |
-      ./autogen.sh
-      snapcraftctl build
+      - libprotobuf17
     organize:
-      bin/mosh:        usr/bin/mosh
-      bin/mosh-server: usr/bin/mosh-server
+      usr/local/bin/: usr/bin/
     stage:
       - usr/bin/mosh-server
       - usr/bin/mosh
