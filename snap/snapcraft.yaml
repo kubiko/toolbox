@@ -309,7 +309,9 @@ build-packages:
     - gawk
     - gettext
     - libboost-dev
+    - libext2fs-dev
     - libglib2.0-dev
+    - libgpm-dev
     - libltdl-dev
     - libncurses5-dev
     - libnuma-dev
