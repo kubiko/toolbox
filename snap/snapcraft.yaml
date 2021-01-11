@@ -311,3 +311,5 @@ build-packages:
     - zlib1g-dev
     - libssl-dev
     - texinfo
+    - libgpm-dev
+    - libext2fs-dev
