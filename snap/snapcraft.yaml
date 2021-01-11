@@ -261,11 +261,13 @@ parts:
         plugin: autotools
         source: https://github.com/mobile-shell/mosh.git
         source-type: git
-        configflags:
+        autotools-configure-parameters:
           - "LDFLAGS=-static"
+        organize:
+          usr/local/bin/: usr/bin/
         stage:
-          - bin/mosh-server
-          - bin/mosh
+          - usr/bin/mosh-server
+          - usr/bin/mosh
 
     tiobench:
         plugin: nil
