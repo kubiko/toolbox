@@ -15,11 +15,10 @@ grade: stable
 architectures:
   - build-on: armhf
   - build-on: arm64
-  - build-on: i386
   - build-on: amd64
   - build-on: ppc64el
 
-base: core18
+base: core20
 
 environment:
   PATH:            $SNAP/usr/sbin:$SNAP/usr/bin:$PATH
