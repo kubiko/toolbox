@@ -203,11 +203,8 @@ parts:
     plugin: autotools
     source: https://github.com/alobbs/macchanger.git
     source-type: git
-    configflags:
+    autotools-configure-parameters:
       - --datadir=/snap/${SNAPCRAFT_PROJECT_NAME}/current/usr/share/
-    override-build: |
-      ./autogen.sh
-      snapcraftctl build
     organize:
       snap/${SNAPCRAFT_PROJECT_NAME}/current/usr/share/: usr/share/
     stage:
