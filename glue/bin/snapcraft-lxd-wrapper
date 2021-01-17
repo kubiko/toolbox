@@ -33,7 +33,7 @@ print_help_lxd_snapcraft () {
 }
 
 lxd_ensure_ssh_setup () {
-  echo "Checking if we have ssh key for lxd containers"
+  echo "Making sure we have ssh key for the containers"
   # get ssh keys ready
   if [ ! -f ${IDENTITY_FILE} ]; then
     ssh-keygen -t rsa -C "${USER}@lxd" -N "" -f ${IDENTITY_FILE}
@@ -129,6 +129,22 @@ lxd_ensure () {
   touch ~/.lxd-wrapper-configured
 }
 
+lxd_start_container() {
+  local container_name="${1}"
+  lxc start ${container_name}
+  local wait_text="Waiting for container to start.."
+  echo -n -e "${wait_text}\r"
+  sleep 1
+  # consider container fully started only when it gets ip address
+  while [ -z "$(lxc info ${container_name} 2>&1 | awk '{if ($1 == "eth0:" && $2 == "inet") print $3}')" ]
+  do
+      wait_text="${wait_text}."
+      echo -n -e "${wait_text}\r"
+      sleep 1
+  done
+  echo -e "${wait_text}..DONE"
+}
+
 lxd_ensure_container_runnig () {
   if [ -z "${1}" ]; then
     echo "Missing container name"
@@ -137,9 +153,9 @@ lxd_ensure_container_runnig () {
   local container_name="${1}"
   local container_status=$(lxc info ${container_name} 2>&1 | awk '$1 ~ "Status" { print $2}')
   if [ -n "${container_status}" ]; then
-    echo -e "Container ${container_name} already exists, making sure it's running"
     if [ "Running" != "${container_status}" ]; then
-      return lxc start ${container_name}
+      echo -e "Container ${container_name} is not running, starting it..."
+      lxd_start_container ${container_name}
     fi
     return 0
   else
@@ -214,18 +230,7 @@ lxd_ensure_container () {
     lxc config device add ${container_name} gitconfig disk source=${HOME}/snap/git-ondra/common/.gitconfig path=/home/ubuntu/.gitconfig
   fi
 
-  lxc start ${container_name}
-  local wait_text="Waiting for container to start.."
-  echo -n -e "${wait_text}\r"
-  lxc start ${container_name}
-  sleep 1
-  while [ -z "$(lxc list ${container_name} -c 4 --format csv)" ]
-  do
-      wait_text="${wait_text}."
-      echo -n -e "${wait_text}\r"
-      sleep 1
-  done
-  echo -e "${wait_text}..DONE"
+  lxd_start_container ${container_name}
 
   lxc exec ${container_name} -- sh -c 'cp -r /etc/skel/. /home/ubuntu'
   lxc exec ${container_name} -- sh -c 'echo "export SNAPCRAFT_BUILD_ENVIRONMENT=host" >> /etc/environment'
@@ -309,63 +314,93 @@ lxd_ensure_container () {
 }
 
 lxd_snapcraft () {
+  # handle special case first parameter:
+  #   -h: print help, (snapcraft help is "snapcraft help)"
+  #   armhf: arm64 can run natively armhf containers
+  #          if first parameter is "armhf" interpret it as run build
+  #          in "armhf" container on arm64 systems"
+  if [ "${1}" = "-h" ]; then
+    print_help_lxd_snapcraft
+    exit 0
+  elif [ "${1}" = "armhf" ]; then
+    # first make sure we are on compatible platform
+    if [ -z "$(uname -a | grep aarch64)" ]; then
+      echo "This host does not seem to support native armhf containers"
+      exit 0
+    fi
+    local container_flavour="-armhf"
+    local container_arch="armhf"
+    shift
+  fi
+
+  # check if lxd is installed, if installed assume it's configured as well
+  lxd_ensure
+
+  # make sure we have container and it's running
   if [ -z "${snapcraft_lxd_container_name}" ]; then
-    # if there is snapcraft.yaml or snap/snapcraft.yaml
+    # if there is snapcraft.yaml or snap/snapcraft.yaml in project root
+    # or under build-aux dir
     # try to determine which container to use
-    [ -e snapcraft.yaml ] && local SNAPCRAFT_YAML="snapcraft.yaml"
-    [ -e snap/snapcraft.yaml ] && local SNAPCRAFT_YAML="snap/snapcraft.yaml"
+    for sy in snapcraft.yaml snap/snapcraft.yaml build-aux/snapcraft.yaml build-aux/snap/snapcraft.yaml
+    do
+      if [ -e ${sy} ]; then
+        local SNAPCRAFT_YAML="${sy}"
+        continue
+      fi
+    done
     if [ -n "${SNAPCRAFT_YAML}" ]; then
       # use build-base and then base as means to determine build series
-      base=$(grep 'build-base:' ${SNAPCRAFT_YAML} | awk '{print $2}')
+      local base=$(grep 'build-base:' ${SNAPCRAFT_YAML} | awk '{print $2}')
       [ -z "${base}" ] && base=$(grep 'base:' ${SNAPCRAFT_YAML} | awk '{print $2}')
       case ${base} in
         core16|core)
-          local container_name="snapcraft-xenial"
+          local container_name="snapcraft-xenial${container_flavour}"
           local ubuntu_series="xenial"
           ;;
         core18)
-          local container_name="snapcraft-bionic"
+          local container_name="snapcraft-bionic${container_flavour}"
           local ubuntu_series="bionic"
           ;;
         core20)
-          local container_name="snapcraft-focal"
+          local container_name="snapcraft-focal${container_flavour}"
           local ubuntu_series="focal"
           ;;
         *)
           echo "Base not defined, assuming Core 16"
-          local container_name="snapcraft-xenial"
+          local container_name="snapcraft-xenial${container_flavour}"
           local ubuntu_series="xenial"
           ;;
       esac
+      local snap_type=$(grep 'type:' ${SNAPCRAFT_YAML} | awk '{print $2}')
+      # if we are building base or snapd, run build as root
+      if [ "${snap_type}" = "base" ] || [ "${snap_type}" = "snapd" ]; then
+        echo "Automatically building snap type ${snap_type} as root"
+        local root_build="sudo "
+      fi
       # force kernel builds to run on focal, hopefully we use new custom plugin
       if [ "kernel" = "$(sed -n 's/^type:.*kernel/kernel/p' ${SNAPCRAFT_YAML})" ]; then
-        echo "Building kernel, defaulting to focal"
-        local container_name="snapcraft-focal"
+        echo "Building kernel, defaulting to focal, make sure to use right pluging!!"
+        local container_name="snapcraft-focal${container_flavour}"
         local ubuntu_series="focal"
       fi
     else
       echo -e "Not in snapcraft project directory, or container name defined\n"
       print_help_lxd_snapcraft
-      return 1
+      exit 0
     fi
+    # make sure container exists and its running
+    lxd_ensure_container ${ubuntu_series} ${container_name} ${container_arch}
   else
     local container_name="${snapcraft_lxd_container_name}"
-  fi
-  # check if lxd is installed, if installed assume it's configured as well
-  lxd_ensure
-
-  # make sure container is created and running
-  if [ -z "${ubuntu_series}" ]; then
+    # make sure contanier is running
     lxd_ensure_container_runnig ${container_name}
-  else
-    lxd_ensure_container ${ubuntu_series} ${container_name}
   fi
 
   # run snapcraft command if we have container ready
   if [ "$?" = "0" ]; then
-    echo -e "Running snapcraft in \"${container_name}\" container"
-    ssh -t -q ${container_name}.lxd "cd $(pwd | sed 's|'"${HOME}"'|/home/ubuntu/host|g'); snapcraft $@"
+    echo -e "Running snapcraft in \'${container_name}\' container:[snapcraft $@]"
+    ssh -t -q ${container_name}.lxd "cd $(pwd | sed 's|'"${HOME}"'|/home/ubuntu/host|g');${root_build} snapcraft $@"
   else
-    return "$?"
+    exit 0
   fi
 }
