@@ -26,10 +26,25 @@ print_help_lxd_ensure_container () {
 }
 
 print_help_lxd_snapcraft () {
-  echo "lxd_snapcraft executes snapcraft in current directory inside defined container"
-  echo "name of container is passed through env variable 'snapcraft_lxd_container_name"
-  echo "If container name is not defined, new container 'snapcraft-<ubuntu series> is created'"
-  echo "Ubuntu series is determined from snapcraft project in current directory"
+  echo -e "lxd_snapcraft: wrapper to run snapcraft in dedicated container"
+  echo -e "\tWrapper has to be called from snapcraf project"
+  echo -e "Usage: lxd_snapcraft [container arch] [snapcraft commands..]\n"
+  echo -e "\tsnapcraft is run in the current directory, but inside the container"
+  echo -e "\tname of the container is determined from project's snapcraft.yaml"
+  echo -e "\t\tunless passed through env variable 'snapcraft_lxd_container_name"
+  echo -e "\tcontainer name is constructed as 'snapcraft-<ubuntu series>[-<architecture>]'"
+  echo -e "\t\tcontainers with native architecture do not have arch in the name"
+  echo -e "\t\tif container does not exist, it will be created"
+  echo -e "\t\tone container is shared for all the builds for given core base and arch"
+  echo -e "\tCorrent Ubuntu series is determined from snapcraft.yaml\n"
+  echo -e "\tFirst parameter is treated specially, if it's 'armhf', it signals"
+  echo -e "\t\tto use armhf container. (this is only avaiable on arm64 host)\n"
+  echo -e "\t-h: this help\n"
+  echo -e "examples:"
+  echo -e "\t\$ lxd_snapcraft"
+  echo -e "\t\$ lxd_snapcraft clean"
+  echo -e "\t\$ lxd_snapcraft prime --target-arch=armhf"
+  echo -e "\t\$ lxd_snapcraft armhf prime"
 }
 
 lxd_ensure_ssh_setup () {
