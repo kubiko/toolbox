@@ -413,7 +413,7 @@ lxd_snapcraft () {
 
   # run snapcraft command if we have container ready
   if [ "$?" = "0" ]; then
-    echo -e "Running snapcraft in \'${container_name}\' container:[snapcraft $@]"
+    echo -e "Running snapcraft in '${container_name}' container:[snapcraft $@]"
     ssh -t -q ${container_name}.lxd "cd $(pwd | sed 's|'"${HOME}"'|/home/ubuntu/host|g');${root_build} snapcraft $@"
   else
     exit 0
