@@ -74,6 +74,7 @@ parts:
           - liblz4-tool
           - libmagic1
           - libslang2
+          - libubootenv-tool
           - linux-tools-common
           - lm-sensors
           - lshw
@@ -100,7 +101,6 @@ parts:
           - time
           - tmux
           - tree
-          - u-boot-tools
           - unzip
           - util-linux
           - vim
