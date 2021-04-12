@@ -77,6 +77,7 @@ parts:
       - libmagic1
       - libparted2
       - libslang2
+      - libubootenv-tool
       - libusb-1.0-0
       - linux-tools-common
       - lm-sensors
@@ -106,7 +107,6 @@ parts:
       - time
       - tmux
       - tree
-      - u-boot-tools
       - unzip
       - usbutils
       - util-linux
