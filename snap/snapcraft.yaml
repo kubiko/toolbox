@@ -85,7 +85,7 @@ parts:
           - iw
           - watchdog
           - rng-tools5
-          - u-boot-tools
+          - libubootenv-tool
           - icdiff
           - cpio
           - xz-utils
