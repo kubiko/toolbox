@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.7.13"
+version: "0.7.14"
 summary: Swiss knife of shell tools
 description: |
   Set of usefull shell tools to be used on Ubuntu/Ubuntu core After install run follwing commands to enable all built in tools in your shell.
@@ -264,6 +264,21 @@ parts:
         stage:
           - bin/mosh-server
           - bin/mosh
+
+    tiobench:
+        plugin: nil
+        source: https://github.com/mkuoppal/tiobench.git
+        source-type: git
+        override-build: |
+            make -j$(nproc)
+            mkdir -p ${SNAPCRAFT_PART_INSTALL}/bin \
+                     ${SNAPCRAFT_PART_INSTALL}/usr/doc/tiobench
+            install -m 0755 tiobench.pl ${SNAPCRAFT_PART_INSTALL}/bin/tiobench.pl
+            install -m 0755 tiotest     ${SNAPCRAFT_PART_INSTALL}/bin/tiotest
+            install -m 0755 scripts/bigbench.sh ${SNAPCRAFT_PART_INSTALL}/bin/bigbench.sh
+            install -m 0755 scripts/tiosum.pl ${SNAPCRAFT_PART_INSTALL}/bin/tiosum.pl
+            install -m 0644 README.md ${SNAPCRAFT_PART_INSTALL}/usr/doc/tiobench/README.md
+            install -m 0644 scripts/README ${SNAPCRAFT_PART_INSTALL}/usr/doc/tiobench/README
 
 build-packages:
     - curl
