@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.7.15"
+version: "0.7.16"
 summary: Swiss knife of shell tools
 description: |
   Set of usefull shell tools to be used on Ubuntu/Ubuntu core After install run follwing commands to enable all built in tools in your shell.
@@ -280,6 +280,10 @@ parts:
             install -m 0755 scripts/tiosum.pl ${SNAPCRAFT_PART_INSTALL}/bin/tiosum.pl
             install -m 0644 README.md ${SNAPCRAFT_PART_INSTALL}/usr/doc/tiobench/README.md
             install -m 0644 scripts/README ${SNAPCRAFT_PART_INSTALL}/usr/doc/tiobench/README
+        stage:
+            - bin/tio*
+            - bin/bigbench*
+            - usr/doc/tiobench
 
 build-packages:
     - curl
