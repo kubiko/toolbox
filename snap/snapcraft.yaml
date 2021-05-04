@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.7.16"
+version: "0.7.17"
 summary: Swiss knife of shell tools
 description: |
   Set of usefull shell tools to be used on Ubuntu/Ubuntu core After install run follwing commands to enable all built in tools in your shell.
@@ -115,17 +115,12 @@ parts:
               - usbutils
         stage:
           - -bin/bash
-          - -usr/lib/gcc
-          - -usr/share/vim
-          - -usr/share/locale
-          - -usr/share/doc
-          - -usr/share/man/
           - -usr/bin/perl*
+          - -usr/bin/py*
+          - -usr/lib/gcc
+          - -usr/lib/*/libpython*
           - -usr/lib/*/perl*
           - -usr/lib/*/libperl*
-          - -usr/share/perl*
-          - -usr/bin/py*
-          - -usr/lib/*/libpython*
           - -usr/lib/python3/dist-packages/R*
           - -usr/lib/python3/dist-packages/c*
           - -usr/lib/python3/dist-packages/h*
@@ -134,8 +129,15 @@ parts:
           - -usr/lib/python3/dist-packages/r*
           - -usr/lib/python3/dist-packages/six*
           - -usr/lib/python3/dist-packages/u*
-          - -usr/lib/python3.6
+          - -usr/lib/python3.*
+          - -usr/share/doc
+          - -usr/share/locale
+          - -usr/share/man/
+          - -usr/share/perl*
           - -usr/share/python*
+          - -usr/share/vim
+          # make sure we do not have pulled in lsb_release, it makes no sense
+          - -usr/bin/lsb_release
         override-build: |
             snapcraftctl build
             echo "Checking if usr/bin/peekfd exists"
@@ -163,9 +165,6 @@ parts:
             sed -i \
                 's|\(conf_file = \).*|\1os.path.join(os.getenv("SNAP"), "etc/ssh/ssh_import_id")|g' \
                 ${SNAPCRAFT_PART_INSTALL}/usr/lib/python3/dist-packages/ssh_import_id/__init__.py
-        stage:
-            # make sure we do not have pulled in lsb_release, it makes no sense
-            - -usr/bin/lsb_release
 
     mc:
         source: https://github.com/MidnightCommander/mc.git
