@@ -151,7 +151,7 @@ lxd_start_container() {
   echo -n -e "${wait_text}\r"
   sleep 1
   # consider container fully started only when it gets ip address
-  while [ -z "$(lxc info ${container_name} 2>&1 | awk '{if ($1 == "eth0:" && $2 == "inet") print $3}')" ]
+  while [ -z "$(lxc list -q -c s4 ${container_name} | sed -n '4p' | awk -F "[[:space:]]*|[[:space:]]*" '{if ($2 == "RUNNING" && $4 != "|") print $2}')" ]
   do
       wait_text="${wait_text}."
       echo -n -e "${wait_text}\r"
