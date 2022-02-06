@@ -134,7 +134,21 @@ lxd_ensure () {
   local lxd_dump="$(lxd init --dump)"
   if [ -n "$(echo "${lxd_dump}" | grep 'storage_pools: \[\]')" ]; then
     echo "Initialising lxd..."
-    lxd init --auto --storage-backend=dir
+    # if there is zfs support, use zfs as backend
+    if [ -n "$(dmesg | grep ZFS)" ]; then
+      lxd init --auto --storage-backend=zfs
+    else
+      # no zfs availablem, on classic use dir backend instead, on core try btrfs
+      if [ ! -d /writable ]; then
+        echo "Initializing lxd with 'dir' storage-backend, consider enabling zfs"
+        lxd init --auto --storage-backend=dir
+      else
+        echo "Detected Ubuntu Core environment"
+        echo "Kernel does not support zfs, and dir storage-backend does not support sudo withing the containers"
+        echo "Using btrfs backend instead, consider enabling zfs..."
+        lxd init --auto --storage-backend=btrfs
+      fi
+    fi
     echo -e "#cloud-config\nssh_authorized_keys:\n - $(cat ${PUBLIC_KEY})" | lxc profile set default user.user-data -
     lxc profile show default
   elif [ -z "$(echo "${lxd_dump}" | grep "$(cat ${PUBLIC_KEY})")" ]; then
