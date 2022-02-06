@@ -1,0 +1,8 @@
+#!/bin/sh
+
+ARCH_TRIPLET=$(grep ARCH_TRIPLET /snap/toolbox/current/meta/snap.yaml | awk '{print $2}')
+SNAP_PATH="/snap/toolbox/current"
+export PATH="${SNAP_PATH}/bin:${SNAP_PATH}/sbin:${SNAP_PATH}/usr/bin:${SNAP_PATH}/usr/sbin:${PATH}"
+export LD_LIBRARY_PATH="/lib:/usr/lib:/lib/${ARCH_TRIPLET}:/usr/lib/${ARCH_TRIPLET}:${SNAP_PATH}/lib:${SNAP_PATH}/usr/lib:${SNAP_PATH}/lib/${ARCH_TRIPLET}:${SNAP_PATH}/usr/lib/${ARCH_TRIPLET}"
+
+exec tmux $@
