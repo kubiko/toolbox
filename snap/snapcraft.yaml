@@ -177,6 +177,7 @@ parts:
             - --sysconfdir=/var/snap/toolbox/common/etc
             - --without-x
         override-build: |
+            ./autogen.sh
             snapcraftctl build
             mv ${SNAPCRAFT_PART_INSTALL}/snap/toolbox/current/usr ${SNAPCRAFT_PART_INSTALL}/
             rm -rf ${SNAPCRAFT_PART_INSTALL}/snap
@@ -211,6 +212,9 @@ parts:
         source-type: git
         configflags:
             - --datadir=/snap/${SNAPCRAFT_PROJECT_NAME}/current/usr/share/
+        override-build: |
+            ./autogen.sh
+            snapcraftctl build
         organize:
             snap/${SNAPCRAFT_PROJECT_NAME}/current/usr/share/: usr/share/
         stage:
@@ -264,6 +268,9 @@ parts:
         source-type: git
         configflags:
           - "LDFLAGS=-static"
+        override-build: |
+          ./autogen.sh
+          snapcraftctl build
         stage:
           - bin/mosh-server
           - bin/mosh
