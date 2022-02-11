@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.7.28"
+version: "0.7.30"
 summary: Swiss knife of shell tools
 description: |
   Set of usefull shell tools to be used on Ubuntu/Ubuntu core After install run follwing commands to enable all built in tools in your shell.
@@ -162,7 +162,8 @@ parts:
                  >> ${SNAPCRAFT_PART_INSTALL}/etc/profile.d/bash_completion.sh
             # fix pastebin to work with toolbox snap install
             sed -i \
-                's|/usr/local/etc/pastebin.d|/snap/toolbox/current/usr/share/pastebin.d|g' \
+                -e 's|/usr/local/etc/pastebin.d|/snap/toolbox/current/usr/share/pastebin.d|g' \
+                -e 's/defaultPB = "pastebin.com"/defaultPB = "paste.ubuntu.com"/g' \
                 ${SNAPCRAFT_PART_INSTALL}/usr/bin/pastebinit
             # fix ssh_import_id search path for etc/ssh/ssh_import_id
             sed -i \
