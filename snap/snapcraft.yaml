@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.7.27"
+version: "0.7.28"
 summary: Swiss knife of shell tools
 description: |
   Set of usefull shell tools to be used on Ubuntu/Ubuntu core After install run follwing commands to enable all built in tools in your shell.
@@ -166,7 +166,7 @@ parts:
                 ${SNAPCRAFT_PART_INSTALL}/usr/bin/pastebinit
             # fix ssh_import_id search path for etc/ssh/ssh_import_id
             sed -i \
-                's|\(conf_file = \).*|\1os.path.join(os.getenv("SNAP"), "etc/ssh/ssh_import_id")|g' \
+                's|\(conf_file = "\)\(.*\)|\1/snap/toolbox/current\2|g' \
                 ${SNAPCRAFT_PART_INSTALL}/usr/lib/python3/dist-packages/ssh_import_id/__init__.py
 
     mc:
