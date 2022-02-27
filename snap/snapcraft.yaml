@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.7.31"
+version: "0.7.32"
 summary: Swiss knife of shell tools
 description: |
   Set of usefull shell tools to be used on Ubuntu/Ubuntu core After install run follwing commands to enable all built in tools in your shell.
@@ -142,6 +142,13 @@ parts:
           # make sure we do not have pulled in lsb_release, it makes no sense
           - -usr/bin/lsb_release
         override-build: |
+            # first clean files from stage packages we want override
+            for f in ${SNAPCRAFT_PART_INSTALL}/usr/share/bash-completion/completions/ssh
+            do
+              if [ -e ${f} ]; then
+                rm -rf ${f}
+              fi
+            done
             snapcraftctl build
             echo "Checking if usr/bin/peekfd exists"
             # interestingly on arm64 there is no usr/bin/peekfd, account for this
