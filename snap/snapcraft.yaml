@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.7.32"
+version: "0.7.33"
 summary: Swiss knife of shell tools
 description: |
   Set of usefull shell tools to be used on Ubuntu/Ubuntu core After install run follwing commands to enable all built in tools in your shell.
@@ -39,79 +39,79 @@ parts:
         source: glue
         plugin: dump
         stage-packages:
+          - abootimg
+          - bash
           - bash-completion
           - bc
-          - wget
-          - nano
-          - silversearcher-ag
-          - pastebinit
-          - curl
           - binutils
-          - screen
-          - tree
-          - zip
-          - unzip
-          - vim
-          - vim-tiny
-          - vim-common
-          - vim-runtime
-          - lsof
-          - iotop
-          - hdparm
-          - rhash
-          - ethtool
-          - i2c-tools
-          - cryptsetup-bin
-          - libgpm2
-          - dmsetup
-          - device-tree-compiler
-          - strace
-          - rsync
-          - iperf3
-          - net-tools
-          - psmisc
-          - libdb5.3
-          - htop
-          - devmem2
+          - bsdmainutils
           - busybox-static
-          - lshw
-          - pciutils
-          - bash
-          - httpie
-          - dnsutils
-          - util-linux
-          - jq
-          - minicom
-          - wireless-tools
-          - iw
-          - watchdog
-          - rng-tools5
-          - u-boot-tools
-          - icdiff
-          - cpio
-          - xz-utils
-          - libslang2
-          - ssh-import-id
-          - stress-ng
-          - cpu-checker
-          - tmux
           - byobu
-          - gdisk
-          - smartmontools
+          - cpio
+          - cpu-checker
+          - cryptsetup-bin
+          - curl
+          - device-tree-compiler
+          - devmem2
+          - dmsetup
+          - dnsutils
+          - ethtool
           - file
-          - abootimg
-          - mkbootimg
+          - fio
+          - gdb
+          - gdisk
+          - hdparm
+          - htop
+          - httpie
+          - i2c-tools
+          - icdiff
+          - initramfs-tools-core
+          - iotop
+          - iperf3
+          - iw
+          - jq
+          - libdb5.3
+          - libgpm2
           - liblz4-tool
           - libmagic1
-          - netdiscover
-          - bsdmainutils
-          - initramfs-tools-core
-          - time
+          - libslang2
           - linux-tools-common
-          - fio
+          - lshw
+          - lsof
+          - minicom
+          - mkbootimg
           - mmc-utils
-          - gdb
+          - nano
+          - netdiscover
+          - net-tools
+          - pastebinit
+          - pciutils
+          - psmisc
           - pv
+          - rhash
+          - rng-tools5
+          - rsync
+          - screen
+          - silversearcher-ag
+          - smartmontools
+          - ssh-import-id
+          - strace
+          - stress-ng
+          - time
+          - tmux
+          - tree
+          - u-boot-tools
+          - unzip
+          - util-linux
+          - vim
+          - vim-common
+          - vim-runtime
+          - vim-tiny
+          - watchdog
+          - wget
+          - wireless-tools
+          - xz-utils
+          - zip
           - try:
               - libonig4
               - sysbench
@@ -304,24 +304,24 @@ parts:
 
 build-packages:
     - curl
-    - libnuma-dev
-    - python2.7
-    - libusb-1.0-0-dev
-    - zlib1g
-    - gawk
-    - pkg-config
-    - libudev-dev
-    - quilt
-    - wget
-    - libglib2.0-dev
-    - libslang2-dev
-    - gettext
-    - libtool
     - g++
-    - protobuf-compiler
-    - libprotobuf-dev
+    - gawk
+    - gettext
     - libboost-dev
+    - libglib2.0-dev
     - libncurses5-dev
-    - zlib1g-dev
+    - libnuma-dev
+    - libprotobuf-dev
+    - libslang2-dev
     - libssl-dev
+    - libtool
+    - libudev-dev
+    - libusb-1.0-0-dev
+    - pkg-config
+    - protobuf-compiler
+    - python2.7
+    - quilt
     - texinfo
+    - wget
+    - zlib1g
+    - zlib1g-dev
