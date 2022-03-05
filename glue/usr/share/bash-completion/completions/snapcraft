@@ -36,7 +36,7 @@ _snapcraft()
         COMPREPLY=( $(compgen -W "$provider_options" -- $cur))
         return 0
         ;;
-    clean)
+    build | clean | pull | stage)
         curdir=$(pwd)
         cd parts
         _filedir -d
