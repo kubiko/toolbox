@@ -48,7 +48,6 @@ print_help_lxd_snapcraft () {
 }
 
 lxd_ensure_ssh_setup () {
-  echo "Making sure we have ssh key for the containers"
   # get ssh keys ready
   if [ ! -f ${IDENTITY_FILE} ]; then
     ssh-keygen -t rsa -C "${USER}@lxd" -N "" -f ${IDENTITY_FILE}
@@ -158,19 +157,26 @@ lxd_ensure () {
   touch ~/.lxd-wrapper-configured
 }
 
-lxd_start_container() {
+lxd_wait_container_ready() {
   local container_name="${1}"
-  lxc start ${container_name}
-  local wait_text="Waiting for container to start.."
+
   echo -n -e "${wait_text}\r"
-  sleep 1
   # consider container fully started only when it gets ip address
-  while [ -z "$(lxc list -q -c s4 ${container_name} | sed -n '4p' | sed 's/ //g' |  awk '{print tolower($0)}' | awk -F "|" '{if ($2 == "running" && $2 != "") print $2}')" ]
+  while [ -z "$(lxc list -q -c s4 ${container_name} | sed -n '4p' |  awk '{print tolower($0)}' | awk -F "[[:space:]]*|[[:space:]]*" '{if ($2 == "running" && $4 != "|") print $4}')" ]
   do
       wait_text="${wait_text}."
       echo -n -e "${wait_text}\r"
       sleep 1
   done
+}
+
+lxd_start_container() {
+  local container_name="${1}"
+
+  lxc start ${container_name} || true
+  local wait_text="Waiting for container to start.."
+  sleep 1
+  lxd_wait_container_ready ${container_name}
   echo -e "${wait_text}..DONE"
 }
 
@@ -181,16 +187,17 @@ lxd_ensure_container_runnig () {
   fi
   local container_name="${1}"
   local container_status=$(lxc info ${container_name} 2>&1 | awk '$1 ~ "Status" { print $2}' | awk '{print tolower($0)}')
-  if [ -n "${container_status}" ]; then
-    if [ "running" != "${container_status}" ]; then
-      echo -e "Container ${container_name} is not running, starting it..."
-      lxd_start_container ${container_name}
-    fi
-    return 0
-  else
+  if [ -z "${container_status}" ]; then
     echo "Container with given name does not exist"
     return 1
   fi
+  if [ "running" == "${container_status,,}" ]; then
+      lxd_wait_container_ready ${container_name}
+      return 0
+  fi
+  echo -e "Container ${container_name} is not running, starting it..."
+  lxd_start_container ${container_name}
+  return 0
 }
 
 lxd_ensure_container () {
