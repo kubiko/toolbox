@@ -202,10 +202,14 @@ lxd_ensure_container_runnig () {
 
 lxd_ensure_container () {
   # normalise series, we only support UC16/18/20 and related LTS
+  # 22.04 -> jammy
   # 20.04 -> focal
   # 18.04 -> bionic
   # 16.04 -> xenial
   case $1 in
+    22.04 | jammy)
+      local ubuntu_series="jammy"
+      ;;
     20.04 | focal)
       local ubuntu_series="focal"
       ;;
@@ -400,6 +404,10 @@ lxd_snapcraft () {
         core20)
           local container_name="snapcraft-focal${container_flavour}"
           local ubuntu_series="focal"
+          ;;
+        core22)
+          local container_name="snapcraft-jammy${container_flavour}"
+          local ubuntu_series="jammy"
           ;;
         *)
           echo "Base not defined, assuming Core 16"
