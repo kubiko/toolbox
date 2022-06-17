@@ -21,17 +21,15 @@ base: core22
 
 environment:
     PATH:            $SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH
-    LD_LIBRARY_PATH: $SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/${SNAPCRAFT_ARCH_TRIPLET}:$SNAP/usr/lib/${SNAPCRAFT_ARCH_TRIPLET}
-    ARCH_TRIPLET:    ${SNAPCRAFT_ARCH_TRIPLET}
+    LD_LIBRARY_PATH: $SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/${CRAFT_ARCH_TRIPLET}:$SNAP/usr/lib/${CRAFT_ARCH_TRIPLET}
+    ARCH_TRIPLET:    ${CRAFT_ARCH_TRIPLET}
 
 apps:
     help:
         command: bin/toolbox-help
-        adapter: none
 
     set-path:
         command: bin/set-path
-        adapter: none
 
 parts:
     tools:
@@ -112,8 +110,8 @@ parts:
           - wireless-tools
           - xz-utils
           - zip
-          - try:
-              - libonig4
+          - on amd64,arm64,armhf,ppc64el:
+              - libonig5
               - sysbench
           - on ppc64el:
               - usbutils
@@ -143,42 +141,42 @@ parts:
           - -usr/bin/lsb_release
         override-build: |
             # first clean files from stage packages we want override
-            for f in ${SNAPCRAFT_PART_INSTALL}/usr/share/bash-completion/completions/ssh
+            for f in ${CRAFT_PART_INSTALL}/usr/share/bash-completion/completions/ssh
             do
               if [ -e ${f} ]; then
                 rm -rf ${f}
               fi
             done
-            snapcraftctl build
+            craftctl default
             echo "Checking if usr/bin/peekfd exists"
             # interestingly on arm64 there is no usr/bin/peekfd, account for this
-            if [ ! -f ${SNAPCRAFT_PART_INSTALL}/usr/bin/peekfd ]; then
+            if [ ! -f ${CRAFT_PART_INSTALL}/usr/bin/peekfd ]; then
                 echo "adding stub for usr/bin/peekfd"
-                echo "#!/bin/bash" > ${SNAPCRAFT_PART_INSTALL}/usr/bin/peekfd
-                echo "echo 'peekfd is not supported on arm64'" >> ${SNAPCRAFT_PART_INSTALL}/usr/bin/peekfd
-                chmod +x ${SNAPCRAFT_PART_INSTALL}/usr/bin/peekfd
+                echo "#!/bin/bash" > ${CRAFT_PART_INSTALL}/usr/bin/peekfd
+                echo "echo 'peekfd is not supported on arm64'" >> ${CRAFT_PART_INSTALL}/usr/bin/peekfd
+                chmod +x ${CRAFT_PART_INSTALL}/usr/bin/peekfd
             fi
             sed -i \
                 's|/usr/share/bash-completion|${SNAP_TOOLBOX}/usr/share/bash-completion|g' \
-                ${SNAPCRAFT_PART_INSTALL}/etc/profile.d/bash_completion.sh
+                ${CRAFT_PART_INSTALL}/etc/profile.d/bash_completion.sh
             # source lxd bash completion if present
             echo "[ -f /snap/lxd/current/etc/bash_completion.d/snap.lxd.lxc ] && . /snap/lxd/current/etc/bash_completion.d/snap.lxd.lxc" \
-                 >> ${SNAPCRAFT_PART_INSTALL}/etc/profile.d/bash_completion.sh
+                 >> ${CRAFT_PART_INSTALL}/etc/profile.d/bash_completion.sh
             # source git-ondra bash completion if present
             echo "[ -f /snap/git-ondra/current/git-completion.bash ] && . /snap/git-ondra/current/git-completion.bash" \
-                 >> ${SNAPCRAFT_PART_INSTALL}/etc/profile.d/bash_completion.sh
+                 >> ${CRAFT_PART_INSTALL}/etc/profile.d/bash_completion.sh
             # source custom ssh if present
             echo "[ -f /snap/toolbox/current/usr/share/bash-completion/completions/ssh ] && . /snap/toolbox/current/usr/share/bash-completion/completions/ssh" \
-                 >> ${SNAPCRAFT_PART_INSTALL}/etc/profile.d/bash_completion.sh
+                 >> ${CRAFT_PART_INSTALL}/etc/profile.d/bash_completion.sh
             # fix pastebin to work with toolbox snap install
             sed -i \
                 -e 's|/usr/local/etc/pastebin.d|/snap/toolbox/current/usr/share/pastebin.d|g' \
                 -e 's/defaultPB = "pastebin.com"/defaultPB = "paste.ubuntu.com"/g' \
-                ${SNAPCRAFT_PART_INSTALL}/usr/bin/pastebinit
+                ${CRAFT_PART_INSTALL}/usr/bin/pastebinit
             # fix ssh_import_id search path for etc/ssh/ssh_import_id
             sed -i \
                 's|\(conf_file = "\)\(.*\)|\1/snap/toolbox/current\2|g' \
-                ${SNAPCRAFT_PART_INSTALL}/usr/lib/python3/dist-packages/ssh_import_id/__init__.py
+                ${CRAFT_PART_INSTALL}/usr/lib/python3/dist-packages/ssh_import_id/__init__.py
 
     mc:
         source: https://github.com/MidnightCommander/mc.git
@@ -188,28 +186,28 @@ parts:
             - --sysconfdir=/var/snap/toolbox/common/etc
             - --without-x
         override-build: |
-            snapcraftctl build
-            mv ${SNAPCRAFT_PART_INSTALL}/snap/toolbox/current/usr ${SNAPCRAFT_PART_INSTALL}/
-            rm -rf ${SNAPCRAFT_PART_INSTALL}/snap
-            mv ${SNAPCRAFT_PART_INSTALL}/var/snap/toolbox/common/etc ${SNAPCRAFT_PART_INSTALL}/
-            rm -rf ${SNAPCRAFT_PART_INSTALL}/var
+            craftctl default
+            mv ${CRAFT_PART_INSTALL}/snap/toolbox/current/usr ${CRAFT_PART_INSTALL}/
+            rm -rf ${CRAFT_PART_INSTALL}/snap
+            mv ${CRAFT_PART_INSTALL}/var/snap/toolbox/common/etc ${CRAFT_PART_INSTALL}/
+            rm -rf ${CRAFT_PART_INSTALL}/var
 
     usbutils:
         source: https://git.launchpad.net/ubuntu/+source/usbutils
-        source-branch: applied/ubuntu/focal
+        source-branch: applied/ubuntu/jammy
         source-type: git
         plugin: autotools
         stage-packages: [libusb-1.0-0]
         autotools-configure-parameters:
-            - --prefix=/snap/${SNAPCRAFT_PROJECT_NAME}/current/usr
-            - --libdir=/snap/${SNAPCRAFT_PROJECT_NAME}/current/usr/lib
-            - --localstatedir=/var/snap/${SNAPCRAFT_PROJECT_NAME}/common/
+            - --prefix=/snap/${CRAFT_PROJECT_NAME}/current/usr
+            - --libdir=/snap/${CRAFT_PROJECT_NAME}/current/usr/lib
+            - --localstatedir=/var/snap/${CRAFT_PROJECT_NAME}/common/
         override-build: |
            if [ -z $(uname -m | grep "ppc64el") ]; then
-               snapcraftctl build
+               craftctl default
            fi
         organize:
-            snap/${SNAPCRAFT_PROJECT_NAME}/current/usr/: usr/
+            snap/${CRAFT_PROJECT_NAME}/current/usr/: usr/
         stage:
             - -snap
 
@@ -218,9 +216,9 @@ parts:
         source: https://github.com/alobbs/macchanger.git
         source-type: git
         autotools-configure-parameters:
-            - --datadir=/snap/${SNAPCRAFT_PROJECT_NAME}/current/usr/share/
+            - --datadir=/snap/${CRAFT_PROJECT_NAME}/current/usr/share/
         organize:
-            snap/${SNAPCRAFT_PROJECT_NAME}/current/usr/share/: usr/share/
+            snap/${CRAFT_PROJECT_NAME}/current/usr/share/: usr/share/
         stage:
             - -snap/
 
@@ -228,11 +226,11 @@ parts:
         plugin: nil
         source: https://github.com/micha/resty.git
         override-build: |
-            mkdir -p ${SNAPCRAFT_PART_INSTALL}/usr/bin
-            cp pp pypp ${SNAPCRAFT_PART_INSTALL}/usr/bin
-            cp resty ${SNAPCRAFT_PART_INSTALL}/usr/bin
-            mkdir -p ${SNAPCRAFT_PART_INSTALL}/usr/share/bash-completion/completions/
-            curl -o ${SNAPCRAFT_PART_INSTALL}/usr/share/bash-completion/completions/httpie https://raw.githubusercontent.com/jakubroztocil/httpie/master/extras/httpie-completion.bash
+            mkdir -p ${CRAFT_PART_INSTALL}/usr/bin
+            cp pp pypp ${CRAFT_PART_INSTALL}/usr/bin
+            cp resty ${CRAFT_PART_INSTALL}/usr/bin
+            mkdir -p ${CRAFT_PART_INSTALL}/usr/share/bash-completion/completions/
+            curl -o ${CRAFT_PART_INSTALL}/usr/share/bash-completion/completions/httpie https://raw.githubusercontent.com/jakubroztocil/httpie/master/extras/httpie-completion.bash
 
     rt-tests:
         source: https://git.kernel.org/pub/scm/linux/kernel/git/clrkwllms/rt-tests.git
@@ -244,7 +242,7 @@ parts:
         organize:
             usr/local/: usr/
         override-build: |
-            snapcraftctl build
+            craftctl default
         stage:
             - -usr/bin/hwlatdetect
 
@@ -253,27 +251,27 @@ parts:
         override-pull: |
             wget https://raw.githubusercontent.com/snapcore/snapd/master/tests/lib/tools/mountinfo.query
         override-build: |
-            cp mountinfo.query ${SNAPCRAFT_PART_INSTALL}/
+            cp mountinfo.query ${CRAFT_PART_INSTALL}/
         organize:
             mountinfo.query: bin/mountinfo.query
 
     lk-boot-env:
         plugin: nil
         override-pull: |
-          snapcraftctl pull
+          craftctl default
           wget https://raw.githubusercontent.com/snapcore/snapd/master/include/lk/snappy_boot_common.h
           wget https://raw.githubusercontent.com/snapcore/snapd/master/include/lk/snappy_boot_v2.h
           wget https://raw.githubusercontent.com/kubiko/dragonboard-gadget/20-lk/snap-boot-sel/lk-boot-env.c
         override-build: |
-            mkdir -p ${SNAPCRAFT_PART_INSTALL}/bin
-            gcc lk-boot-env.c -I/usr/include/ -Iapp/aboot -o ${SNAPCRAFT_PART_INSTALL}/bin/lk-boot-env
+            mkdir -p ${CRAFT_PART_INSTALL}/bin
+            gcc lk-boot-env.c -I/usr/include/ -Iapp/aboot -o ${CRAFT_PART_INSTALL}/bin/lk-boot-env
 
     mosh:
         plugin: autotools
         source: https://github.com/mobile-shell/mosh.git
         source-type: git
         stage-packages:
-          - libprotobuf17
+          - libprotobuf23
         organize:
           usr/local/bin/: usr/bin/
         stage:
@@ -287,14 +285,14 @@ parts:
         source-type: git
         override-build: |
             make -j$(nproc)
-            mkdir -p ${SNAPCRAFT_PART_INSTALL}/bin \
-                     ${SNAPCRAFT_PART_INSTALL}/usr/doc/tiobench
-            install -m 0755 tiobench.pl ${SNAPCRAFT_PART_INSTALL}/bin/tiobench.pl
-            install -m 0755 tiotest     ${SNAPCRAFT_PART_INSTALL}/bin/tiotest
-            install -m 0755 scripts/bigbench.sh ${SNAPCRAFT_PART_INSTALL}/bin/bigbench.sh
-            install -m 0755 scripts/tiosum.pl ${SNAPCRAFT_PART_INSTALL}/bin/tiosum.pl
-            install -m 0644 README.md ${SNAPCRAFT_PART_INSTALL}/usr/doc/tiobench/README.md
-            install -m 0644 scripts/README ${SNAPCRAFT_PART_INSTALL}/usr/doc/tiobench/README
+            mkdir -p ${CRAFT_PART_INSTALL}/bin \
+                     ${CRAFT_PART_INSTALL}/usr/doc/tiobench
+            install -m 0755 tiobench.pl ${CRAFT_PART_INSTALL}/bin/tiobench.pl
+            install -m 0755 tiotest     ${CRAFT_PART_INSTALL}/bin/tiotest
+            install -m 0755 scripts/bigbench.sh ${CRAFT_PART_INSTALL}/bin/bigbench.sh
+            install -m 0755 scripts/tiosum.pl ${CRAFT_PART_INSTALL}/bin/tiosum.pl
+            install -m 0644 README.md ${CRAFT_PART_INSTALL}/usr/doc/tiobench/README.md
+            install -m 0644 scripts/README ${CRAFT_PART_INSTALL}/usr/doc/tiobench/README
         stage:
             - bin/tio*
             - bin/bigbench*
