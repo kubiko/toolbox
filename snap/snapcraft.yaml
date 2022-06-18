@@ -19,7 +19,7 @@ architectures:
   - build-on: ppc64el
   - build-on: riscv64
 
-base: core20
+base: core22
 
 environment:
   PATH:            ${SNAP}/usr/sbin:${SNAP}/usr/bin:$PATH
