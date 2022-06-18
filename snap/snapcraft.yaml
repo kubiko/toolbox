@@ -197,7 +197,7 @@ parts:
 
     usbutils:
         source: https://git.launchpad.net/ubuntu/+source/usbutils
-        source-branch: ubuntu/bionic
+        source-branch: applied/ubuntu/bionic
         source-type: git
         plugin: autotools
         stage-packages: [libusb-1.0-0]
@@ -205,9 +205,6 @@ parts:
             - --prefix=/snap/${SNAPCRAFT_PROJECT_NAME}/current/usr
             - --libdir=/snap/${SNAPCRAFT_PROJECT_NAME}/current/usr/lib
             - --localstatedir=/var/snap/${SNAPCRAFT_PROJECT_NAME}/common/
-        override-pull: |
-            snapcraftctl pull
-            quilt push -afq --leave-rejects --quiltrc=${SNAPCRAFT_PROJECT_DIR}/quiltrc
         override-build: |
            if [ -z $(uname -a | grep "ppc64el") ]; then
                snapcraftctl build
@@ -323,7 +320,6 @@ build-packages:
     - pkg-config
     - protobuf-compiler
     - python2.7
-    - quilt
     - texinfo
     - wget
     - zlib1g
