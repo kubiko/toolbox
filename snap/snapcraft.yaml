@@ -275,6 +275,7 @@ parts:
         source: https://github.com/mobile-shell/mosh.git
         source-type: git
         configflags:
+          - "LIBS=-ldl"
           - "LDFLAGS=-static"
         override-build: |
           ./autogen.sh
@@ -309,6 +310,7 @@ build-packages:
     - gettext
     - libboost-dev
     - libglib2.0-dev
+    - libltdl-dev
     - libncurses5-dev
     - libnuma-dev
     - libprotobuf-dev
