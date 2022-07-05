@@ -422,12 +422,6 @@ lxd_snapcraft () {
         echo "Automatically building snap type ${snap_type} as root"
         local root_build="sudo "
       fi
-      # force kernel builds to run on focal, hopefully we use new custom plugin
-      if [ "kernel" = "$(sed -n 's/^type:.*kernel/kernel/p' ${SNAPCRAFT_YAML})" ]; then
-        echo "Building kernel, defaulting to focal, make sure to use right pluging!!"
-        local container_name="snapcraft-focal${container_flavour}"
-        local ubuntu_series="focal"
-      fi
     else
       echo -e "Not in snapcraft project directory, or container name defined\n"
       print_help_lxd_snapcraft
@@ -444,7 +438,7 @@ lxd_snapcraft () {
   # run snapcraft command if we have container ready
   if [ "$?" = "0" ]; then
     echo -e "Running snapcraft in '${container_name}' container:[snapcraft $@]"
-    ssh -t -q ${container_name}.lxd "cd $(pwd | sed 's|'"${HOME}"'|/home/ubuntu/host|g');${root_build} snapcraft $@"
+    ssh -A -t -q ${container_name}.lxd "cd $(pwd | sed 's|'"${HOME}"'|/home/ubuntu/host|g');${root_build} snapcraft $@"
   else
     exit 0
   fi
