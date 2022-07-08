@@ -1,0 +1,42 @@
+#!/bin/bash
+
+
+generate_sysfs_overlay() {
+    for c in backlight gpio leds bluetooth ptp pwm rtc video4linux
+    do
+        if [ -e /sys/class/${c} ]; then
+            find /sys/class/${c} -maxdepth 1 -type l -exec sh -c 'echo "mkdir -p \${sysfs_overlay}/$(realpath {}) \${sysfs_overlay}$(dirname {}); ln -sf $(readlink {}) \${sysfs_overlay}/{}"' \;
+        fi
+    done
+}
+
+print_help() {
+    echo -e "Helper to generate sysfs overlay which can be used when building preseeded image outsif of the target machine"
+    echo -e "Use: $(basename ${0})[--overlay-dir <directory path to create overlay in>]"
+    echo -e "\t no parameter   overlay is printed as scripts to execute on the build system."
+    echo -e "\t -h|--help      this message"
+    echo -e "\t --overlay-dir  path to the directory to generate overlay in"
+
+}
+
+if [ -z "${1}" ]; then
+    generate_sysfs_overlay
+else
+    case $1 in
+        --help | -h)
+            print_help
+            ;;
+        --overlay-dir)
+            if [ -z "${2}" ]; then
+                echo "Missing target directory"
+                print_help
+            else 
+                generate_sysfs_overlay | sed -e 's/^/sysfs_overlay='"${2}"'; /' | xargs -I {} bash -c "{}"
+            fi
+            ;;
+        *)
+            print_debug 0 "Unknown parameter '$1'"
+            print_help
+            ;;
+    esac
+fi
