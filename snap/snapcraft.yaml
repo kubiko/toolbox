@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.7.44"
+version: "0.7.45"
 summary: Swiss knife of shell tools
 description: |
   Set of usefull shell tools to be used on Ubuntu/Ubuntu core After install run follwing commands to enable all built in tools in your shell.
@@ -76,6 +76,7 @@ parts:
           - libmagic1
           - libslang2
           - linux-tools-common
+          - lm-sensors
           - lshw
           - lsof
           - minicom
