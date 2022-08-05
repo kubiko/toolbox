@@ -275,19 +275,30 @@ lxd_ensure_container () {
   lxc exec ${container_name} -- sh -c 'cp -r /etc/skel/. /home/ubuntu'
   lxc exec ${container_name} -- sh -c 'echo "export SNAPCRAFT_BUILD_ENVIRONMENT=host" >> /etc/environment'
   lxc exec ${container_name} -- sh -c 'echo "export SNAPCRAFT_ENABLE_EXPERIMENTAL_TARGET_ARCH=true" >> /etc/environment'
-  lxc exec ${container_name} -- sh -c 'echo "alias apt='sudo apt'" >> /home/ubuntu/.bash_aliases'
-  # snapcraft 7.x does not like to run apt as root, setup aliases if this jammy container
+  # snapcraft 7.x does not like to run apt as root, setup wrappers if this jammy container
   if [ "${ubuntu_series}" == "jammy" ]; then
-    local tmp_bash_aliases=$(mktemp -u -q)
-    tee ${tmp_bash_aliases} <<EOF
-alias apt='sudo apt'
-alias apt-get='sudo apt-get'
-alias dpkg='sudo dpkg'
+    local tmp_wrapper=$(mktemp -u -q)
+    tee ${tmp_wrapper} <<EOF
+#!/bin/sh
+sudo /usr/bin/apt "\$@"
 EOF
-    lxc file push ${tmp_bash_aliases} ${container_name}/home/ubuntu/.bash_aliases
-    [ -e ${tmp_bash_aliases} ] && rm ${tmp_bash_aliases}
-    lxc exec ${container_name} -- sh -c 'chown ubuntu:ubuntu /home/ubuntu/.bash_aliases'
-    lxc exec ${container_name} -- sh -c 'chmod 644 /home/ubuntu/.bash_aliases'
+
+    lxc file push ${tmp_wrapper} ${container_name}/usr/local/bin/apt
+    tee ${tmp_wrapper} <<EOF
+#!/bin/sh
+sudo /usr/bin/apt-get "\$@"
+EOF
+
+    lxc file push ${tmp_wrapper} ${container_name}/usr/local/bin/apt-get
+    tee ${tmp_wrapper} <<EOF
+#!/bin/sh
+sudo /usr/bin/dpkg "\$@"
+EOF
+
+    lxc file push ${tmp_wrapper} ${container_name}/usr/local/bin/dpkg
+    [ -e ${tmp_wrapper} ] && rm ${tmp_wrapper}
+    lxc exec ${container_name} -- sh -c 'chown root:root /usr/local/bin/*'
+    lxc exec ${container_name} -- sh -c 'chmod 755 /usr/local/bin/*'
     lxc exec ${container_name} -- sed -i 's|PATH=\"\(.*\)\"|PATH=\"\1\:/snap/bin\"|g' /etc/environment
   fi
 
