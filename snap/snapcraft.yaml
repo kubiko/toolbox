@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.7.46"
+version: "0.7.47"
 summary: Swiss knife of shell tools
 description: |
   Set of usefull shell tools to be used on Ubuntu/Ubuntu core After install run follwing commands to enable all built in tools in your shell.
@@ -240,7 +240,9 @@ parts:
             curl -o ${SNAPCRAFT_PART_INSTALL}/usr/share/bash-completion/completions/httpie https://raw.githubusercontent.com/jakubroztocil/httpie/master/extras/httpie-completion.bash
 
     rt-tests:
-        source: git://git.kernel.org/pub/scm/linux/kernel/git/clrkwllms/rt-tests.git
+        source: https://git.kernel.org/pub/scm/linux/kernel/git/clrkwllms/rt-tests.git
+        source-type: git
+        source-branch: master
         plugin: make
         stage-packages:
             - libnuma1
