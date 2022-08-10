@@ -375,8 +375,13 @@ EOF
   if [ -n "$(lxc exec ${container_name} -- sh -c 'snap list' | awk '{print $1}' | grep 'lxd')" ]; then
     lxc exec ${container_name} -- sh -c 'snap remove lxd'
   fi
-  # install snapcraft snap from stable
-  lxc exec ${container_name} -- sh -c 'snap install snapcraft --classic'
+  # install snapcraft snap from stable, in case of xenial, install from 4.x channel
+  # xenial container is at this stage only used for snapd builds, so have it ready
+  if [ "${ubuntu_series}" == "xenial" ]; then
+    lxc exec ${container_name} -- sh -c 'snap install snapcraft --classic --channel 4.x/stable'
+  else
+    lxc exec ${container_name} -- sh -c 'snap install snapcraft --classic'
+  fi
   if [ "${ubuntu_series}" == "jammy" ]; then
     lxc exec ${container_name} -- sh -c 'snap install core22'
   fi
