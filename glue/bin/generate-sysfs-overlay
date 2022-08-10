@@ -5,7 +5,7 @@ generate_sysfs_overlay() {
     for c in backlight gpio leds bluetooth ptp pwm rtc video4linux
     do
         if [ -e /sys/class/${c} ]; then
-            find /sys/class/${c} -maxdepth 1 -type l -exec sh -c 'echo "mkdir -p \${sysfs_overlay}/$(realpath {}) \${sysfs_overlay}$(dirname {}); ln -sf $(readlink {}) \${sysfs_overlay}/{}"' \;
+            find /sys/class/${c} -maxdepth 1 -type l -exec sh -c 'echo "mkdir -p \${sysfs_overlay}$(realpath {}) \${sysfs_overlay}$(dirname {}); ln -sf $(readlink {}) \${sysfs_overlay}/{}"' \;
         fi
     done
 }
