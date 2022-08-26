@@ -30,8 +30,10 @@ else
             if [ -z "${2}" ]; then
                 echo "Missing target directory"
                 print_help
-            else 
-                generate_sysfs_overlay | sed -e 's/^/sysfs_overlay='"${2}"'; /' | xargs -I {} bash -c "{}"
+            else
+                export sysfs_overlay=$(realpath "${2}")
+                generate_sysfs_overlay | xargs -I {} bash -c "{}"
+                unset sysfs_overlay
             fi
             ;;
         *)
