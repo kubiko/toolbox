@@ -32,9 +32,10 @@ print_help() {
     echo -e "\t\t--valid | -v        : number of days assertion is valid from today"
     echo -e "\tOptional arguments:"
     echo -e "\t\t--password | -p     : user account password"
+    echo -e "\t\t--revision | -r     : assertion revision"
     echo -e "\tExamples:"
-    echo -e "\t\t$ sign-system-user-assertion --key model-key --brand-id ondra --authority-id ondra --model uc-20-ondra-pi --model uc-20-ondra-amd64 --name "Ondra Kubik" --email "ondra@ubuntu.com" --valid-for 60 > ondra-system-user.assert"
-    echo -e "\t\t$ sign-system-user-assertion --key model-key --brand-id ondra --authority-id ondra --model uc-20-ondra-pi --model uc-20-ondra-amd64 --name "Ondra Kubik" --username "ondrak" --password ubuntu --valid-for 60 > ondra-system-user.assert"
+    echo -e "\t\t$ sign-system-user-assertion --key model-key --brand-id ondra --authority-id ondra --model uc-20-ondra-pi --model uc-20-ondra-amd64 --name \"Ondra Kubik\" --email "ondra@ubuntu.com" --valid-for 60 > ondra-system-user.assert"
+    echo -e "\t\t$ sign-system-user-assertion --key model-key --brand-id ondra --authority-id ondra --model uc-20-ondra-pi --model uc-20-ondra-amd64 --name \"Ondra Kubik\" --username "ondrak" --password ubuntu --valid-for 60 > ondra-system-user.assert"
     echo -e "\n"
     echo -e "-h, --help   : show this help message and exit"
 }
@@ -111,6 +112,8 @@ check_value() {
 
 # store invoked command
 CONFIGS["ARGS"]="$@"
+# default revision is 1
+CONFIGS["revision"]="1"
 # parse passed parameters
 while [ "$1" != "" ]; do
     case $1 in
@@ -135,6 +138,10 @@ while [ "$1" != "" ]; do
             else
                 CONFIGS["models"]="${CONFIGS["models"]} ${2}"
             fi
+            shift
+            ;;
+        -r | --revision)
+            CONFIGS["revision"]="${2}"
             shift
             ;;
         -n | --name)
@@ -220,26 +227,28 @@ if [ -z "${system_user_assertion_json}" ]; then
            | jq \
                --arg authority_id "${CONFIGS["authority-id"]}" \
                --arg brand_id "${CONFIGS["brand-id"]}" \
+               --arg revision "${CONFIGS["revision"]}" \
                --arg models "${CONFIGS["models"]}" \
                --arg name "${CONFIGS["name"]}" \
                --arg email "${CONFIGS["email"]}" \
                --arg password "${CONFIGS["password"]}" \
                --arg time_since "$(date -u --iso-8601=seconds)" \
                --arg time_until "$(date -d "+${CONFIGS["valid"]} days" -u --iso-8601=seconds)" \
-              '{"type": "system-user", "authority-id": $authority_id, "brand-id": $brand_id, "series": ["16"], "models": ($models | split(" ")), $name, $email} + if ($password|length > 0) then { "password": $password } else {} end + . + { "since": $time_since, "until": $time_until}')
+              '{"type": "system-user", "authority-id": $authority_id, "revision": $revision, "brand-id": $brand_id, "series": ["16"], "models": ($models | split(" ")), $name, $email} + if ($password|length > 0) then { "password": $password } else {} end + . + { "since": $time_since, "until": $time_until}')
     elif [ -n "${CONFIGS["username"]}" ]; then
         # user username
         echo "Using username: ${CONFIGS["username"]}"
         system_user_assertion_json=$(jq --null-input \
            --arg authority_id "${CONFIGS["authority-id"]}" \
            --arg brand_id "${CONFIGS["brand-id"]}" \
+           --arg revision "${CONFIGS["revision"]}" \
            --arg models "${CONFIGS["models"]}" \
            --arg name "${CONFIGS["name"]}" \
            --arg username "${CONFIGS["username"]}" \
            --arg password "${CONFIGS["password"]}" \
            --arg time_since "$(date -u --iso-8601=seconds)" \
            --arg time_until "$(date -d "+${CONFIGS["valid"]} days" -u --iso-8601=seconds)" \
-          '{"type": "system-user", "authority-id": $authority_id, "brand-id": $brand_id, "series": ["16"], "models": ($models | split(" ")), "name": $name, "username": $username} + if ($password|length > 0) then { "password": $password } else {} end + { "since": $time_since, "until": $time_until }')
+          '{"type": "system-user", "authority-id": $authority_id, "revision": $revision, "brand-id": $brand_id, "series": ["16"], "models": ($models | split(" ")), "name": $name, "username": $username} + if ($password|length > 0) then { "password": $password } else {} end + { "since": $time_since, "until": $time_until }')
     else
         echo "Missing username or email"
         print_help
