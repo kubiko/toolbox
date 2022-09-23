@@ -297,6 +297,30 @@ sudo /usr/bin/dpkg "\$@"
 EOF
 
     lxc file push ${tmp_wrapper} ${container_name}/usr/local/bin/dpkg
+    tee ${tmp_wrapper} <<EOF
+#!/bin/sh
+sudo /usr/bin/apt-key "\$@"
+EOF
+
+    lxc file push ${tmp_wrapper} ${container_name}/usr/local/bin/apt-key
+    tee ${tmp_wrapper} <<EOF
+#!/bin/sh
+sudo /usr/bin/apt-add-repository "\$@"
+EOF
+
+    lxc file push ${tmp_wrapper} ${container_name}/usr/local/bin/apt-add-repository
+    tee ${tmp_wrapper} <<EOF
+#!/bin/sh
+sudo /usr/bin/apt-cache "\$@"
+EOF
+
+    lxc file push ${tmp_wrapper} ${container_name}/usr/local/bin/apt-cache
+    tee ${tmp_wrapper} <<EOF
+#!/bin/sh
+sudo /usr/bin/apt-config "\$@"
+EOF
+
+    lxc file push ${tmp_wrapper} ${container_name}/usr/local/bin/apt-config
     [ -e ${tmp_wrapper} ] && rm ${tmp_wrapper}
     lxc exec ${container_name} -- sh -c 'chown root:root /usr/local/bin/*'
     lxc exec ${container_name} -- sh -c 'chmod 755 /usr/local/bin/*'
