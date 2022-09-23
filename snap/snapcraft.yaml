@@ -1,13 +1,12 @@
 name: toolbox
-version: "0.7.55"
+version: "0.7.56"
 summary: Swiss knife of shell tools
 description: |
-  Set of usefull shell tools to be used on Ubuntu/Ubuntu core After install run follwing commands to enable all built in tools in your shell.
-  $ snap connect toolbox:home
+  Set of useful shell tools to be used on Ubuntu/Ubuntu core After install run the follwing commands to enable all built-in tools in your shell.
   $ toolbox.set-path &gt;&gt; ~/.bashrc
-  Logout and log back in. Or $ source ~/.bashrc
+  Log out and log back in. Or $ source ~/.bashrc
   Now all included tools should be in your path, and running unconfined :)
-  This is one time setup, when new tools are added they are automatically included in the path.
+  This is one-time setup, when new tools are added they are automatically included in the path.
 
 confinement: strict
 grade: stable
