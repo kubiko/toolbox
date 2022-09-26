@@ -281,19 +281,37 @@ lxd_ensure_container () {
     local tmp_wrapper=$(mktemp -u -q)
     tee ${tmp_wrapper} <<EOF
 #!/bin/sh
-sudo /usr/bin/apt "\$@"
+# do not force sudo use for all the options as that can cause problems
+if [ "${1}" = "changelog" ] || [ "${1}" = "download" ] || [ "${1}" = "source" ]; then
+  /usr/bin/apt "$@"
+else
+  sudo /usr/bin/apt "$@"
+fi
 EOF
 
     lxc file push ${tmp_wrapper} ${container_name}/usr/local/bin/apt
     tee ${tmp_wrapper} <<EOF
 #!/bin/sh
-sudo /usr/bin/apt-get "\$@"
+# do not force sudo use for all the options as that can cause problems
+if [ "${1}" = "changelog" ] || [ "${1}" = "download" ] || [ "${1}" = "source" ]; then
+  /usr/bin/apt-get "$@"
+else
+  sudo /usr/bin/apt-get "$@"
+fi
 EOF
 
     lxc file push ${tmp_wrapper} ${container_name}/usr/local/bin/apt-get
     tee ${tmp_wrapper} <<EOF
 #!/bin/sh
-sudo /usr/bin/dpkg "\$@"
+# do not force sudo use for all the options as that can cause problems
+if [ "${1}" = "--extract" ] || [ "${1}" = "-x" ] || [ "${1}" = "--print-architecture" ] || [ "${1}" = "--print-avail" ] \
+   || [ "${1}" = "--print-foreign-architectures" ] || [ "${1}" = "--list" ] || [ "${1}" = "-l" ] || [ "${1}" = "--listfiles" ] \
+   || [ "${1}" = "-L" ] ||[ "${1}" = "--search" ] || [ "${1}" = "-S" ] || [ "${1}" = "--unpack" ] || [ "${1}" = "--vextract" ] \
+   || [ "${1}" = "-X" ] || [ "${1}" = "--info" ] || [ "${1}" = "-I" ]; then
+  /usr/bin/dpkg "$@"
+else
+  sudo /usr/bin/dpkg "$@"
+fi
 EOF
 
     lxc file push ${tmp_wrapper} ${container_name}/usr/local/bin/dpkg
