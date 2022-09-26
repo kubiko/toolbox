@@ -305,10 +305,10 @@ EOF
     lxc file push ${tmp_wrapper} ${container_name}/usr/local/bin/apt-key
     tee ${tmp_wrapper} <<EOF
 #!/bin/sh
-sudo /usr/bin/apt-add-repository "\$@"
+sudo /usr/bin/add-apt-repository "\$@"
 EOF
 
-    lxc file push ${tmp_wrapper} ${container_name}/usr/local/bin/apt-add-repository
+    lxc file push ${tmp_wrapper} ${container_name}/usr/local/bin/add-apt-repository
     tee ${tmp_wrapper} <<EOF
 #!/bin/sh
 sudo /usr/bin/apt-cache "\$@"
