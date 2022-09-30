@@ -282,7 +282,7 @@ lxd_ensure_container () {
     tee ${tmp_wrapper} <<EOF
 #!/bin/sh
 # do not force sudo use for all the options as that can cause problems
-if [ "${1}" = "changelog" ] || [ "${1}" = "download" ] || [ "${1}" = "source" ]; then
+if [ "\${1}" = "changelog" ] || [ "\${1}" = "download" ] || [ "\${1}" = "source" ]; then
   /usr/bin/apt "\$@"
 else
   sudo /usr/bin/apt ""\$@"
@@ -293,7 +293,7 @@ EOF
     tee ${tmp_wrapper} <<EOF
 #!/bin/sh
 # do not force sudo use for all the options as that can cause problems
-if [ "${1}" = "changelog" ] || [ "${1}" = "download" ] || [ "${1}" = "source" ]; then
+if [ "\${1}" = "changelog" ] || [ "\${1}" = "download" ] || [ "\${1}" = "source" ]; then
   /usr/bin/apt-get "\$@"
 else
   sudo /usr/bin/apt-get "\$@"
@@ -304,10 +304,10 @@ EOF
     tee ${tmp_wrapper} <<EOF
 #!/bin/sh
 # do not force sudo use for all the options as that can cause problems
-if [ "${1}" = "--extract" ] || [ "${1}" = "-x" ] || [ "${1}" = "--print-architecture" ] || [ "${1}" = "--print-avail" ] \
-   || [ "${1}" = "--print-foreign-architectures" ] || [ "${1}" = "--list" ] || [ "${1}" = "-l" ] || [ "${1}" = "--listfiles" ] \
-   || [ "${1}" = "-L" ] ||[ "${1}" = "--search" ] || [ "${1}" = "-S" ] || [ "${1}" = "--unpack" ] || [ "${1}" = "--vextract" ] \
-   || [ "${1}" = "-X" ] || [ "${1}" = "--info" ] || [ "${1}" = "-I" ]; then
+if [ "\${1}" = "--extract" ] || [ "\${1}" = "-x" ] || [ "\${1}" = "--print-architecture" ] || [ "\${1}" = "--print-avail" ] \
+   || [ "\${1}" = "--print-foreign-architectures" ] || [ "\${1}" = "--list" ] || [ "\${1}" = "-l" ] || [ "\${1}" = "--listfiles" ] \
+   || [ "\${1}" = "-L" ] ||[ "\${1}" = "--search" ] || [ "\${1}" = "-S" ] || [ "\${1}" = "--unpack" ] || [ "\${1}" = "--vextract" ] \
+   || [ "\${1}" = "-X" ] || [ "\${1}" = "--info" ] || [ "\${1}" = "-I" ]; then
   /usr/bin/dpkg "\$@"
 else
   sudo /usr/bin/dpkg "\$@"
