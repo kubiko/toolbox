@@ -285,7 +285,7 @@ lxd_ensure_container () {
 if [ "\${1}" = "changelog" ] || [ "\${1}" = "download" ] || [ "\${1}" = "source" ]; then
   /usr/bin/apt "\$@"
 else
-  sudo /usr/bin/apt ""\$@"
+  sudo /usr/bin/apt "\$@"
 fi
 EOF
 
