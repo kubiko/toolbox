@@ -4,7 +4,9 @@ set -e
 
 KEYNAME=""
 unset CONFIGS
+unset SSHKEYS
 declare -A CONFIGS
+declare -a SSHKEYS
 
 # first argument is the name of the key to sign the assertion with
 print_help() {
@@ -24,18 +26,23 @@ print_help() {
     echo -e "\tRequired arguments:"
     echo -e "\t\t--brand-id | -b     : brand-id"
     echo -e "\t\t--authority-id | -a : authority-id"
+    echo -e "\t\t--key | -k          : signing key"
     echo -e "\t\t--model | -m        : model for which system-user-asserrion is valid, can be repeated for more models"
     echo -e "\t\t--name | -n         : User's full name"
-    echo -e "\t\t--email | -e        : email address of the account: ssh keys and username is determined from LP account"
-    echo -e "\t\t                      if email is passed, it takes priority over username argument"
-    echo -e "\t\t--username | -u     : username, unless email is set, then ignored"
+    echo -e "\t\t--email | -e        : email address of the account: ssh keys and username is determined from LP account unless a username is specified"
+    echo -e "\t\t--username | -u     : username. When specified, email address is not used to determine username form LP account"  
+    echo -e "\t\t                      if specified, --password or --ssh-key are mandatory"  
     echo -e "\t\t--valid | -v        : number of days assertion is valid from today"
     echo -e "\tOptional arguments:"
     echo -e "\t\t--password | -p     : user account password"
+    echo -e "\t\t--ssh-key  | -s     : path to user account ssh public key"
+    echo -e "\t\t                      multiple keys can be specified repeating the --ssh-key argument)"
+    echo -e "\t\t                      ignored in case username is not provided"
     echo -e "\t\t--revision | -r     : assertion revision"
     echo -e "\tExamples:"
-    echo -e "\t\t$ sign-system-user-assertion --key model-key --brand-id ondra --authority-id ondra --model uc-20-ondra-pi --model uc-20-ondra-amd64 --name \"Ondra Kubik\" --email "ondra@ubuntu.com" --valid-for 60 > ondra-system-user.assert"
-    echo -e "\t\t$ sign-system-user-assertion --key model-key --brand-id ondra --authority-id ondra --model uc-20-ondra-pi --model uc-20-ondra-amd64 --name \"Ondra Kubik\" --username "ondrak" --password ubuntu --valid-for 60 > ondra-system-user.assert"
+    echo -e "\t\t$ sign-system-user-assertion --key model-key --brand-id ondra --authority-id ondra --model uc-20-ondra-pi --model uc-20-ondra-amd64 --name \"Ondra Kubik\" --email \"ondra@ubuntu.com\" --valid-for 60 > ondra-system-user.assert"
+    echo -e "\t\t$ sign-system-user-assertion --key model-key --brand-id ondra --authority-id ondra --model uc-20-ondra-pi --model uc-20-ondra-amd64 --name \"Ondra Kubik\" --email \"ondra@ubuntu.com\" --username "ondrak" --password ubuntu --valid-for 60 > ondra-system-user.assert"
+    echo -e "\t\t$ sign-system-user-assertion --key model-key --brand-id ondra --authority-id ondra --model uc-20-ondra-pi --model uc-20-ondra-amd64 --name \"Ondra Kubik\" --email \"ondra@ubuntu.com\" --username demo_user --valid-for 60 --ssh-key ~/.ssh/demo_id_rsa.pub > system-user-pi.assert"
     echo -e "\n"
     echo -e "-h, --help   : show this help message and exit"
 }
@@ -64,8 +71,8 @@ rawurlencode() {
 
 get_account_key_assertions() {
   # first get public SHA3 signature of your account key from snapcraft list-keys
-  publicSHA3=$(snapcraft list-keys | grep "${CONFIGS["key"]}" | awk '{print $3}')
-
+  publicSHA3=$(snapcraft list-keys | grep $'\s'"${CONFIGS["key"]}"$'\s' | awk '{print $3}') 
+  
   # make sure that we didn't pick up more than one key if you have multiple keys matching the provided name
   if [ "$(echo "$publicSHA3" | wc -w)" != "1" ]; then
     echo "invalid number of keys found, must be exactly 1"
@@ -118,7 +125,7 @@ CONFIGS["revision"]="1"
 while [ "$1" != "" ]; do
     case $1 in
         -j | --json)
-            # than 
+            # than 
             CONFIGS["json"]="true"
             ;;
         -b | --brand-id)
@@ -169,6 +176,11 @@ while [ "$1" != "" ]; do
             CONFIGS["key"]="${2}"
             shift
             ;;
+        -s | --ssh-key)
+            check_value ${1} ${2}
+	    SSHKEYS+=("${2}")
+            shift
+            ;;
         -v | --valid-for)
             check_value ${1} ${2}
             re='^[0-9]+$'
@@ -207,10 +219,17 @@ if [ -z "${system_user_assertion_json}" ]; then
     # check we have minimim params
     if [ -z "${CONFIGS["brand-id"]}" ] || [ -z "${CONFIGS["authority-id"]}" ] \
        || [ -z "${CONFIGS["models"]}" ] || [ -z "${CONFIGS["name"]}" ] \
-       || [ -z "${CONFIGS["key"]}" ] || [ -z "${CONFIGS["valid"]}" ] ; then
-        echo "Missing one or more of compulsory arguments: brand-id, authority-id, models, name, key, valid"
+       || [ -z "${CONFIGS["key"]}" ] || [ -z "${CONFIGS["valid"]}" ] || [ -z "${CONFIGS["email"]}" ] ; then
+        echo "Missing one or more of compulsory arguments: brand-id, authority-id, models, name, key, email, valid"
         print_help
         exit 1
+    fi
+    if [ -n "${CONFIGS["username"]}" ]; then
+	if [ -z "${CONFIGS["password"]}" ] && [ "${#SSHKEYS[@]}" -eq "0" ]; then
+	   echo "Missing --username or --password argument"
+	   print_help
+	   exit 1
+	fi
     fi
 
     # encode password if available
@@ -218,9 +237,37 @@ if [ -z "${system_user_assertion_json}" ]; then
         CONFIGS["password"]=$(echo ${CONFIGS["password"]} | mkpasswd -m sha512crypt -)
     fi
 
+    # prepare ssh-keys list if available
+    if [ "${#SSHKEYS[@]}" -gt "0" ]; then
+       for ssh_key in "${SSHKEYS[@]}"; do
+	       if [ -z "${CONFIGS["ssh-keys"]}" ]; then
+	          CONFIGS["ssh-keys"]="\"$(cat $ssh_key)\""
+	       else
+		  CONFIGS["ssh-keys"]=${CONFIGS["ssh-keys"]}", \"$(cat $ssh_key)\""
+	      fi
+       done
+    fi
+    CONFIGS["ssh-keys"]="[""${CONFIGS["ssh-keys"]}""]"
+
     # generate json on the fly
     # we need either username or email
-    if [ -n "${CONFIGS["email"]}" ]; then
+    if [ -n "${CONFIGS["username"]}" ]; then
+        # user username
+        # echo "Using username: ${CONFIGS["username"]}"
+        system_user_assertion_json=$(jq --null-input \
+           --arg authority_id "${CONFIGS["authority-id"]}" \
+           --arg brand_id "${CONFIGS["brand-id"]}" \
+           --arg revision "${CONFIGS["revision"]}" \
+           --arg models "${CONFIGS["models"]}" \
+           --arg name "${CONFIGS["name"]}" \
+           --arg email "${CONFIGS["email"]}" \
+           --arg username "${CONFIGS["username"]}" \
+           --arg password "${CONFIGS["password"]}" \
+           --argjson ssh_keys "${CONFIGS["ssh-keys"]}" \
+           --arg time_since "$(date -u --iso-8601=seconds)" \
+           --arg time_until "$(date -d "+${CONFIGS["valid"]} days" -u --iso-8601=seconds)" \
+          '{"type": "system-user", "authority-id": $authority_id, "revision": $revision, "brand-id": $brand_id, "series": ["16"], "models": ($models | split(" ")), "name": $name, "email": $email, "username": $username} + if ($password|length > 0) then { "password": $password } else {} end + if ($ssh_keys|length > 0) then { "ssh-keys": $ssh_keys } else {} end + { "since": $time_since, "until": $time_until }')
+    elif [ -n "${CONFIGS["email"]}" ]; then
        encoded_email=$(rawurlencode ${CONFIGS["email"]})
        system_user_assertion_json=$( curl --silent https://login.ubuntu.com/api/v2/keys/${encoded_email} \
            | jq  '.["ssh-keys"] = .ssh_keys | del(.ssh_keys, .openid_identifier)' \
@@ -235,20 +282,6 @@ if [ -z "${system_user_assertion_json}" ]; then
                --arg time_since "$(date -u --iso-8601=seconds)" \
                --arg time_until "$(date -d "+${CONFIGS["valid"]} days" -u --iso-8601=seconds)" \
               '{"type": "system-user", "authority-id": $authority_id, "revision": $revision, "brand-id": $brand_id, "series": ["16"], "models": ($models | split(" ")), $name, $email} + if ($password|length > 0) then { "password": $password } else {} end + . + { "since": $time_since, "until": $time_until}')
-    elif [ -n "${CONFIGS["username"]}" ]; then
-        # user username
-        echo "Using username: ${CONFIGS["username"]}"
-        system_user_assertion_json=$(jq --null-input \
-           --arg authority_id "${CONFIGS["authority-id"]}" \
-           --arg brand_id "${CONFIGS["brand-id"]}" \
-           --arg revision "${CONFIGS["revision"]}" \
-           --arg models "${CONFIGS["models"]}" \
-           --arg name "${CONFIGS["name"]}" \
-           --arg username "${CONFIGS["username"]}" \
-           --arg password "${CONFIGS["password"]}" \
-           --arg time_since "$(date -u --iso-8601=seconds)" \
-           --arg time_until "$(date -d "+${CONFIGS["valid"]} days" -u --iso-8601=seconds)" \
-          '{"type": "system-user", "authority-id": $authority_id, "revision": $revision, "brand-id": $brand_id, "series": ["16"], "models": ($models | split(" ")), "name": $name, "username": $username} + if ($password|length > 0) then { "password": $password } else {} end + { "since": $time_since, "until": $time_until }')
     else
         echo "Missing username or email"
         print_help
