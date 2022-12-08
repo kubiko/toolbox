@@ -32,7 +32,7 @@ print_help() {
     echo -e "\t\t--email | -e        : email address of the account: ssh keys and username is determined from LP account unless a username is specified"
     echo -e "\t\t--username | -u     : username. When specified, email address is not used to determine username form LP account"  
     echo -e "\t\t                      if specified, --password or --ssh-key are mandatory"  
-    echo -e "\t\t--valid | -v        : number of days assertion is valid from today"
+    echo -e "\t\t--valid-for | -v    : number of days assertion is valid from today"
     echo -e "\tOptional arguments:"
     echo -e "\t\t--password | -p     : user account password"
     echo -e "\t\t--ssh-key  | -s     : path to user account ssh public key"
@@ -125,7 +125,7 @@ CONFIGS["revision"]="1"
 while [ "$1" != "" ]; do
     case $1 in
         -j | --json)
-            # than 
+            # than
             CONFIGS["json"]="true"
             ;;
         -b | --brand-id)
@@ -225,11 +225,11 @@ if [ -z "${system_user_assertion_json}" ]; then
         exit 1
     fi
     if [ -n "${CONFIGS["username"]}" ]; then
-	if [ -z "${CONFIGS["password"]}" ] && [ "${#SSHKEYS[@]}" -eq "0" ]; then
-	   echo "Missing --username or --password argument"
-	   print_help
-	   exit 1
-	fi
+        if [ -z "${CONFIGS["password"]}" ] && [ "${#SSHKEYS[@]}" -eq "0" ]; then
+            echo "Missing --username or --password argument"
+            print_help
+            exit 1
+        fi
     fi
 
     # encode password if available
@@ -287,7 +287,6 @@ if [ -z "${system_user_assertion_json}" ]; then
         print_help
         exit 0
     fi
-    
 fi
 
 get_account_key_assertions
