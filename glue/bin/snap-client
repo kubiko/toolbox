@@ -1,0 +1,522 @@
+it #!/bin/bash
+# set -ex
+# lean snap client handling multiple snap command
+# all the commands are using snap REST API calls
+
+
+# check if it's one of the supported quick commands
+SNAPD_SOCKET=/run/snapd.socket
+CURL="curl -o/dev/stdout --silent --unix-socket $SNAPD_SOCKET -D- "
+unset snap_app
+# if invoked as /snap/bin/<app> implies snap run
+if [ "/snap/bin" = "$(dirname $0)" ]; then
+  cmd="run"
+  snap_app=$(basename $0)
+else
+  cmd="$1"
+  shift
+fi
+
+# by default wait for change to complete
+no_wait="false"
+
+# loop to wait for change to complete
+wait_for_change_completion() {
+    # progress -\|/
+    chars="/-\|"
+    i=0
+    local ch="${1}"
+    local status=$($CURL "http://localhost/v2/changes/${ch}" | sed '/^{/!d' | jq --raw-output '[.result.ready, .result.status, .result.kind] | "\(.[0]) \(.[1])  \(.[2])"')
+    while [ "${status%% *}" = "false" ]
+    do
+        # print progress and sleep 1s
+        echo -en "Waiting for change ${status##* } (${ch}) to complete: ${chars:$i:1}" "\r"
+        ((i=i+1))
+        i=$(($i % 4))
+        sleep 1
+        status=$($CURL "http://localhost/v2/changes/${ch}" | sed '/^{/!d' | jq --raw-output '[.result.ready, .result.status, .result.kind] | "\(.[0]) \(.[1])  \(.[2])"')
+    done
+    local change_status=$(echo ${status} | awk '{print $2}')
+    echo -en "Change ${status##* } (${ch}) finished in status: ${change_status}\n"
+}
+
+# get last change id for the given change kind
+snapd_get_last_change_id() {
+    local kind="${1}"
+    $CURL "http://localhost/v2/changes?select=all" \
+        | sed '/^{/!d' \
+        | jq --raw-output --arg kind "${kind}" 'last(.result|=sort_by(.id|tonumber)|.result[] | select(.kind==$kind))|  .id | values'
+}
+
+# handle async reply from snapd
+handle_async_reply() {
+    while read -r msg
+    do
+        # first check if this is change of just message
+        if [ "$(echo ${msg} | awk '{print $1}')" = "Change" ]; then
+            if [ "${no_wait}" = "false" ]; then
+                local change_n=$(echo ${msg} | awk '{print $2}')
+                wait_for_change_completion ${change_n}
+            else
+                echo "${msg}"
+            fi
+        else
+            echo "${msg}"
+        fi
+    done
+}
+
+case "${cmd}" in
+  remove)
+    purge="false"
+    if [ "$1" = "--purge" ]; then
+      purge="true"
+      shift 1
+    fi
+    name="$1"
+    if [ -z "$name" ]; then
+      echo "error: missing snap name"
+      exit 1
+    fi
+    echo "{\"action\":\"$cmd\",\"purge\": $purge}" | $CURL \
+       -X POST -d@- "http://localhost/v2/snaps/$name" \
+       | sed '/^{/!d' \
+       | jq --raw-output 'if .type == "async" then ["Change", .change] | "\(.[0])\t\(.[1])" else [.result.message, .result.kind] | "\(.[0])\t \(.[1])" end'
+    ;;
+  install)
+    # parse optional params and snap name(s)
+    cmd_options=""
+    while [ "$1" != "" ]
+    do
+        case $1 in
+            --dangerous)
+                cmd_options+=" -F dangerous=true"
+                ;;
+            --stable)
+                cmd_options+=" -F channel=stable"
+                ;;
+            --candidate)
+                cmd_options+=" -F channel=candidate"
+                ;;
+            --beta)
+                cmd_options+=" -F channel=beta"
+                ;;
+            --edge)
+                cmd_options+=" -F channel=edge"
+                ;;
+            --channel)
+                cmd_options+=" -F channel=${2}"
+                shift
+                ;;
+            --channel=*)
+                cmd_options+=" -F channel=${1##*=}"
+                ;;
+            --classic)
+                cmd_options+=" -F classic=true"
+                ;;
+            --devmode)
+                cmd_options+=" -F devmode=true"
+                ;;
+            --system-restart-immediate)
+                cmd_options+=" -F system-restart-immediate=true"
+                ;;
+            --no-wait)
+                no_wait="true"
+                ;;
+            *)
+                # assume param is snap
+                snaps_to_install+=" -F snap=@${1}"
+                ;;
+        esac
+        shift
+    done
+    if [ -z "${snaps_to_install}" ]; then
+        echo "error: missing at least one snap name"
+        exit 1
+    fi
+    if [ "${snaps_to_install%.snap}" != "${snaps_to_install}" ]; then
+      # file upload
+      $CURL -F action=install ${cmd_options:1} ${snaps_to_install:1} \
+          -X POST "http://localhost/v2/snaps" \
+          | sed '/^{/!d' \
+          | jq --raw-output 'if .type == "async" then ["Change", .change] | "\(.[0])\t\(.[1])" else [.result.message, .result.kind] | "\(.[0])\t \(.[1])" end' \
+          | handle_async_reply
+    else
+      echo "{\"action\":\"$cmd\",\"dangerous\":\"$dangerous\"}" | $CURL \
+         -X POST -d@- "http://localhost/v2/snaps/$names" \
+         | sed '/^{/!d' \
+         | jq --raw-output 'if .type == "async" then ["Change", .change] | "\(.[0])\t\(.[1])" else [.result.message, .result.kind] | "\(.[0])\t \(.[1])" end' \
+         | handle_async_reply
+    fi
+    ;;
+  revert)
+    cmd_options="{\"action\":\"$cmd\""
+    while [ "$1" != "" ]
+    do
+        case $1 in
+            --revision)
+                cmd_options+=",\"revision\": \"${2}\""
+                shift
+                ;;
+            --revision=*)
+                cmd_options+=",\"revision\": \"${1##*=}\""
+                ;;
+            --classic)
+                cmd_options+=",\"classic\": \"true\""
+                ;;
+            --devmode)
+                cmd_options+=",\"devmode\": \"true\""
+                ;;
+            --jailmode)
+                cmd_options+=",\"jailmode\": \"true\""
+                ;;
+            --system-restart-immediate)
+                cmd_options+=",\"system-restart-immediate\": \"true\""
+                ;;
+            --no-wait)
+                no_wait="true"
+                ;;
+            *)
+                name="${1}"
+                ;;
+        esac
+        shift
+    done
+    cmd_options+="}"
+    if [ -z "$name" ]; then
+      echo "error: missing snap name"
+      exit 1
+    fi
+    echo ${cmd_options} | $CURL \
+       -X POST -d@- "http://localhost/v2/snaps/$name" \
+       | sed '/^{/!d' \
+       | jq --raw-output 'if .type == "async" then ["Change", .change] | "\(.[0])\t\(.[1])" else [.result.message, .result.kind] | "\(.[0])\t \(.[1])" end' \
+       | handle_async_reply
+    ;;
+  abort)
+    nr="$1"
+    if [ -z "$nr" ]; then
+      echo "error: missing change ID"
+      exit 1
+    fi
+    echo "{\"action\":\"$cmd\"}" | $CURL \
+       -X POST -d@- "http://localhost/v2/changes/$nr" \
+       | sed '/^{/!d' \
+       | jq --raw-output 'if .type == "async" then ["Change", .change] | "\(.[0])\t\(.[1])" else [.result.message, .result.kind] | "\(.[0])\t \(.[1])" end'
+    ;;
+  ack)
+    as="$1"
+    if [ ! -e "${as}" ]; then
+      echo "error: missing assertion file"
+      exit 1
+    fi
+    cat ${as} | $CURL \
+      -X POST --data-binary @- "http://localhost/v2/assertions" \
+      | sed '/^{/!d' \
+      | jq -r 'if .status != "OK" then [ .result.message ] | "error: \(.[0])" else empty end'
+    ;;
+  known)
+    as="$1"
+    if [ -z "${as}" ]; then
+      echo "error: missing assertion name"
+      exit 1
+    fi
+    as="${1}"
+    $CURL \
+      "http://localhost/v2/assertions/${as}" \
+      | sed '/type:.*/,$!d'
+    ;;
+  list)
+    $CURL "http://localhost/v2/snaps" | sed '/^{/!d' \
+      | jq --raw-output '.result|=sort_by(.name)|.result[] |[.name, .version, .revision, ."tracking-channel" ,.publisher.username, .type]| "\(.[0])\t\(.[1])\t\(.[2])\t\(.[3])\t\(.[4])\t\(.[5])"' \
+      | awk 'BEGIN{print "Name\tVersion\tRev\tTracking\tPublisher\tNotes"}1' \
+      | column -t
+    ;;
+  change)
+    nr="$1"
+    if [ -z "$nr" ]; then
+      echo "error: missing change ID"
+      exit 1
+    fi
+    $CURL "http://localhost/v2/changes/$nr" \
+      | sed '/^{/!d' \
+      | jq --raw-output '.result | select(.tasks != null) | .tasks[] | [.status, ."spawn-time",."ready-time", .summary]| "\(.[0])\t\(.[1])\t\(.[2])\t\t\(.[3])"' \
+      | awk 'BEGIN{print "Status\tSpawn\t\t\t\tReady\t\t\t\t\tSummary"}1'
+    ;;
+  changes)
+    select="all"
+    case $1 in
+      --all)
+        select="all"
+        ;;
+      --ready)
+        select="ready"
+        ;;
+      --in-progress)
+        select="in-progress"
+        ;;
+    esac
+    $CURL "http://localhost/v2/changes?select=${select}" \
+       | sed '/^{/!d' \
+       | jq --raw-output '.result|=sort_by(.id|tonumber)|.result[] | [.id , .status, ."spawn-time", ."ready-time", .summary] | "\(.[0])\t\(.[1])\t\(.[2])\t\(.[3])\t\t\(.[4])"' \
+       | awk 'BEGIN{print "ID\tStatus\tSpawn\t\t\t\tReady\t\t\t\t\tSummary"}1'
+    ;;
+  services)
+    ${CURL} "http://localhost/v2/apps?select=service" \
+      | sed '/^{/!d' \
+      | sed '/^{/!d' \
+      | jq --raw-output '.result[]| [.snap,.name, if .enabled then "enabled" else "disabled" end, if .active then "active" else "inactive" end, .daemon] | "\(.[0]).\(.[1])   \(.[2])    \(.[3])   \(.[4])"' \
+      | awk 'BEGIN{print "Service Startup Current Type"}1' \
+      | column -t
+    ;;
+  start)
+    service_name="${1}"
+    shift
+    enable="false"
+    [ "${1}" = "--enable" ] && enable="true"
+    echo "{\"action\":\"start\", \"names\":[\"${service_name}\"], \"enable\":${enable}}" \
+       | $CURL -X POST -d@- "http://localhost/v2/apps" \
+       | sed '/^{/!d' \
+       | jq --raw-output 'if .type == "error" then .result.message else ["Change", .change] | "\(.[0])\t\(.[1])" end'
+    ;;
+  stop)
+    service_name="${1}"
+    shift
+    disable="false"
+    [ "${1}" = "--disable" ] && disable="true"
+    echo "{\"action\":\"stop\", \"names\":[\"${service_name}\"], \"disable\":${disable}}" \
+       | $CURL -X POST -d@- "http://localhost/v2/apps" \
+       | sed '/^{/!d' \
+       | jq --raw-output 'if .type == "error" then .result.message else ["Change", .change] | "\(.[0])\t\(.[1])" end'
+    ;;
+  restart)
+    service_name="${1}"
+    shift
+    reload="false"
+    [ "${1}" = "--reload" ] && reload="true"
+    echo "{\"action\":\"restart\", \"names\":[\"${service_name}\"], \"reload\":${reload}}" \
+       | $CURL -X POST -d@- "http://localhost/v2/apps" \
+       | sed '/^{/!d' \
+       | jq --raw-output 'if .type == "error" then .result.message else ["Change", .change] | "\(.[0])\t\(.[1])" end'
+    ;;
+  connect)
+    # <plug snap>:<plug> [<slot snap>:<slot>]
+    plug_snap="${1%:*}"
+    plug="${1#*:}"
+    msg="{ \"action\": \"connect\",\"plugs\": [{\"snap\": \"${plug_snap}\", \"plug\": \"${plug}\"}]"
+    # if there is no slot snap, assume snapd
+    if [ -n "${2}" ]; then
+      slot_snap="${2%:*}"
+      slot="${2#*:}"
+    else
+      slot_snap="snapd"
+    fi
+    [ -z "${slot}" ] && slot="${plug}"
+    msg+=",\"slots\": [{\"snap\": \"${slot_snap}\", \"slot\": \"${slot}\"}]"
+    msg+="}"
+    echo "${msg}"
+    echo "${msg}" \
+       | ${CURL} -X POST -d@- "http://localhost/v2/interfaces" \
+       | sed '/^{/!d' \
+       | jq --raw-output 'if .type == "error" then .result.message else ["Change", .change] | "\(.[0])\t\(.[1])" end'
+    ;;
+  disconnect)
+    # <plug snap>:<plug> [<slot snap>:<slot>]
+    plug_snap="${1%:*}"
+    plug="${1#*:}"
+    msg="{\"action\": \"disconnect\",\"plugs\": [{\"snap\": \"${plug_snap}\", \"plug\": \"${plug}\"}]"
+    if [ -n "${2}" ]; then
+      slot_snap="${2%:*}"
+      slot="${2#*:}"
+    else
+      slot_snap="snapd"
+    fi
+    [ -z "${slot}" ] && slot="${plug}"
+    msg+=",\"slots\": [{\"snap\": \"${slot_snap}\", \"slot\": \"${slot}\"}]"
+    msg+="}"
+    echo "${msg}"
+    echo "${msg}" \
+       | ${CURL} -X POST -d@- "http://localhost/v2/interfaces" \
+       | sed '/^{/!d' \
+       | jq --raw-output 'if .type == "error" then .result.message else ["Change", .change] | "\(.[0])\t\(.[1])" end'
+    ;;
+  managed)
+    $CURL "http://localhost/v2/system-info" | sed '/^{/!d' \
+      | jq --raw-output '.result.managed'
+    ;;
+  watch)
+    case $1 in
+      --last=*)
+        kind=$(echo ${1##*=} | sed "s/'//g" )
+        change_id=$(snapd_get_last_change_id ${kind%%\?*})
+        if [ -n "${change_id}" ]; then
+            wait_for_change_completion ${change_id}
+        else
+            # A question mark at the end of the kind means to do nothing (instead of returning an error) if no
+            # change of the given type is found
+            if [ "${kind%%\?*}" = "${kind}" ]; then
+                echo "error: no changes of type \"${kind}\" found"
+                exit 1
+            fi
+        fi
+        ;;
+      *)
+        wait_for_change_completion ${1}
+        ;;
+    esac
+    ;;
+  create-user)
+    cmd_options="{\"action\": \"create\""
+    while [ "$1" != "" ]
+    do
+        case $1 in
+            --username)
+              cmd_options+=",\"username\": \"${2}\""
+              shift
+              ;;
+            --email)
+                cmd_options+=",\"email\": \"${2}\""
+                shift
+                ;;
+            --sudoer)
+                cmd_options+=",\"sudoer\": true"
+                ;;
+            --known)
+                cmd_options+=",\"known\": true"
+                ;;
+            --automatic)
+                cmd_options+=",\"automatic\": true"
+                ;;
+            --force-managed)
+                cmd_options+=",\"force-managed\": true"
+                ;;
+            *)
+                echo "unknown create user option: ${1}"
+                exit 1
+                ;;
+        esac
+        shift
+    done
+    cmd_options+="}"
+    echo "cmd_options=${cmd_options}"
+    echo ${cmd_options} | $CURL \
+       -X POST -d@- "http://localhost/v2/users" \
+        | sed '/^{/!d' \
+        | jq 'if .status != "OK" then [ .result.message ] | "error: \(.[0])" else .result end'
+    ;;
+remove-user)
+    cmd_options="{\"action\": \"remove\""
+    while [ "$1" != "" ]
+    do
+        case $1 in
+            --username)
+              cmd_options+=",\"username\": \"${2}\""
+              shift
+              ;;
+            *)
+                echo "unknown create user option: ${1}"
+                exit 1
+                ;;
+        esac
+        shift
+    done
+    cmd_options+="}"
+    echo "cmd_options=${cmd_options}"
+    echo ${cmd_options} | $CURL \
+       -X POST -d@- "http://localhost/v2/users" \
+       | sed '/^{/!d' \
+       | jq 'if .status != "OK" then [ .result.message ] | "error: \(.[0])" else .result.removed[] | [ .username ] | "removed user: \(.[0])" end'
+    ;;
+  help|--help|-h)
+    echo -e "There is no proper help :("
+    echo -e "For details, refer to snapd RES API:"
+    echo -e "\t\thttps://snapcraft.io/docs/snapd-api"
+    echo -e ""
+    echo -e "Supported commands:"
+    echo -e "\tinstall: install snap"
+    echo -e "\t\t<snap(s) to install>"
+    echo -e "\t\t--dangerous: install unasserted snap"
+    echo -e "\t\t--stable: assumes --channel latest/stable"
+    echo -e "\t\t--candidate: assumes --channel latest/candidate"
+    echo -e "\t\t--beta: assumes --channel latest/beta"
+    echo -e "\t\t--edge: assumes --channel latest/edge"
+    echo -e "\t\t--channel: <channel to install from <track>/<channel>/<branch>"
+    echo -e "\t\t--classic: classic confinement"
+    echo -e "\t\t--devmode: install in devmode"
+    echo -e "\t\t--system-restart-immediate: restart imediatelly after install for snaps requiring system restart"
+    echo -e "\t\t--no-wait: do not wait for completion"
+    echo -e ""
+    echo -e "\tremove: remove snap"
+    echo -e "\t\t<snap name>"
+    echo -e "\t\t--purge: purge all snap data"
+    echo -e ""
+    echo -e "\trevert: rever snap"
+    echo -e "\t\t<snap name>"
+    echo -e "\t\t--revision: <snap revison>"
+    echo -e "\t\t--classic: classic confinement"
+    echo -e "\t\t--devmode: install in devmode"
+    echo -e "\t\t--system-restart-immediate: restart imediatelly after install for snaps requiring system restart"
+    echo -e "\t\t--no-wait: do not wait for completion"
+    echo -e "\t\t--jailmode: set jailmode for snap"
+    echo -e ""
+    echo -e "\tabort: abort"
+    echo -e "\t\t<change id>"
+    echo -e ""
+    echo -e "\tack: acknowledge assertion"
+    echo -e "\t\t<assertion file>"
+    echo -e ""
+    echo -e "\tknown: show known assertion type"
+    echo -e "\t\t<assertion type>"
+    echo -e ""
+    echo -e "\tlist: list installed snaps"
+    echo -e ""
+    echo -e "\tchanges: list changes"
+    echo -e "\t\t--all: all changes (default)"
+    echo -e "\t\t--ready:"
+    echo -e "\t\t--in-progress:"
+    echo -e ""
+    echo -e "\tchange: show change details"
+    echo -e "\t\t<change id>"
+    echo -e ""
+    echo -e "\tservices: list all installed services"
+    echo -e ""
+    echo -e "\tstart: start service(s)"
+    echo -e "\t\t<service name: <snap name>.<service name> or <snap name> for all services in snap>"
+    echo -e "\t\t--enable"
+    echo -e ""
+    echo -e "\tstop: stop service(s)"
+    echo -e "\t\t<service name: <snap name>.<service name> or <snap name> for all services in snap>"
+    echo -e "\t\t--disable"
+    echo -e ""
+    echo -e "\trestart: restart service(s)"
+    echo -e "\t\t<service name: <snap name>.<service name> or <snap name> for all services in snap>"
+    echo -e "\t\t--reload: reload service file"
+    echo -e ""
+    echo -e "\tconnect: connect interface"
+    echo -e "\t\t<plug snap>:<plug> [<slot snap>:<slot>]"
+    echo -e "\t\tfor system slots, slot part can be omitted: <plug snap>:<plug>"
+    echo -e ""
+    echo -e "\tdisconnect: disconnect interface"
+    echo -e "\t\t<plug snap>:<plug>"
+    echo -e ""
+    echo -e "\tmanaged: is system managed"
+    echo -e ""
+    echo -e "\twatch: watch change completion"
+    echo -e "\t\t<change number>"
+    echo -e "\t\t--last=<change type>"
+    echo -e ""
+    echo -e "\tcreate-user: create user"
+    echo -e "\t\t--email: <email>"
+    echo -e "\t\t--username: <user to create>"
+    echo -e "\t\t--sudoer"
+    echo -e "\t\t--known"
+    echo -e "\t\t--automatic"
+    echo -e "\t\t--force-managed"
+    echo -e ""
+    echo -e "\tremove-user: remove user"
+    echo -e "\t\t--username: <user to remove>"
+    ;;
+  *)
+    echo "Command ${cmd} is not supported, use actual snap client"
+    ;;
+esac
