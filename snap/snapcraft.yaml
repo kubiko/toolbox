@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.8.1"
+version: "0.8.2"
 summary: Swiss knife of shell tools
 description: |
   Set of useful shell tools to be used on Ubuntu/Ubuntu core After install run the follwing commands to enable all built-in tools in your shell.
@@ -200,7 +200,8 @@ parts:
         source-branch: applied/ubuntu/bionic
         source-type: git
         plugin: autotools
-        stage-packages: [libusb-1.0-0]
+        stage-packages:
+            - libusb-1.0-0
         configflags:
             - --prefix=/snap/${SNAPCRAFT_PROJECT_NAME}/current/usr
             - --libdir=/snap/${SNAPCRAFT_PROJECT_NAME}/current/usr/lib
@@ -307,6 +308,16 @@ parts:
             - bin/tio*
             - bin/bigbench*
             - usr/doc/tiobench
+
+    ioctl:
+        plugin: make
+        source: https://github.com/jerome-pouiller/ioctl.git
+        source-type: git
+        source-branch: master
+        override-build: |
+            if [ -z $(uname -a | grep "ppc64el") ]; then
+                snapcraftctl build
+            fi
 
 build-packages:
     - curl
