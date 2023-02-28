@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.8.2"
+version: "0.8.4"
 summary: Swiss knife of shell tools
 description: |
   Set of useful shell tools to be used on Ubuntu/Ubuntu core After install run the follwing commands to enable all built-in tools in your shell.
@@ -11,334 +11,334 @@ description: |
 confinement: strict
 grade: stable
 architectures:
-    - build-on: armhf
-    - build-on: arm64
-    - build-on: i386
-    - build-on: amd64
-    - build-on: ppc64el
+  - build-on: armhf
+  - build-on: arm64
+  - build-on: i386
+  - build-on: amd64
+  - build-on: ppc64el
 
 base: core18
 
 environment:
-    PATH:            $SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH
-    LD_LIBRARY_PATH: $SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/${SNAPCRAFT_ARCH_TRIPLET}:$SNAP/usr/lib/${SNAPCRAFT_ARCH_TRIPLET}
-    ARCH_TRIPLET:    ${SNAPCRAFT_ARCH_TRIPLET}
+  PATH:            $SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH
+  LD_LIBRARY_PATH: $SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/${SNAPCRAFT_ARCH_TRIPLET}:$SNAP/usr/lib/${SNAPCRAFT_ARCH_TRIPLET}
+  ARCH_TRIPLET:    ${SNAPCRAFT_ARCH_TRIPLET}
 
 apps:
-    help:
-        command: bin/toolbox-help
-        adapter: none
+  help:
+    command: bin/toolbox-help
+    adapter: none
 
-    set-path:
-        command: bin/set-path
-        adapter: none
+  set-path:
+    command: bin/set-path
+    adapter: none
 
 parts:
-    tools:
-        source: glue
-        plugin: dump
-        stage-packages:
-          - abootimg
-          - bash
-          - bash-completion
-          - bc
-          - binutils
-          - bsdmainutils
-          - busybox-static
-          - byobu
-          - cpio
-          - cpu-checker
-          - cryptsetup-bin
-          - curl
-          - device-tree-compiler
-          - devmem2
-          - dmsetup
-          - dnsutils
-          - ethtool
-          - file
-          - fio
-          - gdb
-          - gdisk
-          - hdparm
-          - htop
-          - httpie
-          - i2c-tools
-          - icdiff
-          - initramfs-tools-core
-          - iotop
-          - iperf3
-          - iw
-          - jq
-          - libdb5.3
-          - libgpm2
-          - liblz4-tool
-          - libmagic1
-          - libslang2
-          - linux-tools-common
-          - lm-sensors
-          - lshw
-          - lsof
-          - minicom
-          - mkbootimg
-          - mmc-utils
-          - nano
-          - netdiscover
-          - net-tools
-          - pastebinit
-          - pciutils
-          - psmisc
-          - pv
-          - rhash
-          - rng-tools5
-          - rsync
-          - screen
-          - silversearcher-ag
-          - smartmontools
-          - ssh-import-id
-          - strace
-          - stress-ng
-          - time
-          - tmux
-          - tree
-          - u-boot-tools
-          - unzip
-          - util-linux
-          - vim
-          - vim-common
-          - vim-runtime
-          - vim-tiny
-          - watchdog
-          - wget
-          - wireless-tools
-          - xz-utils
-          - zip
-          - try:
-              - libonig4
-              - sysbench
-          - on ppc64el:
-              - usbutils
-        stage:
-          - -bin/bash
-          - -usr/bin/perl*
-          - -usr/bin/py*
-          - -usr/lib/gcc
-          - -usr/lib/*/perl*
-          - -usr/lib/*/libperl*
-          - -usr/lib/python3/dist-packages/R*
-          - -usr/lib/python3/dist-packages/c*
-          - -usr/lib/python3/dist-packages/h*
-          - -usr/lib/python3/dist-packages/idna*
-          - -usr/lib/python3/dist-packages/pygments
-          - -usr/lib/python3/dist-packages/r*
-          - -usr/lib/python3/dist-packages/six*
-          - -usr/lib/python3/dist-packages/u*
-          - -usr/lib/python3.*
-          - -usr/share/doc
-          - -usr/share/locale
-          - -usr/share/man/
-          - -usr/share/perl*
-          - -usr/share/python*
-          - -usr/share/vim
-          # make sure we do not have pulled in lsb_release, it makes no sense
-          - -usr/bin/lsb_release
-        override-build: |
-            # first clean files from stage packages we want override
-            for f in ${SNAPCRAFT_PART_INSTALL}/usr/share/bash-completion/completions/ssh
-            do
-              if [ -e ${f} ]; then
-                rm -rf ${f}
-              fi
-            done
-            snapcraftctl build
-            echo "Checking if usr/bin/peekfd exists"
-            # interestingly on arm64 there is no usr/bin/peekfd, account for this
-            if [ ! -f ${SNAPCRAFT_PART_INSTALL}/usr/bin/peekfd ]; then
-                echo "adding stub for usr/bin/peekfd"
-                echo "#!/bin/bash" > ${SNAPCRAFT_PART_INSTALL}/usr/bin/peekfd
-                echo "echo 'peekfd is not supported on arm64'" >> ${SNAPCRAFT_PART_INSTALL}/usr/bin/peekfd
-                chmod +x ${SNAPCRAFT_PART_INSTALL}/usr/bin/peekfd
-            fi
-            sed -i \
-                's|/usr/share/bash-completion|${SNAP_TOOLBOX}/usr/share/bash-completion|g' \
-                ${SNAPCRAFT_PART_INSTALL}/etc/profile.d/bash_completion.sh
-            # source lxd bash completion if present
-            echo "[ -f /snap/lxd/current/etc/bash_completion.d/snap.lxd.lxc ] && . /snap/lxd/current/etc/bash_completion.d/snap.lxd.lxc" \
-                 >> ${SNAPCRAFT_PART_INSTALL}/etc/profile.d/bash_completion.sh
-            # source git-ondra bash completion if present
-            echo "[ -f /snap/git-ondra/current/git-completion.bash ] && . /snap/git-ondra/current/git-completion.bash" \
-                 >> ${SNAPCRAFT_PART_INSTALL}/etc/profile.d/bash_completion.sh
-            # source custom ssh if present
-            echo "[ -f /snap/toolbox/current/usr/share/bash-completion/completions/ssh ] && . /snap/toolbox/current/usr/share/bash-completion/completions/ssh" \
-                 >> ${SNAPCRAFT_PART_INSTALL}/etc/profile.d/bash_completion.sh
-            # fix pastebin to work with toolbox snap install
-            sed -i \
-                -e 's|/usr/local/etc/pastebin.d|/snap/toolbox/current/usr/share/pastebin.d|g' \
-                -e 's/defaultPB = "pastebin.com"/defaultPB = "paste.ubuntu.com"/g' \
-                ${SNAPCRAFT_PART_INSTALL}/usr/bin/pastebinit
-            # fix ssh_import_id search path for etc/ssh/ssh_import_id
-            sed -i \
-                's|\(conf_file = "\)\(.*\)|\1/snap/toolbox/current\2|g' \
-                ${SNAPCRAFT_PART_INSTALL}/usr/lib/python3/dist-packages/ssh_import_id/__init__.py
+  tools:
+    source: glue
+    plugin: dump
+    stage-packages:
+      - abootimg
+      - bash
+      - bash-completion
+      - bc
+      - binutils
+      - bsdmainutils
+      - busybox-static
+      - byobu
+      - cpio
+      - cpu-checker
+      - cryptsetup-bin
+      - curl
+      - device-tree-compiler
+      - devmem2
+      - dmsetup
+      - dnsutils
+      - ethtool
+      - file
+      - fio
+      - gdb
+      - gdisk
+      - hdparm
+      - htop
+      - httpie
+      - i2c-tools
+      - icdiff
+      - initramfs-tools-core
+      - iotop
+      - iperf3
+      - iw
+      - jq
+      - libdb5.3
+      - libgpm2
+      - liblz4-tool
+      - libmagic1
+      - libslang2
+      - linux-tools-common
+      - lm-sensors
+      - lshw
+      - lsof
+      - minicom
+      - mkbootimg
+      - mmc-utils
+      - nano
+      - netdiscover
+      - net-tools
+      - pastebinit
+      - pciutils
+      - psmisc
+      - pv
+      - rhash
+      - rng-tools5
+      - rsync
+      - screen
+      - silversearcher-ag
+      - smartmontools
+      - ssh-import-id
+      - strace
+      - stress-ng
+      - time
+      - tmux
+      - tree
+      - u-boot-tools
+      - unzip
+      - util-linux
+      - vim
+      - vim-common
+      - vim-runtime
+      - vim-tiny
+      - watchdog
+      - wget
+      - wireless-tools
+      - xz-utils
+      - zip
+      - try:
+        - libonig4
+        - sysbench
+      - on ppc64el:
+        - usbutils
+    stage:
+      - -bin/bash
+      - -usr/bin/perl*
+      - -usr/bin/py*
+      - -usr/lib/gcc
+      - -usr/lib/*/perl*
+      - -usr/lib/*/libperl*
+      - -usr/lib/python3/dist-packages/R*
+      - -usr/lib/python3/dist-packages/c*
+      - -usr/lib/python3/dist-packages/h*
+      - -usr/lib/python3/dist-packages/idna*
+      - -usr/lib/python3/dist-packages/pygments
+      - -usr/lib/python3/dist-packages/r*
+      - -usr/lib/python3/dist-packages/six*
+      - -usr/lib/python3/dist-packages/u*
+      - -usr/lib/python3.*
+      - -usr/share/doc
+      - -usr/share/locale
+      - -usr/share/man/
+      - -usr/share/perl*
+      - -usr/share/python*
+      - -usr/share/vim
+      # make sure we do not have pulled in lsb_release, it makes no sense
+      - -usr/bin/lsb_release
+    override-build: |
+      # first clean files from stage packages we want override
+      for f in ${SNAPCRAFT_PART_INSTALL}/usr/share/bash-completion/completions/ssh
+      do
+        if [ -e ${f} ]; then
+          rm -rf ${f}
+        fi
+      done
+      snapcraftctl build
+      echo "Checking if usr/bin/peekfd exists"
+      # interestingly on arm64 there is no usr/bin/peekfd, account for this
+      if [ ! -f ${SNAPCRAFT_PART_INSTALL}/usr/bin/peekfd ]; then
+        echo "adding stub for usr/bin/peekfd"
+        echo "#!/bin/bash" > ${SNAPCRAFT_PART_INSTALL}/usr/bin/peekfd
+        echo "echo 'peekfd is not supported on arm64'" >> ${SNAPCRAFT_PART_INSTALL}/usr/bin/peekfd
+        chmod +x ${SNAPCRAFT_PART_INSTALL}/usr/bin/peekfd
+      fi
+      sed -i \
+          -e 's|/usr/share/bash-completion|${SNAP_TOOLBOX}/usr/share/bash-completion|g' \
+          ${SNAPCRAFT_PART_INSTALL}/etc/profile.d/bash_completion.sh
+      # source lxd bash completion if present
+      echo "[ -f /snap/lxd/current/etc/bash_completion.d/snap.lxd.lxc ] && . /snap/lxd/current/etc/bash_completion.d/snap.lxd.lxc" \
+         >> ${SNAPCRAFT_PART_INSTALL}/etc/profile.d/bash_completion.sh
+      # source git-ondra bash completion if present
+      echo "[ -f /snap/git-ondra/current/git-completion.bash ] && . /snap/git-ondra/current/git-completion.bash" \
+         >> ${SNAPCRAFT_PART_INSTALL}/etc/profile.d/bash_completion.sh
+      # source custom ssh if present
+      echo "[ -f /snap/toolbox/current/usr/share/bash-completion/completions/ssh ] && . /snap/toolbox/current/usr/share/bash-completion/completions/ssh" \
+         >> ${SNAPCRAFT_PART_INSTALL}/etc/profile.d/bash_completion.sh
+      # fix pastebin to work with toolbox snap install
+      sed -i \
+          -e 's|/usr/local/etc/pastebin.d|/snap/toolbox/current/usr/share/pastebin.d|g' \
+          -e 's/defaultPB = "pastebin.com"/defaultPB = "paste.ubuntu.com"/g' \
+          ${SNAPCRAFT_PART_INSTALL}/usr/bin/pastebinit
+      # fix ssh_import_id search path for etc/ssh/ssh_import_id
+      sed -i \
+          -e 's|\(conf_file = "\)\(.*\)|\1/snap/toolbox/current\2|g' \
+          ${SNAPCRAFT_PART_INSTALL}/usr/lib/python3/dist-packages/ssh_import_id/__init__.py
 
-    mc:
-        source: https://github.com/MidnightCommander/mc.git
-        plugin: autotools
-        configflags:
-            - --prefix=/snap/toolbox/current/usr
-            - --sysconfdir=/var/snap/toolbox/common/etc
-            - --without-x
-        override-build: |
-            ./autogen.sh
-            snapcraftctl build
-            mv ${SNAPCRAFT_PART_INSTALL}/snap/toolbox/current/usr ${SNAPCRAFT_PART_INSTALL}/
-            rm -rf ${SNAPCRAFT_PART_INSTALL}/snap
-            mv ${SNAPCRAFT_PART_INSTALL}/var/snap/toolbox/common/etc ${SNAPCRAFT_PART_INSTALL}/
-            rm -rf ${SNAPCRAFT_PART_INSTALL}/var
+  mc:
+    source: https://github.com/MidnightCommander/mc.git
+    plugin: autotools
+    configflags:
+      - --prefix=/snap/toolbox/current/usr
+      - --sysconfdir=/var/snap/toolbox/common/etc
+      - --without-x
+    override-build: |
+      ./autogen.sh
+      snapcraftctl build
+      mv ${SNAPCRAFT_PART_INSTALL}/snap/toolbox/current/usr ${SNAPCRAFT_PART_INSTALL}/
+      rm -rf ${SNAPCRAFT_PART_INSTALL}/snap
+      mv ${SNAPCRAFT_PART_INSTALL}/var/snap/toolbox/common/etc ${SNAPCRAFT_PART_INSTALL}/
+      rm -rf ${SNAPCRAFT_PART_INSTALL}/var
 
-    usbutils:
-        source: https://git.launchpad.net/ubuntu/+source/usbutils
-        source-branch: applied/ubuntu/bionic
-        source-type: git
-        plugin: autotools
-        stage-packages:
-            - libusb-1.0-0
-        configflags:
-            - --prefix=/snap/${SNAPCRAFT_PROJECT_NAME}/current/usr
-            - --libdir=/snap/${SNAPCRAFT_PROJECT_NAME}/current/usr/lib
-            - --localstatedir=/var/snap/${SNAPCRAFT_PROJECT_NAME}/common/
-        override-build: |
-           if [ -z $(uname -a | grep "ppc64el") ]; then
-               snapcraftctl build
-           fi
-        organize:
-            snap/${SNAPCRAFT_PROJECT_NAME}/current/usr/: usr/
-        stage:
-            - -snap
+  usbutils:
+    source: https://git.launchpad.net/ubuntu/+source/usbutils
+    source-branch: applied/ubuntu/bionic
+    source-type: git
+    plugin: autotools
+    stage-packages:
+      - libusb-1.0-0
+    configflags:
+      - --prefix=/snap/${SNAPCRAFT_PROJECT_NAME}/current/usr
+      - --libdir=/snap/${SNAPCRAFT_PROJECT_NAME}/current/usr/lib
+      - --localstatedir=/var/snap/${SNAPCRAFT_PROJECT_NAME}/common/
+    override-build: |
+       if [ -z $(uname -a | grep "ppc64el") ]; then
+         snapcraftctl build
+       fi
+    organize:
+      snap/${SNAPCRAFT_PROJECT_NAME}/current/usr/: usr/
+    stage:
+      - -snap
 
-    macchanger:
-        plugin: autotools
-        source: https://github.com/alobbs/macchanger.git
-        source-type: git
-        configflags:
-            - --datadir=/snap/${SNAPCRAFT_PROJECT_NAME}/current/usr/share/
-        override-build: |
-            ./autogen.sh
-            snapcraftctl build
-        organize:
-            snap/${SNAPCRAFT_PROJECT_NAME}/current/usr/share/: usr/share/
-        stage:
-            - -snap/
+  macchanger:
+    plugin: autotools
+    source: https://github.com/alobbs/macchanger.git
+    source-type: git
+    configflags:
+      - --datadir=/snap/${SNAPCRAFT_PROJECT_NAME}/current/usr/share/
+    override-build: |
+      ./autogen.sh
+      snapcraftctl build
+    organize:
+      snap/${SNAPCRAFT_PROJECT_NAME}/current/usr/share/: usr/share/
+    stage:
+      - -snap/
 
-    resty:
-        plugin: nil
-        source: https://github.com/micha/resty.git
-        override-build: |
-            mkdir -p ${SNAPCRAFT_PART_INSTALL}/usr/bin
-            cp pp pypp ${SNAPCRAFT_PART_INSTALL}/usr/bin
-            cp resty ${SNAPCRAFT_PART_INSTALL}/usr/bin
-            mkdir -p ${SNAPCRAFT_PART_INSTALL}/usr/share/bash-completion/completions/
-            curl -o ${SNAPCRAFT_PART_INSTALL}/usr/share/bash-completion/completions/httpie https://raw.githubusercontent.com/jakubroztocil/httpie/master/extras/httpie-completion.bash
+  resty:
+    plugin: nil
+    source: https://github.com/micha/resty.git
+    override-build: |
+      mkdir -p ${SNAPCRAFT_PART_INSTALL}/usr/bin
+      cp pp pypp ${SNAPCRAFT_PART_INSTALL}/usr/bin
+      cp resty ${SNAPCRAFT_PART_INSTALL}/usr/bin
+      mkdir -p ${SNAPCRAFT_PART_INSTALL}/usr/share/bash-completion/completions/
+      curl -o ${SNAPCRAFT_PART_INSTALL}/usr/share/bash-completion/completions/httpie https://raw.githubusercontent.com/jakubroztocil/httpie/master/extras/httpie-completion.bash
 
-    rt-tests:
-        source: https://git.kernel.org/pub/scm/linux/kernel/git/clrkwllms/rt-tests.git
-        source-type: git
-        source-branch: master
-        plugin: make
-        stage-packages:
-            - libnuma1
-        organize:
-            usr/local/: usr/
-        override-build: |
-            snapcraftctl build
-        stage:
-            - -usr/bin/hwlatdetect
+  rt-tests:
+    source: https://git.kernel.org/pub/scm/linux/kernel/git/clrkwllms/rt-tests.git
+    source-type: git
+    source-branch: master
+    plugin: make
+    stage-packages:
+      - libnuma1
+    organize:
+      usr/local/: usr/
+    override-build: |
+      snapcraftctl build
+    stage:
+      - -usr/bin/hwlatdetect
 
-    mountinfo-tool:
-        plugin: nil
-        override-pull: |
-            wget https://raw.githubusercontent.com/snapcore/snapd/master/tests/lib/tools/mountinfo.query
-        override-build: |
-            cp mountinfo.query ${SNAPCRAFT_PART_INSTALL}/
-        organize:
-            mountinfo.query: bin/mountinfo.query
+  mountinfo-tool:
+    plugin: nil
+    override-pull: |
+      wget https://raw.githubusercontent.com/snapcore/snapd/master/tests/lib/tools/mountinfo.query
+    override-build: |
+      cp mountinfo.query ${SNAPCRAFT_PART_INSTALL}/
+    organize:
+      mountinfo.query: bin/mountinfo.query
 
-    lk-boot-env:
-        plugin: nil
-        override-pull: |
-          snapcraftctl pull
-          wget https://raw.githubusercontent.com/snapcore/snapd/master/include/lk/snappy_boot_common.h
-          wget https://raw.githubusercontent.com/snapcore/snapd/master/include/lk/snappy_boot_v1.h
-          wget https://raw.githubusercontent.com/kubiko/if6640-gadget/18/snap-boot-sel/lk-boot-env.c
-        override-build: |
-            mkdir -p ${SNAPCRAFT_PART_INSTALL}/bin
-            gcc lk-boot-env.c -I/usr/include/ -Iapp/aboot -o ${SNAPCRAFT_PART_INSTALL}/bin/lk-boot-env
+  lk-boot-env:
+    plugin: nil
+    override-pull: |
+      snapcraftctl pull
+      wget https://raw.githubusercontent.com/snapcore/snapd/master/include/lk/snappy_boot_common.h
+      wget https://raw.githubusercontent.com/snapcore/snapd/master/include/lk/snappy_boot_v1.h
+      wget https://raw.githubusercontent.com/kubiko/if6640-gadget/18/snap-boot-sel/lk-boot-env.c
+    override-build: |
+      mkdir -p ${SNAPCRAFT_PART_INSTALL}/bin
+      gcc lk-boot-env.c -I/usr/include/ -Iapp/aboot -o ${SNAPCRAFT_PART_INSTALL}/bin/lk-boot-env
 
-    mosh:
-        plugin: autotools
-        source: https://github.com/mobile-shell/mosh.git
-        source-type: git
-        stage-packages:
-          - libprotobuf10
-        override-build: |
-          ./autogen.sh
-          snapcraftctl build
-        organize:
-          bin/mosh:        usr/bin/mosh
-          bin/mosh-server: usr/bin/mosh-server
-        stage:
-          - usr/bin/mosh-server
-          - usr/bin/mosh
-          - usr/lib/
+  mosh:
+    plugin: autotools
+    source: https://github.com/mobile-shell/mosh.git
+    source-type: git
+    stage-packages:
+      - libprotobuf10
+    override-build: |
+      ./autogen.sh
+      snapcraftctl build
+    organize:
+      bin/mosh:        usr/bin/mosh
+      bin/mosh-server: usr/bin/mosh-server
+    stage:
+      - usr/bin/mosh-server
+      - usr/bin/mosh
+      - usr/lib/
 
-    tiobench:
-        plugin: nil
-        source: https://github.com/mkuoppal/tiobench.git
-        source-type: git
-        override-build: |
-            make -j$(nproc)
-            mkdir -p ${SNAPCRAFT_PART_INSTALL}/bin \
-                     ${SNAPCRAFT_PART_INSTALL}/usr/doc/tiobench
-            install -m 0755 tiobench.pl ${SNAPCRAFT_PART_INSTALL}/bin/tiobench.pl
-            install -m 0755 tiotest     ${SNAPCRAFT_PART_INSTALL}/bin/tiotest
-            install -m 0755 scripts/bigbench.sh ${SNAPCRAFT_PART_INSTALL}/bin/bigbench.sh
-            install -m 0755 scripts/tiosum.pl ${SNAPCRAFT_PART_INSTALL}/bin/tiosum.pl
-            install -m 0644 README.md ${SNAPCRAFT_PART_INSTALL}/usr/doc/tiobench/README.md
-            install -m 0644 scripts/README ${SNAPCRAFT_PART_INSTALL}/usr/doc/tiobench/README
-        stage:
-            - bin/tio*
-            - bin/bigbench*
-            - usr/doc/tiobench
+  tiobench:
+    plugin: nil
+    source: https://github.com/mkuoppal/tiobench.git
+    source-type: git
+    override-build: |
+      make -j$(nproc)
+      mkdir -p ${SNAPCRAFT_PART_INSTALL}/bin \
+               ${SNAPCRAFT_PART_INSTALL}/usr/doc/tiobench
+      install -m 0755 tiobench.pl         ${SNAPCRAFT_PART_INSTALL}/bin/tiobench.pl
+      install -m 0755 tiotest             ${SNAPCRAFT_PART_INSTALL}/bin/tiotest
+      install -m 0755 scripts/bigbench.sh ${SNAPCRAFT_PART_INSTALL}/bin/bigbench.sh
+      install -m 0755 scripts/tiosum.pl   ${SNAPCRAFT_PART_INSTALL}/bin/tiosum.pl
+      install -m 0644 README.md           ${SNAPCRAFT_PART_INSTALL}/usr/doc/tiobench/README.md
+      install -m 0644 scripts/README      ${SNAPCRAFT_PART_INSTALL}/usr/doc/tiobench/README
+    stage:
+      - bin/tio*
+      - bin/bigbench*
+      - usr/doc/tiobench
 
-    ioctl:
-        plugin: make
-        source: https://github.com/jerome-pouiller/ioctl.git
-        source-type: git
-        source-branch: master
-        override-build: |
-            if [ -z $(uname -a | grep "ppc64el") ]; then
-                snapcraftctl build
-            fi
+  ioctl:
+    plugin: make
+    source: https://github.com/jerome-pouiller/ioctl.git
+    source-type: git
+    source-branch: master
+    override-build: |
+      if [ -z $(uname -a | grep "ppc64el") ]; then
+        snapcraftctl build
+      fi
 
 build-packages:
-    - curl
-    - g++
-    - gawk
-    - gettext
-    - libboost-dev
-    - libglib2.0-dev
-    - libltdl-dev
-    - libncurses5-dev
-    - libnuma-dev
-    - libprotobuf-dev
-    - libslang2-dev
-    - libssl-dev
-    - libtool
-    - libudev-dev
-    - libusb-1.0-0-dev
-    - pkg-config
-    - protobuf-compiler
-    - python2.7
-    - texinfo
-    - wget
-    - zlib1g
-    - zlib1g-dev
+  - curl
+  - g++
+  - gawk
+  - gettext
+  - libboost-dev
+  - libglib2.0-dev
+  - libltdl-dev
+  - libncurses5-dev
+  - libnuma-dev
+  - libprotobuf-dev
+  - libslang2-dev
+  - libssl-dev
+  - libtool
+  - libudev-dev
+  - libusb-1.0-0-dev
+  - pkg-config
+  - protobuf-compiler
+  - python2.7
+  - texinfo
+  - wget
+  - zlib1g
+  - zlib1g-dev
