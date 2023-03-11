@@ -52,7 +52,6 @@ parts:
       - byobu
       - cpio
       - cpu-checker
-      - cryptsetup-bin
       - curl
       - device-tree-compiler
       - devmem2
