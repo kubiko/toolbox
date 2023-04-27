@@ -184,6 +184,21 @@ parts:
           -e 's|\(conf_file = "\)\(.*\)|\1/snap/toolbox/current\2|g' \
           ${SNAPCRAFT_PART_INSTALL}/usr/lib/python3/dist-packages/ssh_import_id/__init__.py
 
+  mc:
+    source: https://github.com/MidnightCommander/mc.git
+    plugin: autotools
+    configflags:
+      - --prefix=/snap/toolbox/current/usr
+      - --sysconfdir=/var/snap/toolbox/common/etc
+      - --without-x
+    override-build: |
+      ./autogen.sh
+      snapcraftctl build
+      mv ${SNAPCRAFT_PART_INSTALL}/snap/toolbox/current/usr ${SNAPCRAFT_PART_INSTALL}/
+      rm -rf ${SNAPCRAFT_PART_INSTALL}/snap
+      mv ${SNAPCRAFT_PART_INSTALL}/var/snap/toolbox/common/etc ${SNAPCRAFT_PART_INSTALL}/
+      rm -rf ${SNAPCRAFT_PART_INSTALL}/var
+
   macchanger:
     plugin: autotools
     source: https://github.com/alobbs/macchanger.git
