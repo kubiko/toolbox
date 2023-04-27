@@ -181,22 +181,28 @@ lxd_start_container() {
   echo -e "${wait_text}..DONE"
 }
 
-lxd_ensure_container_runnig () {
+lxd_ensure_container_runnig() {
   if [ -z "${1}" ]; then
     echo "Missing container name"
     return 1
   fi
   local container_name="${1}"
+  local quiet="no"
+  [ -n "${2}" ] &&  quiet="${2}"
   local container_status=$(lxc info ${container_name} 2>&1 | awk '$1 ~ "Status" { print $2}' | awk '{print tolower($0)}')
   if [ -z "${container_status}" ]; then
-    echo "Container with given name does not exist"
+    if [ "${quiet}" != "yes" ]; then
+      echo -e "Container \"${container_name}\" does not exist."
+    fi
     return 1
   fi
   if [ "running" == "${container_status,,}" ]; then
       lxd_wait_container_ready ${container_name}
       return 0
   fi
-  echo -e "Container ${container_name} is not running, starting it..."
+  if [ "${quiet}" != "yes" ]; then
+    echo -e "Container ${container_name} is not running, starting it..."
+  fi
   lxd_start_container ${container_name}
   return 0
 }
@@ -208,6 +214,12 @@ lxd_ensure_container () {
   # 18.04 -> bionic
   # 16.04 -> xenial
   case $1 in
+    23.04 | lunar)
+      local ubuntu_series="lunar"
+      ;;
+    22.10 | kinetic)
+      local ubuntu_series="kinetic"
+      ;;
     22.04 | jammy)
       local ubuntu_series="jammy"
       ;;
@@ -220,8 +232,12 @@ lxd_ensure_container () {
     16.04 | xenial)
       local ubuntu_series="xenial"
       ;;
+    --help | -h)
+      print_help_lxd_ensure_container
+      return 0
+      ;;
     *)
-      echo "Could not check Ubuntu series, still giving it try)"
+      echo "Could not verify Ubuntu series, still giving it try)"
       local ubuntu_series="${1}"
       ;;
   esac
@@ -233,7 +249,7 @@ lxd_ensure_container () {
   fi
   local container_name="${2}"
 
-  if lxd_ensure_container_runnig ${container_name}; then
+  if lxd_ensure_container_runnig ${container_name} "yes"; then
     return "$?"
   fi
 
@@ -486,15 +502,19 @@ lxd_snapcraft () {
           local container_name="snapcraft-jammy${container_flavour}"
           local ubuntu_series="jammy"
           ;;
+        core24)
+          local container_name="snapcraft-jammy${container_flavour}"
+          local ubuntu_series="lunar"
+          ;;
         *)
           echo "Base not defined, assuming Core 16"
           local container_name="snapcraft-xenial${container_flavour}"
           local ubuntu_series="xenial"
           ;;
       esac
-      local snap_type=$(grep 'type:' ${SNAPCRAFT_YAML} | awk '{print $2}')
+      local snap_type=$(grep -m 1 'type:' ${SNAPCRAFT_YAML} | awk '{print $2}')
       # if we are building base or snapd, run build as root
-      if [ "${snap_type}" = "base" ] || [ "${snap_type}" = "snapd" ]; then
+      if [ "${snap_type}" == "base" ] || [ "${snap_type}" == "snapd" ]; then
         echo "Automatically building snap type ${snap_type} as root"
         local root_build="sudo "
       fi
