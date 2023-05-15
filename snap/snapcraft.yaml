@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.8.7"
+version: "0.8.8"
 summary: Swiss knife of shell tools
 description: |
   Set of useful shell tools to be used on Ubuntu/Ubuntu core After install run the follwing commands to enable all built-in tools in your shell.
@@ -74,6 +74,7 @@ parts:
       - liblz4-tool
       - libmagic1
       - libslang2
+      - libusb-1.0-0
       - linux-tools-common
       - lm-sensors
       - lshw
@@ -102,6 +103,7 @@ parts:
       - tree
       - u-boot-tools
       - unzip
+      - usbutils
       - util-linux
       - vim
       - vim-common
@@ -115,8 +117,6 @@ parts:
       - try:
         - libonig4
         - sysbench
-      - on ppc64el:
-        - usbutils
     stage:
       - -bin/bash
       - -usr/bin/perl*
@@ -179,26 +179,6 @@ parts:
       sed -i \
           -e 's|\(conf_file = "\)\(.*\)|\1/snap/toolbox/current\2|g' \
           ${SNAPCRAFT_PART_INSTALL}/usr/lib/python3/dist-packages/ssh_import_id/__init__.py
-
-  usbutils:
-    source: https://git.launchpad.net/ubuntu/+source/usbutils
-    source-branch: applied/ubuntu/bionic
-    source-type: git
-    plugin: autotools
-    stage-packages:
-      - libusb-1.0-0
-    configflags:
-      - --prefix=/snap/${SNAPCRAFT_PROJECT_NAME}/current/usr
-      - --libdir=/snap/${SNAPCRAFT_PROJECT_NAME}/current/usr/lib
-      - --localstatedir=/var/snap/${SNAPCRAFT_PROJECT_NAME}/common/
-    override-build: |
-       if [ -z $(uname -a | grep "ppc64el") ]; then
-         snapcraftctl build
-       fi
-    organize:
-      snap/${SNAPCRAFT_PROJECT_NAME}/current/usr/: usr/
-    stage:
-      - -snap
 
   macchanger:
     plugin: autotools
@@ -319,7 +299,6 @@ build-packages:
   - libssl-dev
   - libtool
   - libudev-dev
-  - libusb-1.0-0-dev
   - pkg-config
   - protobuf-compiler
   - python2.7
