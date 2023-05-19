@@ -117,18 +117,6 @@ check_value() {
   fi
 }
 
-encrypt_pass() {
-    local pass="$1"
-    local fmt="${2-\$6\$}"
-    enc=$(echo "$pass" |
-        perl -e '
-            $p=<STDIN>; chomp($p);
-            $salt = join "", map { (q(a)..q(z))[rand(26)] } 1 .. 8;
-            if (${ARGV[0]}) { $salt = "${ARGV[0]}$salt\$"; }
-            print crypt($p, "$salt") . "\n";' "$fmt") || return
-    [ -n "${enc}" ] && [ -z "${fmt}" -o "${enc#${fmt}}" != "${fmt}" ] && echo "${enc}"
-}
-
 # store invoked command
 CONFIGS["ARGS"]="$@"
 # default revision is 1
@@ -217,8 +205,8 @@ while [ "$1" != "" ]; do
 done
 
 
-if [ -n "${CONFIGS["password"]}" ] && [ -z "$(which perl)" ]; then
-    echo "Missing dependency "perl" for password salting, install whois (sudo apt-get install perl)"
+if [ -n "${CONFIGS["password"]}" ] && [ -z "$(which mkpasswd)" ]; then
+    echo "Missing dependency "mkpasswd" for password salting, install whois (sudo apt-get install whois)"
     exit 0
 fi
 
@@ -246,7 +234,7 @@ if [ -z "${system_user_assertion_json}" ]; then
 
     # encode password if available
     if [ -n "${CONFIGS["password"]}" ]; then
-        CONFIGS["password"]=$(encrypt_pass ${CONFIGS["password"]})
+        CONFIGS["password"]=$(mkpasswd -m sha512crypt "${CONFIGS["password"]}")
     fi
 
     # prepare ssh-keys list if available
