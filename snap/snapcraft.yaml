@@ -80,13 +80,15 @@ parts:
       - libgpm2
       - liblz4-1
       - libmagic1
+      - libonig5
+      - libparted2
       - libslang2
       - libusb-1.0-0
       - linux-tools-common
       - lm-sensors
       - lshw
       - lsof
-      - liblz4-tool
+      - lz4
       - minicom
       - mkbootimg
       - mmc-utils
@@ -95,6 +97,7 @@ parts:
       - nano
       - netdiscover
       - net-tools
+      - parted
       - pastebinit
       - pciutils
       - ppp
@@ -127,8 +130,7 @@ parts:
       - wireless-tools
       - xz-utils
       - zip
-      - try:
-        - libonig4
+      - on amd64,arm64,armhf:
         - sysbench
     stage:
       - -bin/bash
