@@ -76,6 +76,8 @@ parts:
       - libgpm2
       - liblz4-tool
       - libmagic1
+      - libonig5
+      - libparted2
       - libslang2
       - libusb-1.0-0
       - linux-tools-common
@@ -88,6 +90,7 @@ parts:
       - nano
       - netdiscover
       - net-tools
+      - parted
       - pastebinit
       - pciutils
       - psmisc
@@ -118,8 +121,7 @@ parts:
       - wireless-tools
       - xz-utils
       - zip
-      - try:
-        - libonig4
+      - on amd64,arm64,armhf:
         - sysbench
     stage:
       - -bin/bash
