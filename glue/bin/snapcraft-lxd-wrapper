@@ -355,6 +355,17 @@ sudo /usr/bin/apt-config "\$@"
 EOF
 
     lxc file push ${tmp_wrapper} ${container_name}/usr/local/bin/apt-config
+    tee ${tmp_wrapper} <<EOF
+#!/bin/sh
+if [ "\${1}" = "install" ]; then
+  sudo /usr/bin/snap "\$@"
+else
+  /usr/bin/snap "\$@"
+fi
+EOF
+
+    lxc file push ${tmp_wrapper} ${container_name}/usr/local/bin/snap
+
     [ -e ${tmp_wrapper} ] && rm ${tmp_wrapper}
     lxc exec ${container_name} -- sh -c 'chown root:root /usr/local/bin/*'
     lxc exec ${container_name} -- sh -c 'chmod 755 /usr/local/bin/*'
