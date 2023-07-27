@@ -1,44 +1,98 @@
 #!/bin/bash
+export self_path="$(realpath ${0})"
 
+mimic_files() {
+  sysfs_overlay=${1}
+  active_directory=${2}
+  find ${active_directory} \
+    -maxdepth 1 \
+    -type f \
+    -exec sh -c 'touch ${sysfs_overlay}$(realpath {})' \;
+}
+
+mimic_links() {
+  sysfs_overlay=${1}
+  active_directory=${2}
+  find ${active_directory} \
+    -maxdepth 1 \
+    -type l \
+    -exec sh -c 'ln -sf $(readlink {}) ${sysfs_overlay}/{}' \;
+}
+
+mimic_directories() {
+  sysfs_overlay=${1}
+  active_directory=${2}
+  find ${active_directory} \
+    -maxdepth 1 \
+    -type d \
+    -exec sh -c 'mkdir -p ${sysfs_overlay}$(realpath {}); \
+                 ${self_path} --mimic-files ${sysfs_overlay} $(realpath {})' \;
+}
+
+populate_directory() {
+  sysfs_overlay=${1}
+  active_directory=${2}
+  # handle symbolic links
+  find ${active_directory} \
+    -maxdepth 1 \
+    -type l \
+    -exec sh -c 'mkdir -p ${sysfs_overlay}$(realpath {}) ${sysfs_overlay}$(dirname {}); \
+                 ln -sf $(readlink {}) ${sysfs_overlay}/{}; \
+                 ${self_path} --mimic-directories ${sysfs_overlay} $(realpath {}); \
+                 ${self_path} --mimic-files ${sysfs_overlay} $(realpath {}); \
+                 ${self_path} --mimic-links ${sysfs_overlay} $(realpath {})' \;
+
+  # handle files
+  mimic_files ${sysfs_overlay} ${active_directory}
+  # handle directories
+  mimic_directories ${sysfs_overlay} ${active_directory}
+}
 
 generate_sysfs_overlay() {
-    for c in backlight gpio leds bluetooth ptp pwm rtc video4linux
-    do
-        if [ -e /sys/class/${c} ]; then
-            find /sys/class/${c} -maxdepth 1 -type l -exec sh -c 'echo "mkdir -p \${sysfs_overlay}$(realpath {}) \${sysfs_overlay}$(dirname {}); ln -sf $(readlink {}) \${sysfs_overlay}/{}"' \;
-        fi
-    done
+  # capture content of the specified top level dirs under /sys/class
+  sysfs_overlay=${1}
+  for c in backlight gpio leds bluetooth ptp pwm rtc video4linux
+  do
+    if [ -e /sys/class/${c} ]; then
+      populate_directory ${sysfs_overlay} /sys/class/${c}
+    fi
+  done
 }
 
 print_help() {
-    echo -e "Helper to generate sysfs overlay which can be used when building preseeded image outsif of the target machine"
-    echo -e "Use: $(basename ${0})[--overlay-dir <directory path to create overlay in>]"
-    echo -e "\t no parameter   overlay is printed as scripts to execute on the build system."
-    echo -e "\t -h|--help      this message"
-    echo -e "\t --overlay-dir  path to the directory to generate overlay in"
+  echo -e "Helper to generate sysfs overlay which can be used when building preseeded image outsif of the target machine"
+  echo -e "Use: $(basename ${0})--overlay-dir <directory path to create overlay in>"
+  echo -e "\t -h|--help    this message"
+  echo -e "\t --overlay-dir  path to the directory to generate overlay in"
 
 }
 
-if [ -z "${1}" ]; then
-    generate_sysfs_overlay
-else
-    case $1 in
-        --help | -h)
-            print_help
-            ;;
-        --overlay-dir)
-            if [ -z "${2}" ]; then
-                echo "Missing target directory"
-                print_help
-            else
-                export sysfs_overlay=$(realpath "${2}")
-                generate_sysfs_overlay | xargs -I {} bash -c "{}"
-                unset sysfs_overlay
-            fi
-            ;;
-        *)
-            print_debug 0 "Unknown parameter '$1'"
-            print_help
-            ;;
-    esac
-fi
+case $1 in
+  --help | -h)
+    print_help
+    ;;
+  --overlay-dir)
+    if [ -z "${2}" ]; then
+      echo "Missing target directory"
+      print_help
+    else
+      export sysfs_overlay=$(realpath "${2}")
+      rm -rf ${sysfs_overlay}
+      generate_sysfs_overlay ${sysfs_overlay}
+      unset sysfs_overlay
+    fi
+    ;;
+  --mimic-directories)
+    mimic_directories ${2} ${3}
+    ;;
+  --mimic-files)
+    mimic_files ${2} ${3}
+    ;;
+  --mimic-links)
+    mimic_links ${2} ${3}
+    ;;
+  *)
+    print_debug 0 "Unknown parameter '$1'"
+    print_help
+    ;;
+esac
