@@ -19,12 +19,12 @@ architectures:
   - build-on: ppc64el
   - build-on: riscv64
 
-base: core22
+base: core24
 
 environment:
   PATH:            ${SNAP}/usr/sbin:${SNAP}/usr/bin:$PATH
-  LD_LIBRARY_PATH: ${SNAP_LIBRARY_PATH}:${LD_LIBRARY_PATH}:${SNAP}/lib:${SNAP}/usr/lib:${SNAP}/lib/${CRAFT_ARCH_TRIPLET}:${SNAP}/usr/lib/${CRAFT_ARCH_TRIPLET}
-  ARCH_TRIPLET:    ${CRAFT_ARCH_TRIPLET}
+  LD_LIBRARY_PATH: ${SNAP_LIBRARY_PATH}:${LD_LIBRARY_PATH}:${SNAP}/lib:${SNAP}/usr/lib:${SNAP}/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}:${SNAP}/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}
+  ARCH_TRIPLET:    ${CRAFT_ARCH_TRIPLET_BUILD_FOR}
 
 apps:
   help:
@@ -267,11 +267,11 @@ parts:
     source: https://github.com/mobile-shell/mosh.git
     source-type: git
     stage-packages:
-      - libprotobuf23
+      - libprotobuf32
     autotools-configure-parameters:
       - --prefix=/usr
       - --bindir=/usr/bin
-      - --libdir=/usr/lib/${CRAFT_ARCH_TRIPLET}
+      - --libdir=/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}
     stage:
       - usr/bin/mosh-server
       - usr/bin/mosh
@@ -319,7 +319,6 @@ build-packages:
   - libudev-dev
   - pkg-config
   - protobuf-compiler
-  - python2.7
   - texinfo
   - wget
   - zlib1g
