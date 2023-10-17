@@ -290,15 +290,15 @@ parts:
       install -D -m 0644 README.md           ${CRAFT_PART_INSTALL}/usr/doc/tiobench/README.md
       install -D -m 0644 scripts/README      ${CRAFT_PART_INSTALL}/usr/doc/tiobench/README
 
-  ioctl:
-    plugin: make
-    source: https://github.com/jerome-pouiller/ioctl.git
-    source-type: git
-    source-branch: master
-    override-build: |
-      if [ -z $(uname -a | grep "ppc64el") ]; then
-        craftctl default
-      fi
+  # ioctl:
+  #   plugin: make
+  #   source: https://github.com/jerome-pouiller/ioctl.git
+  #   source-type: git
+  #   source-branch: master
+  #   override-build: |
+  #     if [ -z $(uname -a | grep "ppc64el") ]; then
+  #       craftctl default
+  #     fi
 
 build-packages:
   - curl
