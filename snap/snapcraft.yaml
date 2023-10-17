@@ -12,14 +12,13 @@ description: |
 
 confinement: strict
 grade: stable
-architectures:
-  - build-on: armhf
-  - build-on: arm64
-  - build-on: amd64
-  - build-on: ppc64el
-  - build-on: riscv64
+platforms:
+  armhf:
+  arm64:
+  amd64:
+  riscv64:
 
-base: core22
+base: core24
 
 environment:
   PATH:            ${SNAP}/usr/sbin:${SNAP}/usr/bin:$PATH
@@ -74,12 +73,12 @@ parts:
       - iw
       - jq
       - keyutils
-      - libdb5.3
+      - libdb5.3t64
       - libgpm2
       - liblz4-1
-      - libmagic1
+      - libmagic1t64
       - libonig5
-      - libparted2
+      - libparted2t64
       - libslang2
       - libubootenv-tool
       - libusb-1.0-0
@@ -204,7 +203,7 @@ parts:
     override-stage: |
       ${CRAFT_PROJECT_DIR}/clean-stage.sh -f \
             -i 'usr/share/bash-completion/completions usr/lib/python* etc/cloud/templates etc/profile.d/bash_completion.sh' \
-            /snap/core22/current/ ${CRAFT_PART_INSTALL}
+            /snap/core24/current/ ${CRAFT_PART_INSTALL}
       craftctl default
 
   mc:
@@ -267,7 +266,7 @@ parts:
     source: https://github.com/mobile-shell/mosh.git
     source-type: git
     stage-packages:
-      - libprotobuf23
+      - libprotobuf32t64
     autotools-configure-parameters:
       - --prefix=/usr
       - --bindir=/usr/bin
@@ -385,7 +384,6 @@ build-packages:
   - libzstd-dev
   - pkg-config
   - protobuf-compiler
-  - python2.7
   - texinfo
   - unzip
   - wget
