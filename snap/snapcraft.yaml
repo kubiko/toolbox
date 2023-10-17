@@ -12,19 +12,18 @@ description: |
 
 confinement: strict
 grade: stable
-architectures:
-  - build-on: armhf
-  - build-on: arm64
-  - build-on: amd64
-  - build-on: ppc64el
-  - build-on: riscv64
+platforms:
+  armhf:
+  arm64:
+  amd64:
+  riscv64:
 
-base: core22
+base: core24
 
 environment:
   PATH:            ${SNAP}/usr/sbin:${SNAP}/usr/bin:$PATH
-  LD_LIBRARY_PATH: ${SNAP_LIBRARY_PATH}:${LD_LIBRARY_PATH}:${SNAP}/lib:${SNAP}/usr/lib:${SNAP}/lib/${CRAFT_ARCH_TRIPLET}:${SNAP}/usr/lib/${CRAFT_ARCH_TRIPLET}
-  ARCH_TRIPLET:    ${CRAFT_ARCH_TRIPLET}
+  LD_LIBRARY_PATH: ${SNAP_LIBRARY_PATH}:${LD_LIBRARY_PATH}:${SNAP}/lib:${SNAP}/usr/lib:${SNAP}/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}:${SNAP}/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}
+  ARCH_TRIPLET:    ${CRAFT_ARCH_TRIPLET_BUILD_FOR}
 
 apps:
   help:
@@ -74,12 +73,12 @@ parts:
       - iperf3
       - iw
       - jq
-      - libdb5.3
+      - libdb5.3t64
       - libgpm2
       - liblz4-tool
-      - libmagic1
+      - libmagic1t64
       - libonig5
-      - libparted2
+      - libparted2t64
       - libslang2
       - libubootenv-tool
       - libusb-1.0-0
@@ -274,11 +273,11 @@ parts:
     source: https://github.com/mobile-shell/mosh.git
     source-type: git
     stage-packages:
-      - libprotobuf23
+      - libprotobuf32t64
     autotools-configure-parameters:
       - --prefix=/usr
       - --bindir=/usr/bin
-      - --libdir=/usr/lib/${CRAFT_ARCH_TRIPLET}
+      - --libdir=/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}
     stage:
       - usr/bin/mosh-server
       - usr/bin/mosh
@@ -326,7 +325,6 @@ build-packages:
   - libudev-dev
   - pkg-config
   - protobuf-compiler
-  - python2.7
   - texinfo
   - wget
   - zlib1g
