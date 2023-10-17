@@ -404,7 +404,7 @@ case "${cmd}" in
         | sed '/^{/!d' \
         | jq 'if .status != "OK" then [ .result.message ] | "error: \(.[0])" else .result end'
     ;;
-remove-user)
+  remove-user)
     cmd_options="{\"action\": \"remove\""
     while [ "$1" != "" ]
     do
@@ -426,6 +426,10 @@ remove-user)
        -X POST -d@- "http://localhost/v2/users" \
        | sed '/^{/!d' \
        | jq 'if .status != "OK" then [ .result.message ] | "error: \(.[0])" else .result.removed[] | [ .username ] | "removed user: \(.[0])" end'
+    ;;
+  users)
+    $CURL "http://localhost/v2/users" | sed '/^{/!d' \
+      | jq --raw-output 'if .status != "OK" then [ .result ] | "error: \(.[0])" else .result[] | [ .username, .email ] | "username: \(.[0])\t\temail: \(.[1])" end'
     ;;
   help|--help|-h)
     echo -e "There is no proper help :("
