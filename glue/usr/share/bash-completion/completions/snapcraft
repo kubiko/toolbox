@@ -6,7 +6,7 @@ _snapcraft()
   COMPREPLY=()
   cur="${COMP_WORDS[COMP_CWORD]}"
   prev="${COMP_WORDS[COMP_CWORD-1]}"
-  opts="help init list-plugins plugins login logout export-login list-keys keys create-key register-key register registered list-registered push release clean cleanbuild pull build sign-build stage prime pack update define search gated validate history status close enable-ci expand-extensions extension extensions list-extensions --target-arch --debug --shell --offline --shell-after --destructive-mode --use-lxd --provider --http-proxy --https-proxy --add-ca-certificates --bind-ssh --enable-experimental-extensions --enable-experimental-target-arch --ua-token -h --help upload --verbose"
+  opts="help init list-plugins plugins login logout export-login list-keys keys create-key register-key register registered list-registered push release clean cleanbuild pull build sign-build stage prime pack update define search gated validate history status close enable-ci expand-extensions extension extensions list-extensions --target-arch --build-for --debug --shell --offline --shell-after --destructive-mode --use-lxd --provider --http-proxy --https-proxy --add-ca-certificates --bind-ssh --enable-experimental-extensions --enable-experimental-target-arch --ua-token -h --help upload --verbose"
 
   case "$prev" in
   help)
@@ -22,12 +22,7 @@ _snapcraft()
     COMREPLY=( travis )
     return 0
     ;;
-  --target-arch)
-    arch_options="arm64 armhf amd64"
-    COMPREPLY=( $(compgen -W "$arch_options" -- $cur))
-    return 0
-    ;;
-  --build-for)
+  --target-arch | --build-for)
     arch_options="arm64 armhf amd64"
     COMPREPLY=( $(compgen -W "$arch_options" -- $cur))
     return 0
