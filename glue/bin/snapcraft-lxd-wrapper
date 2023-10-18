@@ -535,11 +535,49 @@ lxd_snapcraft () {
     lxd_ensure_container_runnig ${container_name}
   fi
 
+  # determine host arch
+  local host_arch="amd64"
+  case $(uname -m) in
+    aarch64)
+      host_arch="arm64"
+      ;;
+    armv7l)
+      host_arch="armhf"
+      ;;
+    riscv64)
+      host_arch="riscv"
+      ;;
+    x86_64)
+      host_arch="amd64"
+      ;;
+  esac
+
+  # if this is core22 base, in 9 out of 10 cases snapcraft will build too much unless --build-for
+  # is passed. Check supported target arches for a given host if more than 1 is supported
+  # pick one matching host or bail out asking the user which one to build
+  # There is really no good valid use case for day-to-day development to always build all supported arches.
+  # This often trashes development env if one wants to just run incremental build.
+  # This check requires 'yq' parser to be installed.
+  local target_arch=""
+  if [ "${base}" = "core22" ] && [ -n "$(which yq)" ] && [[ $@ != *"--build-for"* ]]; then
+    supported_arches="$(host_arch=${host_arch} yq '.architectures[] | select( [ .build-on[] | contains(env(host_arch)) ] | any) | .build-for' ${SNAPCRAFT_YAML})"
+    # if there are more than 2 matching targets check if one matches host, if not bail
+    if [ $(echo ${supported_arches} | wc -w) -gt 1 ]; then
+      if [[ ${supported_arches} == *"${host_arch}"* ]]; then
+        echo "snap arch definition supports multiple arches for this host, auto picking host matching one"
+        target_arch="--build-for=${host_arch}"
+      else
+        echo "snap arch definition supports multiple arches for this host, please specify which one you want to build"
+        return 0
+      fi
+    fi
+  fi
+
   # run snapcraft command if we have container ready
   if [ "$?" = "0" ]; then
-    echo -e "Running snapcraft in '${container_name}' container:[snapcraft $@]"
-    ssh -A -t -q ${container_name}.lxd "cd $(pwd | sed 's|'"${HOME}"'|/home/ubuntu/host|g');${root_build} snapcraft $@"
+    echo -e "Running snapcraft in '${container_name}' container:[snapcraft $@ ${target_arch}]"
+    ssh -A -t -q ${container_name}.lxd "cd $(pwd | sed 's|'"${HOME}"'|/home/ubuntu/host|g');${root_build} snapcraft $@ ${target_arch}"
   else
-    exit 0
+    return 0
   fi
 }
