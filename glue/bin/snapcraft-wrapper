@@ -1,0 +1,70 @@
+# !/bin/bash
+
+# try to resolve snapcraft.yaml path in the current directory
+lxd_get_snap_base() {
+  for sy in snapcraft.yaml snap/snapcraft.yaml build-aux/snapcraft.yaml build-aux/snap/snapcraft.yaml
+  do
+    if [ -e ${sy} ]; then
+      snapcraft_yaml="${sy}"
+      return
+    fi
+  done
+}
+
+# If this is core22 base, in 9 out of 10 cases snapcraft will build too much unless --build-for
+# is passed. Check supported target arches for a given host if more than 1 is supported
+# pick one matching host or bail out asking the user which one to build
+# There is really no good valid use case for day-to-day development to always build all supported arches.
+# This often trashes development env if one wants to just run incremental build.
+# This check requires 'yq' parser to be installed.
+lxd_get_target_arch() {
+  local snapcraft_yaml=${1}
+  local base=${2}
+  if [ "${base}" = "core22" ] && [ -n "$(which yq)" ] && [[ $@ != *"--build-for"* ]]; then
+    # determine host arch
+    local host_arch="amd64"
+    case $(uname -m) in
+      aarch64)
+        host_arch="arm64"
+        ;;
+      armv7l)
+        host_arch="armhf"
+        ;;
+      riscv64)
+        host_arch="riscv"
+        ;;
+      x86_64)
+        host_arch="amd64"
+        ;;
+    esac
+    local supported_arches="$(host_arch=${host_arch} yq '.architectures[] | select( [ .build-on[] | contains(env(host_arch)) ] | any) | .build-for' ${snapcraft_yaml})"
+    # if there are more than 2 matching targets check if one matches host, if not bail
+    if [ $(echo ${supported_arches} | wc -w) -gt 1 ]; then
+      if [[ ${supported_arches} == *"${host_arch}"* ]]; then
+        echo "snap arch definition supports multiple arches for this host, auto picking host matching one (${host_arch})" >&2
+        target_arch="--build-for=${host_arch}"
+        return 0
+      else
+        echo "Arch definition in snapcraft.yaml supports multiple arches for this host, please specify which one you want to build" >&2
+        return 1
+      fi
+    fi
+  fi
+  return 0
+}
+# if we can see /snap/toolbox/current/bin/snapcraft-lxd-wrapper source it
+[ -e /snap/toolbox/current/bin/snapcraft-lxd-wrapper ] && source $(realpath /snap/toolbox/current/bin/snapcraft-lxd-wrapper)
+
+# if running outside of the container, call lxd_snapcraft
+if [ "$(systemd-detect-virt)" = "none" ]; then
+  lxd_snapcraft $@
+else
+  lxd_get_snap_base
+  if [ -n "${snapcraft_yaml}" ]; then
+    base=$(grep 'build-base:' ${snapcraft_yaml} | awk '{print $2}')
+    lxd_get_target_arch ${snapcraft_yaml} ${base}
+    [ ! 0 -eq ${?} ] && return 0
+  fi
+  exec /snap/bin/snapcraft $@ ${target_arch}
+fi
+
