@@ -33,8 +33,24 @@ _snapcraft()
     return 0
     ;;
   build | clean | pull | stage | prime)
-    part_options="$(find parts/ -mindepth 1 -maxdepth 1 -type d -printf '%P ')"
-    COMPREPLY=( $(compgen -W "$part_options" -- $cur))
+    # if we have yq installed use it, otherwise try to use parts directory
+    if [ -n "$(which yq)" ]; then
+      # first find snapcraft.yaml
+      for sy in snapcraft.yaml snap/snapcraft.yaml build-aux/snapcraft.yaml build-aux/snap/snapcraft.yaml
+      do
+        if [ -e ${sy} ]; then
+          snapcraft_yaml="${sy}"
+          continue
+        fi
+      done
+      if [ -n "${snapcraft_yaml}" ]; then
+        parts_options=$(yq --output-format tsv '.parts | keys | ... comments=""' ${snapcraft_yaml})
+      fi
+    fi
+    if [ -z "${parts_options}" ]; then
+      parts_options="$(find parts/ -mindepth 1 -maxdepth 1 -type d -printf '%P ')"
+    fi
+    COMPREPLY=( $(compgen -W "$parts_options" -- $cur))
     return 0
     ;;
   *)
