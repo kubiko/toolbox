@@ -1,12 +1,14 @@
 name: toolbox
-version: "0.9.8"
+version: "0.9.9"
 summary: Swiss knife of shell tools
 description: |
-  Set of useful shell tools to be used on Ubuntu/Ubuntu core After install run the follwing commands to enable all built-in tools in your shell.
-  $ toolbox.set-path &gt;&gt; ~/.bashrc
-  Log out and log back in. Or $ source ~/.bashrc
+  Set of useful shell tools to be used on Ubuntu/Ubuntu core systems.
+  After installation run the following commands to enable all built-in tools in your shell:
+  $ toolbox.set-path >> ~/.bashrc
+  Log out and log back in, or run $ source ~/.bashrc
+
   Now all included tools should be in your path, and running unconfined :)
-  This is one-time setup, when new tools are added they are automatically included in the path.
+  This is a one-time setup, when new tools are added they are automatically included in the path.
 
 confinement: strict
 grade: stable
