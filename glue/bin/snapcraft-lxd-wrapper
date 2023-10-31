@@ -208,12 +208,15 @@ lxd_ensure_container_runnig() {
 
 lxd_ensure_container () {
   # normalise series, we only support UC16/18/2* and related LTS
-  # 24.04 -> ????/temporarily mantic
+  # 24.04 -> noble
   # 22.04 -> jammy
   # 20.04 -> focal
   # 18.04 -> bionic
   # 16.04 -> xenial
   case $1 in
+    24.04 | noble)
+      local ubuntu_series="noble"
+      ;;
     23.10 | mantic)
       local ubuntu_series="mantic"
       ;;
@@ -551,7 +554,7 @@ lxd_snapcraft () {
         local ubuntu_series="jammy"
         ;;
       core24)
-        local ubuntu_series="mantic"
+        local ubuntu_series="noble"
         ;;
       *)
         echo "Base not defined, assuming Core 16"
