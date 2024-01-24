@@ -60,7 +60,7 @@ generate_sysfs_overlay() {
 }
 
 print_help() {
-  echo -e "Helper to generate sysfs overlay which can be used when building preseeded image outsif of the target machine"
+  echo -e "Helper to generate sysfs overlay which can be used when building preseeded image outside of the target machine"
   echo -e "Use: $(basename ${0})--overlay-dir <directory path to create overlay in>"
   echo -e "\t -h|--help    this message"
   echo -e "\t --overlay-dir  path to the directory to generate overlay in"
