@@ -1,4 +1,4 @@
-# !/bin/bash
+#!/bin/bash
 
 # try to resolve snapcraft.yaml path in the current directory
 lxd_get_snap_base() {

@@ -1,4 +1,4 @@
-it #!/bin/bash
+#!/bin/bash
 # set -ex
 # lean snap client handling multiple snap command
 # all the commands are using snap REST API calls
