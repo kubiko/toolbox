@@ -1,7 +1,7 @@
 #!/bin/bash
 SNAP="$(dirname $(which ${0}))/.."
 print_usage() {
-    echo -e "setup ssh tunnet to remote machine"
+    echo -e "setup ssh tunnel to remote machine"
     echo -e "required parameters can be passed as parameters or env variables, e.g."
     echo -e "$ $(basename ${0}) --target <target name> --target-ip <ip address> --remote-port <port> --remote-username <username>"
     echo -e "$ TARGET=<target name> TARGET_IP=<ip address> REMOTE_PORT=<port> USERNAME=<username> $(basename ${0})"
