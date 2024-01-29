@@ -35,15 +35,12 @@ MOUNT_SERVICE="hack-snapd.service"
 GO_LDFLAGS="-s -w" # flags to strip DWARF, symbol and debug info
 
 set_permanent_bindmount() {
-    echo -e "\nSetting up permanent bind mount persistent over reboots, BE CAREFULL!!!!!"
-    FULL_PATH=$(ssh ${SSH_OPTION} ${REMOTE} "[ -d \"/writable\" ] && echo /writable/${REMOTE_TARGET_DIR}" | tr -d '\r\n' )
-    [ -z "${FULL_PATH}" ] && FULL_PATH=$(ssh ${SSH_OPTION} ${REMOTE} "echo \$HOME/${REMOTE_TARGET_DIR}" |  tr -d '\r\n' )
-
-FULL_PATH="/var/lib/misc"
-
-    ssh_call "${DO_SUDO} mkdir -p ${FULL_PATH}"
-
-    remove_permanent_bind_mount
+  echo -e "\nSetting up permanent bind mount persistent over reboots, BE CAREFULL!!!!!"
+  FULL_PATH=$(ssh ${SSH_OPTION} ${REMOTE} "[ -d \"/writable\" ] && echo /writable/${REMOTE_TARGET_DIR}" | tr -d '\r\n' )
+  [ -z "${FULL_PATH}" ] && FULL_PATH=$(ssh ${SSH_OPTION} ${REMOTE} "echo \$HOME/${REMOTE_TARGET_DIR}" |  tr -d '\r\n' )
+  FULL_PATH="/var/lib/misc"
+  ssh_call "${DO_SUDO} mkdir -p ${FULL_PATH}"
+  remove_permanent_bind_mount
 
 cat > tmp_hack-snapd.service << EOL
 [Unit]
@@ -58,332 +55,332 @@ ExecStart=${FULL_PATH}/hack-snapd.sh
 WantedBy=multi-user.target
 EOL
 
-    echo "#!/bin/bash" > tmp_hack-snapd.sh
-    echo "exec >> /var/log/snapd-bind-mount 2>&1" >> tmp_hack-snapd.sh
-    echo "set -e" >> tmp_hack-snapd.sh
-    echo "echo \$(date)" >> tmp_hack-snapd.sh
-    echo "echo \"Bindmounting snapd to run our hack one\"\n" >> tmp_hack-snapd.sh
+  echo "#!/bin/bash" > tmp_hack-snapd.sh
+  echo "exec >> /var/log/snapd-bind-mount 2>&1" >> tmp_hack-snapd.sh
+  echo "set -e" >> tmp_hack-snapd.sh
+  echo "echo \$(date)" >> tmp_hack-snapd.sh
+  echo "echo \"Bindmounting snapd to run our hack one\"\n" >> tmp_hack-snapd.sh
 
-    for t in "${!SNAP_TARGETS[@]}"
-    do
-        echo "[ -f ${FULL_PATH}/${t}.${FARCH} ] && mount -o bind ${FULL_PATH}/${t}.${FARCH} ${SNAP_TARGETS[$t]}/${t}" >> tmp_hack-snapd.sh
-    done
+  for t in "${!SNAP_TARGETS[@]}"
+  do
+    echo "[ -f ${FULL_PATH}/${t}.${FARCH} ] && mount -o bind ${FULL_PATH}/${t}.${FARCH} ${SNAP_TARGETS[$t]}/${t}" >> tmp_hack-snapd.sh
+  done
 
-    copy tmp_hack-snapd.sh
-    copy tmp_hack-snapd.service
-    ssh_call "${DO_SUDO} mv ~/${REMOTE_TARGET_DIR}/tmp_hack-snapd.sh ${FULL_PATH}/hack-snapd.sh"
-    ssh_call "${DO_SUDO} chmod +x ${FULL_PATH}/hack-snapd.sh"
-    ssh_call "${DO_SUDO} cp ~/${REMOTE_TARGET_DIR}/*.${FARCH} ${FULL_PATH}/"
-    ssh_call "${DO_SUDO} cp ~/${REMOTE_TARGET_DIR}/tmp_${MOUNT_SERVICE} /etc/systemd/system/${MOUNT_SERVICE}"
-    ssh_call "${DO_SUDO} chmod 664 /etc/systemd/system/${MOUNT_SERVICE}"
-    ssh_call "${DO_SUDO} ln -sf  /etc/systemd/system/${MOUNT_SERVICE} /etc/systemd/system/multi-user.target.wants/${MOUNT_SERVICE}"
-    ssh_call "${DO_SUDO} systemctl daemon-reload"
-    ssh_call "${DO_SUDO} systemctl enable hack-snapd.service"
-    rm tmp_hack-snapd.sh
-    rm tmp_hack-snapd.service
+  copy tmp_hack-snapd.sh
+  copy tmp_hack-snapd.service
+  ssh_call "${DO_SUDO} mv ~/${REMOTE_TARGET_DIR}/tmp_hack-snapd.sh ${FULL_PATH}/hack-snapd.sh"
+  ssh_call "${DO_SUDO} chmod +x ${FULL_PATH}/hack-snapd.sh"
+  ssh_call "${DO_SUDO} cp ~/${REMOTE_TARGET_DIR}/*.${FARCH} ${FULL_PATH}/"
+  ssh_call "${DO_SUDO} cp ~/${REMOTE_TARGET_DIR}/tmp_${MOUNT_SERVICE} /etc/systemd/system/${MOUNT_SERVICE}"
+  ssh_call "${DO_SUDO} chmod 664 /etc/systemd/system/${MOUNT_SERVICE}"
+  ssh_call "${DO_SUDO} ln -sf  /etc/systemd/system/${MOUNT_SERVICE} /etc/systemd/system/multi-user.target.wants/${MOUNT_SERVICE}"
+  ssh_call "${DO_SUDO} systemctl daemon-reload"
+  ssh_call "${DO_SUDO} systemctl enable hack-snapd.service"
+  rm tmp_hack-snapd.sh
+  rm tmp_hack-snapd.service
 }
 
 remove_permanent_bind_mount() {
-    ssh_call "${DO_SUDO} systemctl disable ${MOUNT_SERVICE}"
-    ssh_call "[ -e /etc/systemd/system/sockets.target.wants/${MOUNT_SERVICE} ] && ${DO_SUDO} rm /etc/systemd/system/sockets.target.wants/${MOUNT_SERVICE}"
-    ssh_call "[ -e /etc/systemd/system/multi-user.target.wants/${MOUNT_SERVICE} ] && ${DO_SUDO} rm /etc/systemd/system/multi-user.target.wants/${MOUNT_SERVICE}"
-    ssh_call "[ -e /etc/systemd/system/${MOUNT_SERVICE} ] && ${DO_SUDO} rm /etc/systemd/system/${MOUNT_SERVICE}"
+  ssh_call "${DO_SUDO} systemctl disable ${MOUNT_SERVICE}"
+  ssh_call "[ -e /etc/systemd/system/sockets.target.wants/${MOUNT_SERVICE} ] && ${DO_SUDO} rm /etc/systemd/system/sockets.target.wants/${MOUNT_SERVICE}"
+  ssh_call "[ -e /etc/systemd/system/multi-user.target.wants/${MOUNT_SERVICE} ] && ${DO_SUDO} rm /etc/systemd/system/multi-user.target.wants/${MOUNT_SERVICE}"
+  ssh_call "[ -e /etc/systemd/system/${MOUNT_SERVICE} ] && ${DO_SUDO} rm /etc/systemd/system/${MOUNT_SERVICE}"
 }
 
 unset_all() {
-    unset GOARCH
-    unset CC
-    unset CGO_ENABLED
-    unset GOARM
-    unset FARCH
-    unset DO_SUDO_ASKPASS
-    unset DO_SUDO
-    unset REMOTE
-    unset SET_PERMANENT
-    unset CLASSIC_REMOTE
+  unset GOARCH
+  unset CC
+  unset CGO_ENABLED
+  unset GOARM
+  unset FARCH
+  unset DO_SUDO_ASKPASS
+  unset DO_SUDO
+  unset REMOTE
+  unset SET_PERMANENT
+  unset CLASSIC_REMOTE
 }
 
 set_amd64() {
-    export GOARCH=amd64
-    export CC=x86_64-linux-gnu-gcc
-    export CGO_ENABLED=1
-    export FARCH=amd64
+  export GOARCH=amd64
+  export CC=x86_64-linux-gnu-gcc
+  export CGO_ENABLED=1
+  export FARCH=amd64
 }
 
 set_armhf() {
-    export GOARCH=arm
-    export GOARM=7
-    export CGO_ENABLED=1
-    export CC=arm-linux-gnueabihf-gcc
-    export FARCH=armhf
+  export GOARCH=arm
+  export GOARM=7
+  export CGO_ENABLED=1
+  export CC=arm-linux-gnueabihf-gcc
+  export FARCH=armhf
 }
 
 set_arm64() {
-    export GOARCH=arm64
-    unset GOARM
-    export CGO_ENABLED=1
-    export CC=aarch64-linux-gnu-gcc
-    export FARCH=arm64
+  export GOARCH=arm64
+  unset GOARM
+  export CGO_ENABLED=1
+  export CC=aarch64-linux-gnu-gcc
+  export FARCH=arm64
 }
 
 set_macOS() {
-    export GOARCH=arm64
-    # export CC=x86_64-linux-gnu-gcc
-    export CGO_ENABLED=1
-    export FARCH=macOS
-    unset SNAP_TARGETS["snapd"]
-    unset SNAP_TARGETS["snap-seccomp"]
-    unset SNAP_TARGETS["snap-update-ns"]
-    unset SNAP_TARGETS["snap-bootstrap"]
-    BUILD_DIR="${HOME}/development/snapd"
-    SNAP_TAGS["snap"]="nomanagers nosecboot"
+  export GOARCH=arm64
+  # export CC=x86_64-linux-gnu-gcc
+  export CGO_ENABLED=1
+  export FARCH=macOS
+  unset SNAP_TARGETS["snapd"]
+  unset SNAP_TARGETS["snap-seccomp"]
+  unset SNAP_TARGETS["snap-update-ns"]
+  unset SNAP_TARGETS["snap-bootstrap"]
+  BUILD_DIR="${HOME}/development/snapd"
+  SNAP_TAGS["snap"]="nomanagers nosecboot"
 }
 
 print_config() {
-    echo -e "\nRunning build with following configuration:"
-    echo -e "\tGOARCH=${GOARCH}"
-    echo -e "\tGOARM=${GOARM}"
-    echo -e "\tCC=${CC}"
-    echo -e "\tFARCH=${FARCH}"
-    echo -e "\tREMOTE=${REMOTE}"
-    echo -e "\tDO_SUDO=${DO_SUDO}"
-    echo -e "\tDO_SUDO_ASKPASS=${DO_SUDO_ASKPASS}"
-    echo -e "\tBUILD_DIR=${BUILD_DIR}"
-    echo -e "\tSNAP_TAGS:"
-    for t in "${!SNAP_TARGETS[@]}"
-    do
-        if [ -n "${SNAP_TAGS[$t]}" ]; then
-          echo -e "\t\t${t}:\t '${SNAP_TAGS[$t]}'"
-        fi
-    done
-    echo -e "\n"
+  echo -e "\nRunning build with following configuration:"
+  echo -e "\tGOARCH=${GOARCH}"
+  echo -e "\tGOARM=${GOARM}"
+  echo -e "\tCC=${CC}"
+  echo -e "\tFARCH=${FARCH}"
+  echo -e "\tREMOTE=${REMOTE}"
+  echo -e "\tDO_SUDO=${DO_SUDO}"
+  echo -e "\tDO_SUDO_ASKPASS=${DO_SUDO_ASKPASS}"
+  echo -e "\tBUILD_DIR=${BUILD_DIR}"
+  echo -e "\tSNAP_TAGS:"
+  for t in "${!SNAP_TARGETS[@]}"
+  do
+    if [ -n "${SNAP_TAGS[$t]}" ]; then
+      echo -e "\t\t${t}:\t '${SNAP_TAGS[$t]}'"
+    fi
+  done
+  echo -e "\n"
 }
 
 ssh_call() {
-    if [ "${REMOTE}" = "local" ]; then
-      if [ -z "${DO_SUDO_ASKPASS}" ]; then
-          echo -e "\tlocal: ${@}"
-          sh -c "${@}"
-      else
-          echo -e "\tlocal: ${DO_SUDO_ASKPASS}; ${@}"
-          sh -c "${DO_SUDO_ASKPASS}; ${@}"
-      fi
+  if [ "${REMOTE}" = "local" ]; then
+    if [ -z "${DO_SUDO_ASKPASS}" ]; then
+      echo -e "\tlocal: ${@}"
+      sh -c "${@}"
     else
-      if [ -z "${DO_SUDO_ASKPASS}" ]; then
-          echo -e "\tssh ${SSH_OPTION} ${REMOTE} ${@}"
-          ssh ${SSH_OPTION} ${REMOTE} "${@}"
-      else
-          echo -e "\tssh ${SSH_OPTION} ${REMOTE} ${DO_SUDO_ASKPASS} ${@}"
-          ssh ${SSH_OPTION} ${REMOTE} "${DO_SUDO_ASKPASS}; ${@}"
-      fi
+      echo -e "\tlocal: ${DO_SUDO_ASKPASS}; ${@}"
+      sh -c "${DO_SUDO_ASKPASS}; ${@}"
     fi
+  else
+    if [ -z "${DO_SUDO_ASKPASS}" ]; then
+      echo -e "\tssh ${SSH_OPTION} ${REMOTE} ${@}"
+      ssh ${SSH_OPTION} ${REMOTE} "${@}"
+    else
+      echo -e "\tssh ${SSH_OPTION} ${REMOTE} ${DO_SUDO_ASKPASS} ${@}"
+      ssh ${SSH_OPTION} ${REMOTE} "${DO_SUDO_ASKPASS}; ${@}"
+    fi
+  fi
 }
 
 copy() {
-    if [ -f ${1} ]; then
-        if [ "${REMOTE}" = "local" ]; then
-            cp ${1} ~/${REMOTE_TARGET_DIR}/
-        else
-            scp ${1} ${REMOTE}:${REMOTE_TARGET_DIR}/
-        fi
+  if [ -f ${1} ]; then
+    if [ "${REMOTE}" = "local" ]; then
+      cp ${1} ~/${REMOTE_TARGET_DIR}/
     else
-        echo "WARNING: Missing artefact ${1}, skipping it"
+      scp ${1} ${REMOTE}:${REMOTE_TARGET_DIR}/
     fi
+  else
+    echo "WARNING: Missing artefact ${1}, skipping it"
+  fi
 }
 
 unmount_existing_bits() {
-    echo -e "\nUnmounting existing bind mounts"
-    for t in "${!SNAP_TARGETS[@]}"
-    do
-        ssh_call "[ ! -z \"\$(mount | grep ${SNAP_TARGETS[$t]}/${t})\" ] && ${DO_SUDO} umount ${SNAP_TARGETS[$t]}/${t}"
-    done
+  echo -e "\nUnmounting existing bind mounts"
+  for t in "${!SNAP_TARGETS[@]}"
+  do
+    ssh_call "[ ! -z \"\$(mount | grep ${SNAP_TARGETS[$t]}/${t})\" ] && ${DO_SUDO} umount ${SNAP_TARGETS[$t]}/${t}"
+  done
 }
 
 clean_old_bits() {
-    echo -e "\nCleaning old build artefacts"
-    for t in "${!SNAP_TARGETS[@]}"
-    do
-        ssh_call "[ -f ~/${REMOTE_TARGET_DIR}/${t}.${FARCH} ] && rm ~/${REMOTE_TARGET_DIR}/${t}.${FARCH}"
-    done
+  echo -e "\nCleaning old build artefacts"
+  for t in "${!SNAP_TARGETS[@]}"
+  do
+    ssh_call "[ -f ~/${REMOTE_TARGET_DIR}/${t}.${FARCH} ] && rm ~/${REMOTE_TARGET_DIR}/${t}.${FARCH}"
+  done
 }
 
 remount_new_bits() {
-    echo -e "\nRemounting new build artefacts"
-    for t in "${!SNAP_TARGETS[@]}"
-    do
-        ssh_call "[ -f ~/${REMOTE_TARGET_DIR}/${t}.${FARCH} ] && ${DO_SUDO} mount -o bind ~/${REMOTE_TARGET_DIR}/${t}.${FARCH} ${SNAP_TARGETS[$t]}/${t}"
-    done
+  echo -e "\nRemounting new build artefacts"
+  for t in "${!SNAP_TARGETS[@]}"
+  do
+    ssh_call "[ -f ~/${REMOTE_TARGET_DIR}/${t}.${FARCH} ] && ${DO_SUDO} mount -o bind ~/${REMOTE_TARGET_DIR}/${t}.${FARCH} ${SNAP_TARGETS[$t]}/${t}"
+  done
 }
 
 stop_snapd() {
-    echo -e "\nStopping snap service"
-    ssh_call "${DO_SUDO} systemctl stop snapd.socket; ${DO_SUDO} systemctl stop snapd.service"
+  echo -e "\nStopping snap service"
+  ssh_call "${DO_SUDO} systemctl stop snapd.socket; ${DO_SUDO} systemctl stop snapd.service"
 }
 
 start_snapd() {
-    echo -e "\nRestarting snapd service"
-    ssh_call "${DO_SUDO} systemctl start snapd.socket; ${DO_SUDO} systemctl start snapd.service"
+  echo -e "\nRestarting snapd service"
+  ssh_call "${DO_SUDO} systemctl start snapd.socket; ${DO_SUDO} systemctl start snapd.service"
 }
 
 snapd_status() {
-    echo -e "\nChecking snapd status"
-    ssh_call "systemctl status snapd.socket; systemctl status snapd.service"
+  echo -e "\nChecking snapd status"
+  ssh_call "systemctl status snapd.socket; systemctl status snapd.service"
 }
 
 print_current_bind_mounts() {
-    echo -e "\nActive bindmounts for snapd artefacts:"
-    ssh ${SSH_OPTION} ${REMOTE} "grep \"/usr/lib/snapd/\" /proc/self/mountinfo" | awk '{print "\t",$4,"\t",$5}'
-    ssh ${SSH_OPTION} ${REMOTE} "grep \"/usr/bin/snap\" /proc/self/mountinfo" | awk '{print "\t",$4,"\t",$5}'
+  echo -e "\nActive bindmounts for snapd artefacts:"
+  ssh ${SSH_OPTION} ${REMOTE} "grep \"/usr/lib/snapd/\" /proc/self/mountinfo" | awk '{print "\t",$4,"\t",$5}'
+  ssh ${SSH_OPTION} ${REMOTE} "grep \"/usr/bin/snap\" /proc/self/mountinfo" | awk '{print "\t",$4,"\t",$5}'
 }
 
 print_help () {
-    echo -e "Helper script to compile snap(d) and test it on local and remote devices\n"
-    echo -e "Usage: $0 [remote] [architecture] [permanent option | clean options]\n"
-    echo -e "There is list of predefined remotes which can have associated architecture"
-    echo -e "if manually passing remote device, specify also architecture"
-    echo -e "if no remote is passed, only build is run for given architecture\n"
-    echo -e "Parameters:"
-    echo -e "\tArchitecture options: [amd64 | i386 | armhf | arm64 | macOS]\n"
-    echo -e "\t\tIf none is supplied, host arch is assumed"
-    echo -e "\tlocal: predefined target to test snapd  on local machine\n"
-    echo -e "\tPredefined example remote devices: [gateway|server]"
-    echo -e "\t\tuse as example to define own test devices\n"
-    echo -e "\t-remote=<remote device address>: address to remote device, could be ip address"
-    echo -e "\t\tor alias defined in ssh/config\n"
-    echo -e "\t-clean-mounts: clean exiting bind mount on remote device"
-    echo -e "\t\tRequired parameter: remote\n"
-    echo -e "\t-permanent: flag to make bind mounts reboot persistent, use with caution!!"
-    echo -e "\t\tRequired parameter: remote\n"
-    echo -e "\t-remove-permanent: remove permanent bind mounts from remote"
-    echo -e "\t\tRequired parameter: remote\n"
-    echo -e "\t-ask-pass: path to SUDO_ASKPASS on remote device to be used\n"
-    echo -e "\t-help: this help"
+  echo -e "Helper script to compile snap(d) and test it on local and remote devices\n"
+  echo -e "Usage: $0 [remote] [architecture] [permanent option | clean options]\n"
+  echo -e "There is list of predefined remotes which can have associated architecture"
+  echo -e "if manually passing remote device, specify also architecture"
+  echo -e "if no remote is passed, only build is run for given architecture\n"
+  echo -e "Parameters:"
+  echo -e "\tArchitecture options: [amd64 | i386 | armhf | arm64 | macOS]\n"
+  echo -e "\t\tIf none is supplied, host arch is assumed"
+  echo -e "\tlocal: predefined target to test snapd  on local machine\n"
+  echo -e "\tPredefined example remote devices: [gateway|server]"
+  echo -e "\t\tuse as example to define own test devices\n"
+  echo -e "\t-remote=<remote device address>: address to remote device, could be ip address"
+  echo -e "\t\tor alias defined in ssh/config\n"
+  echo -e "\t-clean-mounts: clean exiting bind mount on remote device"
+  echo -e "\t\tRequired parameter: remote\n"
+  echo -e "\t-permanent: flag to make bind mounts reboot persistent, use with caution!!"
+  echo -e "\t\tRequired parameter: remote\n"
+  echo -e "\t-remove-permanent: remove permanent bind mounts from remote"
+  echo -e "\t\tRequired parameter: remote\n"
+  echo -e "\t-ask-pass: path to SUDO_ASKPASS on remote device to be used\n"
+  echo -e "\t-help: this help"
 }
 
 unset_all
 
 for line in "$@"
 do
-    case "$line" in
-        local)
-            REMOTE="local"
-            DO_SUDO="sudo -A"
-            DO_SUDO_ASKPASS='export SUDO_ASKPASS=/home/${USER}/sudo-askpass.sh'
-            set_amd64
-            ;;
-        gateway)
-            REMOTE="10.20.66.111"
-            set_amd64
-            DO_SUDO="sudo"
-            ;;
-        server)
-            REMOTE="10.20.66.123"
-            set_amd64
-            DO_SUDO_ASKPASS='export SUDO_ASKPASS=/home/${USER}/bin/SudoPass.sh'
-            DO_SUDO="sudo -A"
-            ;;
-        amd64)
-            set_amd64
-            ;;
-        armhf)
-            set_armhf
-            ;;
-        arm64)
-            set_arm64
-            ;;
-        osx)
-            set_macOS
-            ;;
-        macOS)
-            set_macOS
-            ;;
-        -all | --all)
-            BUILD_EXTENDED="true"
-            ;;
-        -remote=* | --remote=*)
-            REMOTE=${line#*=}
-            DO_SUDO="sudo"
-            ;;
-        -clean-mounts | --clean-mounts)
-            CLEAN_MOUNTS="true"
-            ;;
-        -permanent | --permanent)
-            SET_PERMANENT="true"
-            ;;
-        -remove-permanent | --remove-permanent)
-            SET_PERMANENT="remove"
-            ;;
-        -ask-pass=* | --ask-pass=*)
-            DO_SUDO_ASKPASS=${line#*=}
-            ;;
-        -build-dir=* | --build-dir=*)
-            BUILD_DIR=${line#*=}
-            ;;
-        -help | --help | -h)
-            print_help
-            exit
-            ;;
-        *)
-            echo -e "Wrong parameter\n\n"
-            print_help
-            exit
-            ;;
-      esac
+  case "$line" in
+    local)
+      REMOTE="local"
+      DO_SUDO="sudo -A"
+      DO_SUDO_ASKPASS='export SUDO_ASKPASS=/home/${USER}/sudo-askpass.sh'
+      set_amd64
+      ;;
+    gateway)
+      REMOTE="10.20.66.111"
+      set_amd64
+      DO_SUDO="sudo"
+      ;;
+    server)
+      REMOTE="10.20.66.123"
+      set_amd64
+      DO_SUDO_ASKPASS='export SUDO_ASKPASS=/home/${USER}/bin/SudoPass.sh'
+      DO_SUDO="sudo -A"
+      ;;
+    amd64)
+      set_amd64
+      ;;
+    armhf)
+      set_armhf
+      ;;
+    arm64)
+      set_arm64
+      ;;
+    osx)
+      set_macOS
+      ;;
+    macOS)
+      set_macOS
+      ;;
+    -all | --all)
+      BUILD_EXTENDED="true"
+      ;;
+    -remote=* | --remote=*)
+      REMOTE=${line#*=}
+      DO_SUDO="sudo"
+      ;;
+    -clean-mounts | --clean-mounts)
+      CLEAN_MOUNTS="true"
+      ;;
+    -permanent | --permanent)
+      SET_PERMANENT="true"
+      ;;
+    -remove-permanent | --remove-permanent)
+      SET_PERMANENT="remove"
+      ;;
+    -ask-pass=* | --ask-pass=*)
+      DO_SUDO_ASKPASS=${line#*=}
+      ;;
+    -build-dir=* | --build-dir=*)
+      BUILD_DIR=${line#*=}
+      ;;
+    -help | --help | -h)
+      print_help
+      exit
+      ;;
+    *)
+      echo -e "Wrong parameter\n\n"
+      print_help
+      exit
+      ;;
+    esac
 done
 # if arch was not set, assume host
 if [ -z "${GOARCH}" ]; then
-    echo -e "\nNo arch defined, assuming host's arch"
-    case $(uname -m) in
-        arm64)
-            set_macOS
-            ;;
-        aarch64)
-            set_arm64
-            ;;
-        armv7l)
-            set_armhf
-            ;;
-        x86_64)
-            set_amd64
-            ;;
-    esac
+  echo -e "\nNo arch defined, assuming host's arch"
+  case $(uname -m) in
+    arm64)
+      set_macOS
+      ;;
+    aarch64)
+      set_arm64
+      ;;
+    armv7l)
+      set_armhf
+      ;;
+    x86_64)
+      set_amd64
+      ;;
+  esac
 fi
 print_config
 
 
 if [ "${CLEAN_MOUNTS}" = "true" ]; then
-    if [ -z "${REMOTE}" ]; then
-        echo "Not defined remote to clean bind mounts on!!!"
-        exit
-    fi
-    echo "Only cleaning existing bind mounts"
-    stop_snapd
-    unmount_existing_bits
-    start_snapd
-    print_current_bind_mounts
-    snapd_status
+  if [ -z "${REMOTE}" ]; then
+    echo "Not defined remote to clean bind mounts on!!!"
     exit
+  fi
+  echo "Only cleaning existing bind mounts"
+  stop_snapd
+  unmount_existing_bits
+  start_snapd
+  print_current_bind_mounts
+  snapd_status
+  exit
 fi
 
 if [ "${SET_PERMANENT}" = "remove" ]; then
-    if [ -z "${REMOTE}" ]; then
-        echo "Not defined remote to clean permanent bind mounts!!!"
-        exit
-    fi
-    remove_permanent_bind_mount
+  if [ -z "${REMOTE}" ]; then
+    echo "Not defined remote to clean permanent bind mounts!!!"
     exit
+  fi
+  remove_permanent_bind_mount
+  exit
 fi
 
 if [ -z "${GOARCH}" ]; then
-    echo "unknown target architecture for remote device: $1"
-    exit
+  echo "unknown target architecture for remote device: $1"
+  exit
 fi
 
 # gather all the build targets
 if [ "${BUILD_EXTENDED}" == "true" ]; then
   for t in "${!SNAP_TARGETS_EXTENDED[@]}"
   do
-      SNAP_TARGETS[${t}]=${SNAP_TARGETS_EXTENDED[${t}]}
+    SNAP_TARGETS[${t}]=${SNAP_TARGETS_EXTENDED[${t}]}
   done
 fi
 
@@ -393,24 +390,24 @@ pushd ${GOPATH}/src/github.com/snapcore/snapd
 mkdir -p ${BUILD_DIR}
 for t in "${!SNAP_TARGETS[@]}"
 do
-    # echo -e "\tBulding: ${t}"
-    [ -f ${BUILD_DIR}/${t}.${FARCH} ] && rm ${BUILD_DIR}/${t}.${FARCH}
-    tag="${SNAP_TAGS[${t}]}"
-    # special case for snap-update-ns
-    # if [ "${t}" == "snap-update-ns" ]; then
-    #     echo -e "\tBulding: ${t}\t go build -mod=vendor  -buildmode=pie -o ${BUILD_DIR}/${t}.${FARCH} --ldflags '-s -w -extldflags "-static"' github.com/snapcore/snapd/cmd/${t}"
-    #     go build -mod=vendor  -buildmode=pie -o ${BUILD_DIR}/${t}.${FARCH} --ldflags '-s -w -extldflags "-static"' github.com/snapcore/snapd/cmd/${t}
-    if [ -z "${tag}" ]; then
-        printf "\tBuilding: %-15s\t go build -mod=vendor  -buildmode=pie -o ${BUILD_DIR}/${t}.${FARCH} -ldflags \"${GO_LDFLAGS}\" github.com/snapcore/snapd/cmd/${t}\n" ${t}
-        go build -mod=vendor  -buildmode=pie -o ${BUILD_DIR}/${t}.${FARCH} -ldflags "${GO_LDFLAGS}" github.com/snapcore/snapd/cmd/${t}
-    else
-        printf "\tBuilding: %-15s\t go build -mod=vendor  -buildmode=pie -tags "${tag}" -ldflags \"${GO_LDFLAGS}\"  -o ${BUILD_DIR}/${t}.${FARCH} github.com/snapcore/snapd/cmd/${t}\n" ${t}
-        go build -mod=vendor  -buildmode=pie -tags "${tag}" -o ${BUILD_DIR}/${t}.${FARCH} -ldflags "${GO_LDFLAGS}" github.com/snapcore/snapd/cmd/${t}
-    fi
-    OUT=$?
-    if [ ! $OUT -eq 0 ];then
-      exit 0
-    fi
+  # echo -e "\tBulding: ${t}"
+  [ -f ${BUILD_DIR}/${t}.${FARCH} ] && rm ${BUILD_DIR}/${t}.${FARCH}
+  tag="${SNAP_TAGS[${t}]}"
+  # special case for snap-update-ns
+  # if [ "${t}" == "snap-update-ns" ]; then
+  #   echo -e "\tBulding: ${t}\t go build -mod=vendor  -buildmode=pie -o ${BUILD_DIR}/${t}.${FARCH} --ldflags '-s -w -extldflags "-static"' github.com/snapcore/snapd/cmd/${t}"
+  #   go build -mod=vendor  -buildmode=pie -o ${BUILD_DIR}/${t}.${FARCH} --ldflags '-s -w -extldflags "-static"' github.com/snapcore/snapd/cmd/${t}
+  if [ -z "${tag}" ]; then
+    printf "\tBuilding: %-15s\t go build -mod=vendor  -buildmode=pie -o ${BUILD_DIR}/${t}.${FARCH} -ldflags \"${GO_LDFLAGS}\" github.com/snapcore/snapd/cmd/${t}\n" ${t}
+    go build -mod=vendor  -buildmode=pie -o ${BUILD_DIR}/${t}.${FARCH} -ldflags "${GO_LDFLAGS}" github.com/snapcore/snapd/cmd/${t}
+  else
+    printf "\tBuilding: %-15s\t go build -mod=vendor  -buildmode=pie -tags "${tag}" -ldflags \"${GO_LDFLAGS}\"  -o ${BUILD_DIR}/${t}.${FARCH} github.com/snapcore/snapd/cmd/${t}\n" ${t}
+    go build -mod=vendor  -buildmode=pie -tags "${tag}" -o ${BUILD_DIR}/${t}.${FARCH} -ldflags "${GO_LDFLAGS}" github.com/snapcore/snapd/cmd/${t}
+  fi
+  OUT=$?
+  if [ ! $OUT -eq 0 ];then
+    exit 0
+  fi
 done
 
 echo -e "Building finished\n"
@@ -418,18 +415,18 @@ echo -e "Building finished\n"
 echo -e "Double checking if build was successfull and we have all needed binaries before going any further\n"
 for t in "${!SNAP_TARGETS[@]}"
 do
-    if [ ! -e ${BUILD_DIR}/${t}.${FARCH} ]; then
-        echo "Build failed... bailing out"
-        exit 0
-    else
-        printf "successfully built %-15s \t ${BUILD_DIR}/${t}.${FARCH}\n" ${t}
-    fi
+  if [ ! -e ${BUILD_DIR}/${t}.${FARCH} ]; then
+    echo "Build failed... bailing out"
+    exit 0
+  else
+    printf "successfully built %-15s \t ${BUILD_DIR}/${t}.${FARCH}\n" ${t}
+  fi
 done
 
 if [ -z "${REMOTE}" ]; then
-    echo -e "\nNo remote machine, skipping copy step"
-    unset_all
-    exit
+  echo -e "\nNo remote machine, skipping copy step"
+  unset_all
+  exit
 fi
 
 echo -e "\nCopying new binaries to target machine: ${REMOTE}"
@@ -442,8 +439,8 @@ clean_old_bits
 
 for t in "${!SNAP_TARGETS[@]}"
 do
-    echo -e "\tCopying ${t}.${FARCH} to remote target"
-    copy ${BUILD_DIR}/${t}.${FARCH} ${REMOTE}
+  echo -e "\tCopying ${t}.${FARCH} to remote target"
+  copy ${BUILD_DIR}/${t}.${FARCH} ${REMOTE}
 done
 
 remount_new_bits
@@ -453,7 +450,7 @@ start_snapd
 print_current_bind_mounts
 
 if [ "${SET_PERMANENT}" = "true" ]; then
-    set_permanent_bindmount
+  set_permanent_bindmount
 fi
 
 snapd_status
