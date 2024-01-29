@@ -1,33 +1,44 @@
 #!/bin/bash
 
-unset snap_name
-if [ -z "${1}" ]; then
-    # chech if this script is part of snap, in which case apply
-    # to snap it's part of
-    snap_root=$(dirname $0)
-    if [ -f ${snap_root}/../meta/snap.yaml ]; then
-        snap_name=$(grep 'name: ' ${snap_root}/../meta/snap.yaml | awk '{ print $2}')
-    else
-        echo -e "Pass snap name for which to connect interfaces\n"
-        exit 0
-    fi
-else
-    snap_name=${1}
-fi
+help() {
+    echo "Helper script for automation tests only!"
+    echo "This script can be used to automate interface connection for given snap"
+    echo "It mostly works for interfaces with system slots. For other interfaces"
+    echo "best effort is made."
+    echo "use: \$ $(basename ${0}) <snap name>"
+}
 
-# validate we valid snap name
-if [ -z $(snap list ${snap_name} 2> /dev/null | awk '{print $1}' | grep "^${snap_name}$") ]; then
-    echo "'${snap_name}' is not valid snap name"
-    exit 0
+for a in "$@"
+do
+    case "${a}" in
+    -h | --help)
+        help
+        exit
+        ;;
+    *)
+        # validate we valid snap name
+        snap_name=${1}
+        if [ -z $(snap list ${snap_name} 2> /dev/null | awk '{print $1}' | grep "^${snap_name}$") ]; then
+        echo -e "'${snap_name}' is not valid snap name"
+        help
+        exit 0
+        fi
+        ;;
+    esac
+done
+
+if [ -z "${snap_name}" ]; then
+  echo -e "Missing snap name!"
+  help
+  exit 0
 fi
 
 echo -e "Connecting interfaces for ${snap_name}\n"
-
 snap connections ${snap_name} | awk '$3 == "-" {print $2}' | awk -F ":" '{print $2}' | while read plug
 do
     unset slot_candidate
     if [ -z $(snap connections system | awk '{print $1}' | uniq | tail -n +2 | grep -w "^${plug}$") ]; then
-        slot_candidate=$(snap connections | awk -v plug="${plug}" '$1 == plug {print $3}' | uniq)
+        slot_candidate=$(snap connections  --all | awk -v plug="${plug}" '$1 == plug  && $3 != "-" {print $3}' | uniq)
         if [ "x${slot_candidate}" != "x" ]; then
             echo -e "\tTrying slot candidate '${slot_candidate}' for plug ${snap_name}:${plug}"
             snap connect ${snap_name}:${plug} ${slot_candidate}
@@ -43,4 +54,3 @@ do
         snap connect ${snap_name}:${plug} system
     fi
 done
-
