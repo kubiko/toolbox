@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.9.15"
+version: "0.9.16"
 summary: Swiss knife of shell tools
 description: |
   Set of useful shell tools to be used on Ubuntu/Ubuntu core systems.
@@ -22,17 +22,17 @@ architectures:
 base: core18
 
 environment:
-  PATH:            $SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH
-  LD_LIBRARY_PATH: $SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/${SNAPCRAFT_ARCH_TRIPLET}:$SNAP/usr/lib/${SNAPCRAFT_ARCH_TRIPLET}
+  PATH:            $SNAP/usr/sbin:$SNAP/usr/bin:$PATH
+  LD_LIBRARY_PATH: $SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH:$SNAP/usr/lib:$SNAP/usr/lib/${SNAPCRAFT_ARCH_TRIPLET}
   ARCH_TRIPLET:    ${SNAPCRAFT_ARCH_TRIPLET}
 
 apps:
   help:
-    command: bin/toolbox-help
+    command: usr/bin/toolbox-help
     adapter: none
 
   set-path:
-    command: bin/set-path
+    command: usr/bin/set-path
     adapter: none
 
 parts:

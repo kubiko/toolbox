@@ -1,0 +1,12 @@
+#!/bin/bash
+
+ARCH_TRIPLET=$(sed -n 's/.*ARCH_TRIPLET: \(.*\)/\1/p' /snap/toolbox/current/meta/snap.yaml)
+
+echo -e "Set of helpful tools\n"
+echo -e "To connect interfaces run: $SNAP/usr/bin/connect-interfaces"
+echo -e "To setup aliases run $SNAP/usr/bin/set-aliases"
+echo -e "To remove aliases run $SNAP/usr/bin/unset-aliases"
+echo -e "To add toolbox directly into path, call:"
+SNAP_CUR="$(dirname ${SNAP})/current"
+echo -e "export PATH${SNAP_CUR}/usr/bin:${SNAP_CUR}/usr/sbin:${SNAP_CUR}"
+echo -e "export LD_LIBRARY_PATH=\"${SNAP_CUR}/usr/lib:${SNAP_CUR}/usr/lib/${ARCH_TRIPLET}\""

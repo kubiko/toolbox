@@ -1,7 +1,6 @@
 #!/bin/bash
 
-[ -z "${ARCH_TRIPLET}" ] && ARCH_TRIPLET="$(basename $(ls -d /usr/lib/*-linux-*))"
-
+[ -z "${ARCH_TRIPLET}" ] && ARCH_TRIPLET=$(sed -n 's/.*ARCH_TRIPLET: \(.*\)/\1/p' /snap/toolbox/current/meta/snap.yaml)
 SNAP_PATH="/snap/${SNAP_INSTANCE_NAME}/current"
 
 echo -e "\n# Updating ~/.bashrc with folloving lines" >&2
@@ -10,18 +9,18 @@ echo "# start of modifications done by toolbox snap" >&2
 echo "# start of modifications done by toolbox snap"
 echo "SNAP_PATH=\"${SNAP_PATH}\"" >&2
 echo "SNAP_PATH=\"${SNAP_PATH}\""
-echo "export PATH=\"\${SNAP_PATH}/bin:\${SNAP_PATH}/sbin:\${SNAP_PATH}/usr/bin:\${SNAP_PATH}/usr/sbin:\${PATH}\"" >&2
-echo "export PATH=\"\${SNAP_PATH}/bin:\${SNAP_PATH}/sbin:\${SNAP_PATH}/usr/bin:\${SNAP_PATH}/usr/sbin:\${PATH}\""
-echo "export LD_LIBRARY_PATH=\"/lib:/usr/lib:/lib/${ARCH_TRIPLET}:/usr/lib/${ARCH_TRIPLET}:\${SNAP_PATH}/lib:\${SNAP_PATH}/usr/lib:\${SNAP_PATH}/lib/${ARCH_TRIPLET}:\${SNAP_PATH}/usr/lib/${ARCH_TRIPLET}\"" >&2
-echo "export LD_LIBRARY_PATH=\"/lib:/usr/lib:/lib/${ARCH_TRIPLET}:/usr/lib/${ARCH_TRIPLET}:\${SNAP_PATH}/lib:\${SNAP_PATH}/usr/lib:\${SNAP_PATH}/lib/${ARCH_TRIPLET}:\${SNAP_PATH}/usr/lib/${ARCH_TRIPLET}\""
+echo "export PATH=\"\${SNAP_PATH}/usr/bin:\${SNAP_PATH}/usr/sbin:\${PATH}\"" >&2
+echo "export PATH=\"\${SNAP_PATH}/usr/bin:\${SNAP_PATH}/usr/sbin:\${PATH}\""
+echo "export LD_LIBRARY_PATH=\"/usr/lib:/usr/lib/${ARCH_TRIPLET}:\${SNAP_PATH}/usr/lib:\${SNAP_PATH}/usr/lib/${ARCH_TRIPLET}\"" >&2
+echo "export LD_LIBRARY_PATH=\"/usr/lib:/usr/lib/${ARCH_TRIPLET}:\${SNAP_PATH}/usr/lib:\${SNAP_PATH}/usr/lib/${ARCH_TRIPLET}\""
 echo "alias sudo='sudo -E env \"PATH=\$PATH\" \"LD_LIBRARY_PATH=\$LD_LIBRARY_PATH\"'" >&2
 echo "alias sudo='sudo -E env \"PATH=\$PATH\" \"LD_LIBRARY_PATH=\$LD_LIBRARY_PATH\"'"
 echo "export XDG_DATA_DIRS=/usr/local/share:/usr/share:/snap/snapd/current/usr/share:\${SNAP_PATH}/usr/share" >&2
 echo "export XDG_DATA_DIRS=/usr/local/share:/usr/share:/snap/snapd/current/usr/share:\${SNAP_PATH}/usr/share"
 echo "source ${SNAP_PATH}/etc/profile.d/bash_completion.sh" >&2
 echo "source ${SNAP_PATH}/etc/profile.d/bash_completion.sh"
-echo "source ${SNAP_PATH}/bin/snapcraft-lxd-wrapper" >&2
-echo "source ${SNAP_PATH}/bin/snapcraft-lxd-wrapper"
+echo "source ${SNAP_PATH}/usr/bin/snapcraft-lxd-wrapper" >&2
+echo "source ${SNAP_PATH}/usr/bin/snapcraft-lxd-wrapper"
 echo "alias vim='vim.basic'" >&2
 echo "alias vim='vim.basic'"
 echo "export PYTHONPATH=\"\${SNAP_PATH}/usr/lib/python3/dist-packages\"" >&2

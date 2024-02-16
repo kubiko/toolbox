@@ -1,0 +1,8 @@
+#!/bin/sh
+
+SNAP_PATH="/snap/toolbox/current"
+ARCH_TRIPLET=$(sed -n 's/.*ARCH_TRIPLET: \(.*\)/\1/p' ${SNAP_PATH}/meta/snap.yaml)
+
+export LD_LIBRARY_PATH="/${SNAP_PATH}/usr/lib/${ARCH_TRIPLET}"
+
+${SNAP_PATH}/usr/bin/mosh-server "$@"
