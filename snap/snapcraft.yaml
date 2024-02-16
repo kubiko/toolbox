@@ -22,8 +22,8 @@ architectures:
 base: core20
 
 environment:
-  PATH:            $SNAP/usr/sbin:$SNAP/usr/bin:$PATH
-  LD_LIBRARY_PATH: $SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH:$SNAP/usr/lib:$SNAP/usr/lib/${SNAPCRAFT_ARCH_TRIPLET}
+  PATH:            ${SNAP}/usr/sbin:${SNAP}/usr/bin:$PATH
+  LD_LIBRARY_PATH: ${SNAP_LIBRARY_PATH}:${LD_LIBRARY_PATH}:${SNAP}/usr/lib:${SNAP}/usr/lib/${SNAPCRAFT_ARCH_TRIPLET}
   ARCH_TRIPLET:    ${SNAPCRAFT_ARCH_TRIPLET}
 
 apps:
@@ -128,6 +128,7 @@ parts:
       - -usr/bin/perl*
       - -usr/bin/py*
       - -usr/lib/gcc
+      - -usr/lib/klibc*
       - -usr/lib/*/perl*
       - -usr/lib/*/libperl*
       - -usr/lib/python3/dist-packages/R*
@@ -185,6 +186,14 @@ parts:
       sed -i \
           -e 's|\(conf_file = "\)\(.*\)|\1/snap/toolbox/current\2|g' \
           ${SNAPCRAFT_PART_INSTALL}/usr/lib/python3/dist-packages/ssh_import_id/__init__.py
+      # merge {s}bin/,lib, to usr/{s}bin, usr/lib
+      mv ${SNAPCRAFT_PART_INSTALL}/bin/*     ${SNAPCRAFT_PART_INSTALL}/usr/bin
+      mv ${SNAPCRAFT_PART_INSTALL}/sbin/*    ${SNAPCRAFT_PART_INSTALL}/usr/sbin
+      cp -rl ${SNAPCRAFT_PART_INSTALL}/lib/* ${SNAPCRAFT_PART_INSTALL}/usr/lib
+      rm -rf ${SNAPCRAFT_PART_INSTALL}/bin   ${SNAPCRAFT_PART_INSTALL}/sbin ${SNAPCRAFT_PART_INSTALL}/lib
+      ln -sf usr/bin  ${SNAPCRAFT_PART_INSTALL}/bin
+      ln -sf usr/sbin ${SNAPCRAFT_PART_INSTALL}/sbin
+      ln -sf usr/lib  ${SNAPCRAFT_PART_INSTALL}/lib
 
   mc:
     source: https://github.com/MidnightCommander/mc.git
@@ -242,7 +251,7 @@ parts:
     override-build: |
       cp mountinfo.query ${SNAPCRAFT_PART_INSTALL}/
     organize:
-      mountinfo.query: bin/mountinfo.query
+      mountinfo.query: usr/bin/mountinfo.query
 
   lk-boot-env:
     plugin: nil
@@ -252,8 +261,8 @@ parts:
       wget https://raw.githubusercontent.com/snapcore/snapd/master/include/lk/snappy_boot_v2.h
       wget https://raw.githubusercontent.com/kubiko/dragonboard-gadget/20-lk/snap-boot-sel/lk-boot-env.c
     override-build: |
-      mkdir -p ${SNAPCRAFT_PART_INSTALL}/bin
-      gcc lk-boot-env.c -I/usr/include/ -Iapp/aboot -o ${SNAPCRAFT_PART_INSTALL}/bin/lk-boot-env
+      mkdir -p ${SNAPCRAFT_PART_INSTALL}/usr/bin
+      gcc lk-boot-env.c -I/usr/include/ -Iapp/aboot -o ${SNAPCRAFT_PART_INSTALL}/usr/bin/lk-boot-env
 
   mosh:
     plugin: autotools
@@ -261,8 +270,10 @@ parts:
     source-type: git
     stage-packages:
       - libprotobuf17
-    organize:
-      usr/local/bin/: usr/bin/
+    autotools-configure-parameters:
+      - --prefix=/usr
+      - --bindir=/usr/bin
+      - --libdir=/usr/lib/${SNAPCRAFT_ARCH_TRIPLET}
     stage:
       - usr/bin/mosh-server
       - usr/bin/mosh
@@ -274,18 +285,12 @@ parts:
     source-type: git
     override-build: |
       make -j$(nproc)
-      mkdir -p ${SNAPCRAFT_PART_INSTALL}/bin \
-               ${SNAPCRAFT_PART_INSTALL}/usr/doc/tiobench
-      install -m 0755 tiobench.pl         ${SNAPCRAFT_PART_INSTALL}/bin/tiobench.pl
-      install -m 0755 tiotest             ${SNAPCRAFT_PART_INSTALL}/bin/tiotest
-      install -m 0755 scripts/bigbench.sh ${SNAPCRAFT_PART_INSTALL}/bin/bigbench.sh
-      install -m 0755 scripts/tiosum.pl   ${SNAPCRAFT_PART_INSTALL}/bin/tiosum.pl
-      install -m 0644 README.md           ${SNAPCRAFT_PART_INSTALL}/usr/doc/tiobench/README.md
-      install -m 0644 scripts/README      ${SNAPCRAFT_PART_INSTALL}/usr/doc/tiobench/README
-    stage:
-      - bin/tio*
-      - bin/bigbench*
-      - usr/doc/tiobench
+      install -D -m 0755 tiobench.pl         ${SNAPCRAFT_PART_INSTALL}/usr/bin/tiobench.pl
+      install -D -m 0755 tiotest             ${SNAPCRAFT_PART_INSTALL}/usr/bin/tiotest
+      install -D -m 0755 scripts/bigbench.sh ${SNAPCRAFT_PART_INSTALL}/usr/bin/bigbench.sh
+      install -D -m 0755 scripts/tiosum.pl   ${SNAPCRAFT_PART_INSTALL}/usr/bin/tiosum.pl
+      install -D -m 0644 README.md           ${SNAPCRAFT_PART_INSTALL}/usr/doc/tiobench/README.md
+      install -D -m 0644 scripts/README      ${SNAPCRAFT_PART_INSTALL}/usr/doc/tiobench/README
 
   ioctl:
     plugin: make
