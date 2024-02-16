@@ -1,0 +1,8 @@
+#!/bin/sh
+
+SNAP_PATH="/snap/toolbox/current"
+ARCH_TRIPLET=$(sed -n 's/.*ARCH_TRIPLET: \(.*\)/\1/p' ${SNAP_PATH}/meta/snap.yaml)
+export PATH="${SNAP_PATH}/usr/bin:${SNAP_PATH}/usr/sbin:${PATH}"
+export LD_LIBRARY_PATH="/usr/lib:/usr/lib/${ARCH_TRIPLET}:${SNAP_PATH}/usr/lib:${SNAP_PATH}/usr/lib/${ARCH_TRIPLET}"
+
+exec tmux $@
