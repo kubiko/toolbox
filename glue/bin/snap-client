@@ -344,6 +344,10 @@ case "${cmd}" in
     $CURL "http://localhost/v2/system-info" | sed '/^{/!d' \
       | jq --raw-output '.result.managed'
     ;;
+  system-info)
+    $CURL "http://localhost/v2/system-info" | sed '/^{/!d' \
+      | jq '.result'
+    ;;
   watch)
     case $1 in
       --last=*)
@@ -504,6 +508,8 @@ case "${cmd}" in
     echo -e "\t\t<plug snap>:<plug>"
     echo -e ""
     echo -e "\tmanaged: is system managed"
+    echo -e ""
+    echo -e "\tsystem-info: system info "
     echo -e ""
     echo -e "\twatch: watch change completion"
     echo -e "\t\t<change number>"

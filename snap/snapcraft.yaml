@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.9.14"
+version: "0.9.15"
 summary: Swiss knife of shell tools
 description: |
   Set of useful shell tools to be used on Ubuntu/Ubuntu core systems.
