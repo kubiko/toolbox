@@ -1,0 +1,110 @@
+#!/bin/bash
+
+unset debug action interface
+
+print_help() {
+  echo -e "Network configuration in YAML"
+  echo -e ""
+  echo -e "options:"
+  echo -e "  -h, --help  show this help message and exit"
+  echo -e "  --debug     Enable debug messages"
+  echo -e ""
+  echo -e "Available commands:"
+  echo -e ""
+  echo -e "  help      Show this help message"
+  echo -e "  apply     Apply current netplan config to running system"
+  echo -e "            Optional interface name if changes only for given interface should be applied"
+  echo -e "  generate  Generate backend specific configuration files from /etc/netplan/00-snapd-config.yaml"
+}
+
+netplan_apply() {
+  [ -n "${debug}" ] && >&2 echo "Removing netplan stamp"
+  rm /run/systemd/generator/netplan.stamp
+
+  [ -n "${debug}" ] && >&2  echo "Reloading daemons..."
+  systemctl daemon-reload
+
+  if [ -n "${interface}" ]; then
+    [ -n "${debug}" ] &&  >&2  echo "Reconfiguring network..."
+    networkctl reconfigure ${interface}
+  else
+    [ -n "${debug}" ] &&  >&2 echo "Restarting systemd-networkd..."
+    systemctl restart systemd-networkd
+  fi
+
+  if [ -n "${interface}" ]; then
+    if ls /run/systemd/system/netplan-wpa-${interface}.service 1> /dev/null 2>&1; then
+      [ -n "${debug}" ] &&  >&2 echo "Restarting netplan-wpa-${interface} services..."
+      systemctl restart netplan-wpa-${interface}.service
+    fi
+  else
+    if ls /run/systemd/system/netplan-wpa-*.service 1> /dev/null 2>&1; then
+      [ -n "${debug}" ] &&  >&2 echo "Restating all netplan-wpa* services"
+      systemctl restart netplan-wpa*.service
+    fi
+  fi
+}
+
+check_root() {
+  if [ "0" != "${UID}" ]; then
+    echo "natplan has to run as root!"
+    exit 0
+  fi
+}
+
+# we support in this limited case apply, and generate
+
+if [ -z "${1}" ];then
+  echo "You need to specify a command"
+  print_help
+  exit 0
+fi
+
+for arg in "${@}"
+do
+  case ${arg} in
+    apply)
+      action="Apply"
+      ;;
+    -h|--help|help)
+      print_help
+      ;;
+    generate)
+      action="Generate"
+      ;;     
+    --debug)
+      debug=1
+      ;;
+    try)
+      action="Try"
+      ;;
+    *)
+      if [ "${action}" = "apply" ]; then
+        interface="${arg}"
+      else
+        echo "unsupported option [${1}]passed"
+        print_help
+      fi
+      ;;
+  esac
+done
+
+# handle case when we are in confinement
+if [ -n "${SNAP}" ]; then 
+  exec busctl call --quiet --system "io.netplan.Netplan" "/io/netplan/Netplan" "io.netplan.Netplan" "${action}"
+else
+  case ${action} in
+    Apply)
+      check_root
+      netplan_apply
+      ;;
+    Generate)
+      check_root
+      /usr/libexec/netplan/generate
+      ;;
+    *)      
+      echo "Missing action or not supported action"
+      print_help
+      ;;
+  esac
+fi
