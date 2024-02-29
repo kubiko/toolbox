@@ -264,9 +264,14 @@ lxd_ensure_container () {
   echo "Configuring new container..."
   # override template, as sometimes snapcraft tries to be too smart
   local tmp_sources=$(mktemp -u -q)
+  local tmp_sources_deb822=$(mktemp -u -q)
   curl -s https://people.canonical.com/~okubik/sources.list.ubuntu.lxd.tmpl > ${tmp_sources}
+  curl -s https://people.canonical.com/~okubik/sources.list.ubuntu.deb822.lxd.tmpl > ${tmp_sources_deb822}
   lxc file push ${tmp_sources} ${container_name}/etc/cloud/templates/sources.list.ubuntu.tmpl
+  lxc file push ${tmp_sources_deb822} ${container_name}/etc/cloud/templates/sources.list.ubuntu.deb822.tmpl
+
   [ -e ${tmp_sources} ] && rm ${tmp_sources}
+  [ -e ${tmp_sources_deb822} ] && rm ${tmp_sources_deb822}
   echo -en "uid $(id -u) 1000\ngid $(id -g) 1000" | lxc config set ${container_name} raw.idmap -
   # check if kernel version is 5.x, enough to enable mknod interception, to support debootstrap
   # we cannot enable it for all the kernels, container would refuse to boot
