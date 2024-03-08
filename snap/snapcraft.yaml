@@ -11,7 +11,7 @@ description: |
   This is a one-time setup, when new tools are added they are automatically included in the path.
 
 confinement: strict
-grade: stable
+grade: devel
 architectures:
   - build-on: armhf
   - build-on: arm64
@@ -20,6 +20,7 @@ architectures:
   - build-on: riscv64
 
 base: core24
+build-base: devel
 
 environment:
   PATH:            ${SNAP}/usr/sbin:${SNAP}/usr/bin:$PATH
