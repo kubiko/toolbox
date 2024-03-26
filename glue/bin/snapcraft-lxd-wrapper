@@ -556,6 +556,9 @@ lxd_snapcraft () {
       core24)
         local ubuntu_series="noble"
         ;;
+      bare) # special case, assume latest(noble)
+        local ubuntu_series="noble"
+        ;;
       *)
         echo "Base not defined, assuming Core 16"
         local ubuntu_series="xenial"
@@ -566,6 +569,10 @@ lxd_snapcraft () {
     # if we are building base or snapd, run build as root
     if [ "${snap_type}" == "base" ] || [ "${snap_type}" == "snapd" ]; then
       echo "Automatically building snap type ${snap_type} as root"
+      local root_build="sudo "
+    fi
+    if [ "${USER}" == "root" ]; then
+      echo "Assuming build to be run as root based on current user"
       local root_build="sudo "
     fi
 
