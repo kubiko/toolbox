@@ -1,0 +1,166 @@
+#!/bin/bash
+# set -ex
+
+# check if there is SNAP set, otherwise exist, we only suport calling from within snap env
+check_in_snap_env() {
+  if [ -z "${SNAP_NAME}" ]; then
+    echo "snapctl is only intended to be used within snap runtime."
+    exit 1
+  fi
+}
+
+services_status () {
+  header=""
+  for name in $@; do \
+    # remove snap. from the name
+    [ -z "${header}" ] && header="yes" && echo "Service Startup Current Notes"; \
+    echo ${name:5} $(systemctl is-enabled ${name}) $(systemctl is-active ${name}); \
+  done | column -t | grep --color=always '\(disabled\|inactive\|$\)'
+}
+
+handle_service_action() {
+  action=${1}
+  services=""
+  shift
+  while [ "$1" != "" ]
+  do
+    case $1 in
+      --enable)
+        ;;
+      --enable)
+        ;;
+      --reload)
+        ;;
+      *)
+        # assume this is service name to act upon
+        # if name matches SNAP_NAME (SNAP_INSTANCE_NAME) we assume all services
+        # service name should prepended by "snap."
+        if [ "${1}" = "${SNAP_INSTANCE_NAME}" ]; then
+          services="snap.${SNAP_INSTANCE_NAME}.*"
+        else
+          services="${services} snap.${1}.service"
+        fi
+    esac
+    shift
+  done
+  systemctl ${action} ${services} 
+}
+
+print_services_status() {
+  if [ -n "${1}" ]; then
+    pattern="${1}"
+    [ "${pattern}" = "${SNAP_NAME}" ] && pattern="${SNAP_NAME}.*"
+  else
+    pattern="${SNAP_NAME}.*"
+  fi
+  # we use trick that all the services of insterest has following pattern
+  # /usr/lib/systemd/system/snap.<snap name>.<service name>.service
+  services_status $(ls /usr/lib/systemd/system/snap.${pattern}.service | xargs -n 1 basename)
+}
+
+snap_config=/var/snap/snap.${SNAP_INSTANCE_NAME}.json
+
+check_config() {
+  # if config does not exit, create empty one
+  if [ ! -e "${snap_config}" ]; then
+    echo "{}" > "${snap_config}"
+  fi
+}
+
+cmd="${1}"
+shift
+case "${cmd}" in
+  # check if requested interface is connected
+  is-connected)
+    check_in_snap_env
+    # assume add connections are connected
+    ;;
+
+  # return model assertion
+  model)
+    check_in_snap_env
+    snap known model
+    ;;
+
+  # list state of the services of the snap
+  services)
+    check_in_snap_env
+    print_services_status ${@}
+    ;;
+  # start requested service(s)
+  start)
+    check_in_snap_env
+    # there might be optional flag --enable, which we do not support
+    handle_service_action "start" ${@}
+    ;;
+
+  # stop requested service(s)
+  stop)
+    check_in_snap_env
+    # there might be optional flag --disable, which we do not support
+    handle_service_action "stop" ${@}
+    ;;
+
+  restart)
+    check_in_snap_env
+    # there might be additional flag --reload, which we can ignore for single snap os
+    handle_service_action "restart" ${@}
+    ;;
+
+  set)
+    check_in_snap_env
+    check_config
+    key_value="${1}"
+    if [ -z "${key_value}" ]; then
+      echo "error: error running snapctl: set which option?"
+      exit 0
+    fi
+    KEY="${key_value%=*}"
+    VALUE="${key_value##*=}"
+    cat "${snap_config}" | jq  ".${KEY} = \"${VALUE}\"" > "${snap_config}.tmp"; mv "${snap_config}.tmp" "${snap_config}"
+    ;;
+
+  # Print either configuration op
+  get)
+    check_in_snap_env
+    check_config
+    format="-r"
+    if [ "${1}" = "-d" ]; then
+      format=""
+      shift
+    fi
+    KEY="${1}"
+    if [ -z "${KEY}" ]; then
+      echo "error: error running snapctl: get which option?"
+      exit 0
+    fi
+    jq ${format} ".${KEY} | select( . != null )" "${snap_config}"
+    ;;
+
+  # Remove configuration options
+  unset)
+    check_in_snap_env
+    check_config
+    KEY="${1}"
+    cat "${snap_config}" | jq  --arg key "$KEY" 'del(."$key")' > "${snap_config}.tmp"; mv "${snap_config}.tmp" "${snap_config}"
+    ;;
+
+  # Get the current system mode and associated details
+  system-mode)
+    check_in_snap_env
+    # assume system is in run mode and seeded
+    echo -e "system-mode: run\nseed-loaded: true"
+    ;;
+
+  # Report the health status of a snap
+  set-health)
+    # ignore passed value, we do not do anything with it
+  ;;
+  help|--help|-h)
+    echo -e "There is no proper help :("
+    ;;
+  *)
+    echo "Command ${cmd} is not supported, use actual snapctl client"
+    exit 1
+    ;;
+esac
