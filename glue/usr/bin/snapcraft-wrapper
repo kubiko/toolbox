@@ -1,7 +1,11 @@
 #!/bin/bash
 
+# option override for the target arch
+target_arch=""
+snapcraft_yaml=""
+
 # try to resolve snapcraft.yaml path in the current directory
-lxd_get_snap_base() {
+lxd_get_snapcraft_yaml() {
   for sy in snapcraft.yaml snap/snapcraft.yaml build-aux/snapcraft.yaml build-aux/snap/snapcraft.yaml
   do
     if [ -e ${sy} ]; then
@@ -9,6 +13,21 @@ lxd_get_snap_base() {
       return
     fi
   done
+  echo "failed to locate snapcraft.yaml"
+  exit 0
+}
+
+# determine base or build-base, base takes priority
+lxd_get_base() {
+  local snapcraft_yaml="${1}"
+  base=$(yq -r '.base' ${snapcraft_yaml})
+  if [ "${base}" = "null" ]; then
+    base=$(yq -r '.build-base' ${snapcraft_yaml})
+  fi
+  [ "${base}" = "null" ] && base=""
+  # override "bare" to latest core24
+  [ "${base}" = "bare" ] && base="core24"
+  echo "${base}"
 }
 
 # If this is core22 base, in 9 out of 10 cases snapcraft will build too much unless --build-for
@@ -20,7 +39,7 @@ lxd_get_snap_base() {
 lxd_get_target_arch() {
   local snapcraft_yaml=${1}
   local base=${2}
-  if [ "${base}" = "core22" ] && [ -n "$(which yq)" ] && [[ $@ != *"--build-for"* ]]; then
+  if [ "${base:4}" -ge "22" ] && [ -n "$(which yq)" ] && [[ $@ != *"--build-for"* ]]; then
     # determine host arch
     local host_arch="amd64"
     case $(uname -m) in
@@ -46,25 +65,38 @@ lxd_get_target_arch() {
         return 0
       else
         echo "Arch definition in snapcraft.yaml supports multiple arches for this host, please specify which one you want to build" >&2
-        return 1
+        exit 0
       fi
     fi
   fi
   return 0
 }
+
+# check if we should source wrapper hellpers
+wrapper=$(type lxd_snapcraft 2> /dev/null)
 # if we can see /snap/toolbox/current/bin/snapcraft-lxd-wrapper source it
-[ -e /snap/toolbox/current/bin/snapcraft-lxd-wrapper ] && source $(realpath /snap/toolbox/current/bin/snapcraft-lxd-wrapper)
+if [ -z "${wrapper}" ]; then
+  . /snap/toolbox/current/bin/snapcraft-lxd-wrapper
+fi
 
 # if running outside of the container, call lxd_snapcraft
 if [ "$(systemd-detect-virt)" = "none" ]; then
-  lxd_snapcraft $@
-else
-  lxd_get_snap_base
-  if [ -n "${snapcraft_yaml}" ]; then
-    base=$(grep 'build-base:' ${snapcraft_yaml} | awk '{print $2}')
-    lxd_get_target_arch ${snapcraft_yaml} ${base}
-    [ ! 0 -eq ${?} ] && return 0
+  # is this build or some other command?
+  # extra params indicating build are: clean, cleanbuild, pull, build, stage, prime, pack, --build-for, --target-arch
+  # ignore "--verbose" parameter
+  action="${1}"
+  [ "${action}" = "--verbose" ] && action="${2}" 
+  if [ -n "${action}" ] && [ "${action}" != "clean" ] && [ "${action}" != "cleanbuild" ] && [ "${action}" != "pull" ] && [ "${action}" != "build" ] && [ "${action}" != "stage" ] && [ "${action}" != "prime" ] && [ "${action}" != "pack" ] && [ "${action}" != "--build-for" ] && [ "${action}" != "--target-arch" ]; then
+    echo "Assuming non build related function, running directly"
+    exec /snap/bin/snapcraft ${@}
+  else
+    echo "Assuming build should run in the container"
+    lxd_snapcraft $@
   fi
+else
+  lxd_get_snapcraft_yaml
+  lxd_get_target_arch ${snapcraft_yaml} $(lxd_get_base ${snapcraft_yaml})
+  [ ! 0 -eq ${?} ] && return 0
+  # invoke snapcraft
   exec /snap/bin/snapcraft $@ ${target_arch}
 fi
-
