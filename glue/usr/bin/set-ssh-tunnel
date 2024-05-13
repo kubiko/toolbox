@@ -1,10 +1,12 @@
 #!/bin/bash
-SNAP="$(dirname $(which ${0}))/.."
+
+SNAP=$(dirname "$(realpath "${0}")")/../..
+
 print_usage() {
     echo -e "setup ssh tunnel to remote machine"
     echo -e "required parameters can be passed as parameters or env variables, e.g."
-    echo -e "$ $(basename ${0}) --target <target name> --target-ip <ip address> --remote-port <port> --remote-username <username>"
-    echo -e "$ TARGET=<target name> TARGET_IP=<ip address> REMOTE_PORT=<port> USERNAME=<username> $(basename ${0})"
+    echo -e "$ $(basename "${0}") --target <target name> --target-ip <ip address> --remote-port <port> --remote-username <username>"
+    echo -e "$ TARGET=<target name> TARGET_IP=<ip address> REMOTE_PORT=<port> USERNAME=<username> $(basename "${0}")"
     echo -e ""
     echo -e "\t--target : name of remote target e.g. ssh-server-1. This will be able used to identify systemd service"
     echo -e "\t\tenv variable name: TARGET"
@@ -121,7 +123,8 @@ else
     echo -e "Using existing ssh keys"
 fi
 
-cp ${SNAP}/secure-tunnel ${HOME}/secure-tunnel@${TARGET}
+cp "${SNAP}/secure-tunnel" "${HOME}/secure-tunnel@${TARGET}"
+# shellcheck disable=SC2016 # SC2016 is irrelevant because we replace ${XXX} with actual value
 sed -i \
     -e 's/${TARGET}/'"${TARGET}"'/g' \
     -e 's/${LOCAL_ADDR}/'"${LOCAL_ADDR}"'/g' \
@@ -129,30 +132,30 @@ sed -i \
     -e 's/${REMOTE_PORT}/'"${REMOTE_PORT}"'/g' \
     -e 's/${USERNAME}/'"${USERNAME}"'/g' \
     -e 's/${SSH_TARGET_PORT}/'"${SSH_TARGET_PORT}"'/g' \
-    ${HOME}/secure-tunnel@${TARGET}
+    "${HOME}/secure-tunnel@${TARGET}"
 
 echo "seting up secure-tunne service...."
-sudo cp ${SNAP}/secure-tunnel@.service /etc/systemd/system/secure-tunnel@.service
+sudo cp "${SNAP}/secure-tunnel@.service" "/etc/systemd/system/secure-tunnel@.service"
 sudo sed -i 's#${HOME}#'"${HOME}"'#g'  /etc/systemd/system/secure-tunnel@.service
 sudo sed -i 's/${USER}/'"${USER}"'/g'  /etc/systemd/system/secure-tunnel@.service
 
-if [ -z "$(grep ${TARGET} /etc/hosts)" ]; then
+if ! grep -q "${TARGET}" /etc/hosts ; then
     echo "${TARGET_IP} ${TARGET}" | sudo tee -a  /etc/hosts
 fi
 
 echo -e "\nstarting up [secure-tunnel@${TARGET}] service...."
 sudo systemctl daemon-reload
-sudo systemctl start secure-tunnel@${TARGET} || true
-sudo systemctl enable secure-tunnel@${TARGET} || true
+sudo systemctl start "secure-tunnel@${TARGET}" || true
+sudo systemctl enable "secure-tunnel@${TARGET}" || true
 
 echo  -e "waiting for service [secure-tunnel@${TARGET}] status update"
 sleep 2
-while [ "activating" = "$(sudo systemctl status secure-tunnel@${TARGET} | grep Active | awk '{print $2}')" ]
+while [ "activating" = "$(sudo systemctl status "secure-tunnel@${TARGET}" | grep Active | awk '{print $2}')" ]
 do
  sleep 1
 done
 sleep 1
-if [ "$(sudo systemctl status secure-tunnel@${TARGET} | grep Active | awk '{print $2 }')" != "active" ]; then
+if [ "$(sudo systemctl status "secure-tunnel@${TARGET}" | grep Active | awk '{print $2 }')" != "active" ]; then
     echo -e "\nService is having trouble to start, make sure you have following key in ~/.ssh/authorized_keys on remote machine"
     cat ~/.ssh/id_rsa.pub
     echo -e "Once key is added you can restart and check service status with following commands"
@@ -160,5 +163,5 @@ if [ "$(sudo systemctl status secure-tunnel@${TARGET} | grep Active | awk '{prin
     echo -e "sudo systemctl status secure-tunnel@${TARGET}"
 else
     echo -e "you are all set, service seems to be running fine"
-    sudo systemctl status secure-tunnel@${TARGET} || true
+    sudo systemctl status "secure-tunnel@${TARGET}" || true
 fi

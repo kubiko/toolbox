@@ -7,11 +7,9 @@
 # check if it's one of the supported quick commands
 SNAPD_SOCKET=/run/snapd.socket
 CURL="curl -o/dev/stdout --silent --unix-socket $SNAPD_SOCKET -D- "
-unset snap_app
 # if invoked as /snap/bin/<app> implies snap run
-if [ "/snap/bin" = "$(dirname $0)" ]; then
+if [ "/snap/bin" = "$(dirname """$0""")" ]; then
   cmd="run"
-  snap_app=$(basename $0)
 else
   cmd="$1"
   shift
@@ -26,17 +24,19 @@ wait_for_change_completion() {
     chars="/-\|"
     i=0
     local ch="${1}"
-    local status=$($CURL "http://localhost/v2/changes/${ch}" | sed '/^{/!d' | jq --raw-output '[.result.ready, .result.status, .result.kind] | "\(.[0]) \(.[1])  \(.[2])"')
+    local status
+    status=$($CURL "http://localhost/v2/changes/${ch}" | sed '/^{/!d' | jq --raw-output '[.result.ready, .result.status, .result.kind] | "\(.[0]) \(.[1])  \(.[2])"')
     while [ "${status%% *}" = "false" ]
     do
         # print progress and sleep 1s
         echo -en "Waiting for change ${status##* } (${ch}) to complete: ${chars:$i:1}" "\r"
         ((i=i+1))
-        i=$(($i % 4))
+        i=$((i % 4))
         sleep 1
         status=$($CURL "http://localhost/v2/changes/${ch}" | sed '/^{/!d' | jq --raw-output '[.result.ready, .result.status, .result.kind] | "\(.[0]) \(.[1])  \(.[2])"')
     done
-    local change_status=$(echo ${status} | awk '{print $2}')
+    local change_status
+    change_status=$(echo "${status}" | awk '{print $2}')
     echo -en "Change ${status##* } (${ch}) finished in status: ${change_status}\n"
 }
 
@@ -53,10 +53,11 @@ handle_async_reply() {
     while read -r msg
     do
         # first check if this is change of just message
-        if [ "$(echo ${msg} | awk '{print $1}')" = "Change" ]; then
+        if [ "$(echo """${msg}""" | awk '{print $1}')" = "Change" ]; then
             if [ "${no_wait}" = "false" ]; then
-                local change_n=$(echo ${msg} | awk '{print $2}')
-                wait_for_change_completion ${change_n}
+                local change_n
+                change_n=$(echo "${msg}" | awk '{print $2}')
+                wait_for_change_completion "${change_n}"
             else
                 echo "${msg}"
             fi
@@ -136,14 +137,14 @@ case "${cmd}" in
     fi
     if [ "${snaps_to_install%.snap}" != "${snaps_to_install}" ]; then
       # file upload
-      $CURL -F action=install ${cmd_options:1} ${snaps_to_install:1} \
+      $CURL -F action=install "${cmd_options:1}" "${snaps_to_install:1}" \
           -X POST "http://localhost/v2/snaps" \
           | sed '/^{/!d' \
           | jq --raw-output 'if .type == "async" then ["Change", .change] | "\(.[0])\t\(.[1])" else [.result.message, .result.kind] | "\(.[0])\t \(.[1])" end' \
           | handle_async_reply
     else
       echo "{\"action\":\"$cmd\",\"dangerous\":\"$dangerous\"}" | $CURL \
-         -X POST -d@- "http://localhost/v2/snaps/$names" \
+         -X POST -d@- "http://localhost/v2/snaps/$name" \
          | sed '/^{/!d' \
          | jq --raw-output 'if .type == "async" then ["Change", .change] | "\(.[0])\t\(.[1])" else [.result.message, .result.kind] | "\(.[0])\t \(.[1])" end' \
          | handle_async_reply
@@ -187,7 +188,7 @@ case "${cmd}" in
       echo "error: missing snap name"
       exit 1
     fi
-    echo ${cmd_options} | $CURL \
+    echo "${cmd_options}" | $CURL \
        -X POST -d@- "http://localhost/v2/snaps/$name" \
        | sed '/^{/!d' \
        | jq --raw-output 'if .type == "async" then ["Change", .change] | "\(.[0])\t\(.[1])" else [.result.message, .result.kind] | "\(.[0])\t \(.[1])" end' \
@@ -210,7 +211,7 @@ case "${cmd}" in
       echo "error: missing assertion file"
       exit 1
     fi
-    cat ${as} | $CURL \
+    cat "${as}" | $CURL \
       -X POST --data-binary @- "http://localhost/v2/assertions" \
       | sed '/^{/!d' \
       | jq -r 'if .status != "OK" then [ .result.message ] | "error: \(.[0])" else empty end'
@@ -351,10 +352,10 @@ case "${cmd}" in
   watch)
     case $1 in
       --last=*)
-        kind=$(echo ${1##*=} | sed "s/'//g" )
-        change_id=$(snapd_get_last_change_id ${kind%%\?*})
+        kind=$(echo "${1##*=}" | sed "s/'//g" )
+        change_id=$(snapd_get_last_change_id "${kind%%\?*}")
         if [ -n "${change_id}" ]; then
-            wait_for_change_completion ${change_id}
+            wait_for_change_completion "${change_id}"
         else
             # A question mark at the end of the kind means to do nothing (instead of returning an error) if no
             # change of the given type is found
@@ -365,7 +366,7 @@ case "${cmd}" in
         fi
         ;;
       *)
-        wait_for_change_completion ${1}
+        wait_for_change_completion "${1}"
         ;;
     esac
     ;;
@@ -403,7 +404,7 @@ case "${cmd}" in
     done
     cmd_options+="}"
     echo "cmd_options=${cmd_options}"
-    echo ${cmd_options} | $CURL \
+    echo "${cmd_options}" | $CURL \
        -X POST -d@- "http://localhost/v2/users" \
         | sed '/^{/!d' \
         | jq 'if .status != "OK" then [ .result.message ] | "error: \(.[0])" else .result end'
@@ -426,7 +427,7 @@ case "${cmd}" in
     done
     cmd_options+="}"
     echo "cmd_options=${cmd_options}"
-    echo ${cmd_options} | $CURL \
+    echo "${cmd_options}" | $CURL \
        -X POST -d@- "http://localhost/v2/users" \
        | sed '/^{/!d' \
        | jq 'if .status != "OK" then [ .result.message ] | "error: \(.[0])" else .result.removed[] | [ .username ] | "removed user: \(.[0])" end'
