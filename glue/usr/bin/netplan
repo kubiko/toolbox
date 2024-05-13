@@ -26,16 +26,16 @@ netplan_apply() {
 
   if [ -n "${interface}" ]; then
     [ -n "${debug}" ] &&  >&2  echo "Reconfiguring network..."
-    networkctl reconfigure ${interface}
+    networkctl reconfigure "${interface}"
   else
     [ -n "${debug}" ] &&  >&2 echo "Restarting systemd-networkd..."
     systemctl restart systemd-networkd
   fi
 
   if [ -n "${interface}" ]; then
-    if ls /run/systemd/system/netplan-wpa-${interface}.service 1> /dev/null 2>&1; then
+    if ls "/run/systemd/system/netplan-wpa-${interface}.service" 1> /dev/null 2>&1; then
       [ -n "${debug}" ] &&  >&2 echo "Restarting netplan-wpa-${interface} services..."
-      systemctl restart netplan-wpa-${interface}.service
+      systemctl restart "netplan-wpa-${interface}.service"
     fi
   else
     if ls /run/systemd/system/netplan-wpa-*.service 1> /dev/null 2>&1; then

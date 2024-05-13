@@ -5,7 +5,6 @@
 declare -A SNAP_TARGETS
 declare -A SNAP_TARGETS_EXTENDED
 declare -A SNAP_TAGS
-declare -A LDFLAGS
 SNAP_TARGETS["snap"]="/usr/bin"
 SNAP_TARGETS["snapd"]="/usr/lib/snapd"
 SNAP_TARGETS["snap-bootstrap"]="/usr/lib/snapd"
@@ -25,7 +24,6 @@ SNAP_TARGETS_EXTENDED["snap-repair"]="/usr/lib/snapd"
 
 SNAP_TAGS["snap"]="nomanagers"
 SNAP_TAGS["snap-bootstrap"]="nomanagers"
-LDFLAGS["snap"]=""
 
 
 REMOTE_TARGET_DIR="snapd-hacking"
@@ -36,8 +34,8 @@ GO_LDFLAGS="-s -w" # flags to strip DWARF, symbol and debug info
 
 set_permanent_bindmount() {
   echo -e "\nSetting up permanent bind mount persistent over reboots, BE CAREFULL!!!!!"
-  FULL_PATH=$(ssh ${SSH_OPTION} ${REMOTE} "[ -d \"/writable\" ] && echo /writable/${REMOTE_TARGET_DIR}" | tr -d '\r\n' )
-  [ -z "${FULL_PATH}" ] && FULL_PATH=$(ssh ${SSH_OPTION} ${REMOTE} "echo \$HOME/${REMOTE_TARGET_DIR}" |  tr -d '\r\n' )
+  FULL_PATH=$(ssh "${SSH_OPTION}" "${REMOTE}" "[ -d \"/writable\" ] && echo /writable/${REMOTE_TARGET_DIR}" | tr -d '\r\n' )
+  [ -z "${FULL_PATH}" ] && FULL_PATH=$(ssh "${SSH_OPTION}" "${REMOTE}" "echo \$HOME/${REMOTE_TARGET_DIR}" |  tr -d '\r\n' )
   FULL_PATH="/var/lib/misc"
   ssh_call "${DO_SUDO} mkdir -p ${FULL_PATH}"
   remove_permanent_bind_mount
@@ -128,10 +126,10 @@ set_macOS() {
   # export CC=x86_64-linux-gnu-gcc
   export CGO_ENABLED=1
   export FARCH=macOS
-  unset SNAP_TARGETS["snapd"]
-  unset SNAP_TARGETS["snap-seccomp"]
-  unset SNAP_TARGETS["snap-update-ns"]
-  unset SNAP_TARGETS["snap-bootstrap"]
+  unset "SNAP_TARGETS['snapd']"
+  unset "SNAP_TARGETS['snap-seccomp']"
+  unset "SNAP_TARGETS['snap-update-ns']"
+  unset "SNAP_TARGETS['snap-bootstrap']"
   BUILD_DIR="${HOME}/development/snapd"
   SNAP_TAGS["snap"]="nomanagers nosecboot"
 }
@@ -168,20 +166,20 @@ ssh_call() {
   else
     if [ -z "${DO_SUDO_ASKPASS}" ]; then
       echo -e "\tssh ${SSH_OPTION} ${REMOTE} ${@}"
-      ssh ${SSH_OPTION} ${REMOTE} "${@}"
+      ssh "${SSH_OPTION}" "${REMOTE}" "${@}"
     else
       echo -e "\tssh ${SSH_OPTION} ${REMOTE} ${DO_SUDO_ASKPASS} ${@}"
-      ssh ${SSH_OPTION} ${REMOTE} "${DO_SUDO_ASKPASS}; ${@}"
+      ssh "${SSH_OPTION}" "${REMOTE}" "${DO_SUDO_ASKPASS}; ${@}"
     fi
   fi
 }
 
 copy() {
-  if [ -f ${1} ]; then
+  if [ -f "${1}" ]; then
     if [ "${REMOTE}" = "local" ]; then
-      cp ${1} ~/${REMOTE_TARGET_DIR}/
+      cp "${1}" ~/"${REMOTE_TARGET_DIR}"/
     else
-      scp ${1} ${REMOTE}:${REMOTE_TARGET_DIR}/
+      scp "${1}" "${REMOTE}":"${REMOTE_TARGET_DIR}"/
     fi
   else
     echo "WARNING: Missing artefact ${1}, skipping it"
@@ -229,8 +227,8 @@ snapd_status() {
 
 print_current_bind_mounts() {
   echo -e "\nActive bindmounts for snapd artefacts:"
-  ssh ${SSH_OPTION} ${REMOTE} "grep \"/usr/lib/snapd/\" /proc/self/mountinfo" | awk '{print "\t",$4,"\t",$5}'
-  ssh ${SSH_OPTION} ${REMOTE} "grep \"/usr/bin/snap\" /proc/self/mountinfo" | awk '{print "\t",$4,"\t",$5}'
+  ssh "${SSH_OPTION}" "${REMOTE}" "grep \"/usr/lib/snapd/\" /proc/self/mountinfo" | awk '{print "\t",$4,"\t",$5}'
+  ssh "${SSH_OPTION}" "${REMOTE}" "grep \"/usr/bin/snap\" /proc/self/mountinfo" | awk '{print "\t",$4,"\t",$5}'
 }
 
 print_help () {
@@ -265,6 +263,7 @@ do
     local)
       REMOTE="local"
       DO_SUDO="sudo -A"
+      # shellcheck disable=SC2016 # SC2016 is irrelevant because we don't want expression to be expanded
       DO_SUDO_ASKPASS='export SUDO_ASKPASS=/home/${USER}/sudo-askpass.sh'
       set_amd64
       ;;
@@ -276,6 +275,7 @@ do
     server)
       REMOTE="10.20.66.123"
       set_amd64
+      # shellcheck disable=SC2016 # SC2016 is irrelevant because we don't want expression to be expanded
       DO_SUDO_ASKPASS='export SUDO_ASKPASS=/home/${USER}/bin/SudoPass.sh'
       DO_SUDO="sudo -A"
       ;;
@@ -385,24 +385,24 @@ if [ "${BUILD_EXTENDED}" == "true" ]; then
 fi
 
 echo "Rebuilding snapd components:"
-pushd ${GOPATH}/src/github.com/snapcore/snapd
+pushd "${GOPATH}/src/github.com/snapcore/snapd" || exit
 ./mkversion.sh
-mkdir -p ${BUILD_DIR}
+mkdir -p "${BUILD_DIR}"
 for t in "${!SNAP_TARGETS[@]}"
 do
   # echo -e "\tBulding: ${t}"
-  [ -f ${BUILD_DIR}/${t}.${FARCH} ] && rm ${BUILD_DIR}/${t}.${FARCH}
+  [ -f "${BUILD_DIR}/${t}.${FARCH}" ] && rm "${BUILD_DIR}/${t}.${FARCH}"
   tag="${SNAP_TAGS[${t}]}"
   # special case for snap-update-ns
   # if [ "${t}" == "snap-update-ns" ]; then
   #   echo -e "\tBulding: ${t}\t go build -mod=vendor  -buildmode=pie -o ${BUILD_DIR}/${t}.${FARCH} --ldflags '-s -w -extldflags "-static"' github.com/snapcore/snapd/cmd/${t}"
   #   go build -mod=vendor  -buildmode=pie -o ${BUILD_DIR}/${t}.${FARCH} --ldflags '-s -w -extldflags "-static"' github.com/snapcore/snapd/cmd/${t}
   if [ -z "${tag}" ]; then
-    printf "\tBuilding: %-15s\t go build -mod=vendor  -buildmode=pie -o ${BUILD_DIR}/${t}.${FARCH} -ldflags \"${GO_LDFLAGS}\" github.com/snapcore/snapd/cmd/${t}\n" ${t}
-    go build -mod=vendor  -buildmode=pie -o ${BUILD_DIR}/${t}.${FARCH} -ldflags "${GO_LDFLAGS}" github.com/snapcore/snapd/cmd/${t}
+    printf "\tBuilding: %-15s\t go build -mod=vendor  -buildmode=pie -o ${BUILD_DIR}/${t}.${FARCH} -ldflags \"${GO_LDFLAGS}\" github.com/snapcore/snapd/cmd/${t}\n" "${t}"
+    go build -mod=vendor  -buildmode=pie -o "${BUILD_DIR}/${t}.${FARCH}" -ldflags "${GO_LDFLAGS}" "github.com/snapcore/snapd/cmd/${t}"
   else
-    printf "\tBuilding: %-15s\t go build -mod=vendor  -buildmode=pie -tags "${tag}" -ldflags \"${GO_LDFLAGS}\"  -o ${BUILD_DIR}/${t}.${FARCH} github.com/snapcore/snapd/cmd/${t}\n" ${t}
-    go build -mod=vendor  -buildmode=pie -tags "${tag}" -o ${BUILD_DIR}/${t}.${FARCH} -ldflags "${GO_LDFLAGS}" github.com/snapcore/snapd/cmd/${t}
+    printf "\tBuilding: %-15s\t go build -mod=vendor  -buildmode=pie -tags ${tag} -ldflags \"${GO_LDFLAGS}\"  -o ${BUILD_DIR}/${t}.${FARCH} github.com/snapcore/snapd/cmd/${t}\n" "${t}"
+    go build -mod=vendor  -buildmode=pie -tags "${tag}" -o "${BUILD_DIR}/${t}.${FARCH}" -ldflags "${GO_LDFLAGS}" "github.com/snapcore/snapd/cmd/${t}"
   fi
   OUT=$?
   if [ ! $OUT -eq 0 ];then
@@ -415,11 +415,11 @@ echo -e "Building finished\n"
 echo -e "Double checking if build was successfull and we have all needed binaries before going any further\n"
 for t in "${!SNAP_TARGETS[@]}"
 do
-  if [ ! -e ${BUILD_DIR}/${t}.${FARCH} ]; then
+  if [ ! -e "${BUILD_DIR}/${t}.${FARCH}" ]; then
     echo "Build failed... bailing out"
     exit 0
   else
-    printf "successfully built %-15s \t ${BUILD_DIR}/${t}.${FARCH}\n" ${t}
+    printf "successfully built %-15s \t ${BUILD_DIR}/${t}.${FARCH}\n" "${t}"
   fi
 done
 
@@ -440,7 +440,7 @@ clean_old_bits
 for t in "${!SNAP_TARGETS[@]}"
 do
   echo -e "\tCopying ${t}.${FARCH} to remote target"
-  copy ${BUILD_DIR}/${t}.${FARCH} ${REMOTE}
+  copy "${BUILD_DIR}/${t}.${FARCH}" "${REMOTE}"
 done
 
 remount_new_bits
@@ -456,4 +456,4 @@ fi
 snapd_status
 
 unset_all
-popd
+popd || exit

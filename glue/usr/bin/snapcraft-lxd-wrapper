@@ -544,7 +544,7 @@ lxd_snapcraft () {
   if [ -n "${snapcraft_yaml}" ]; then
     # use build-base and then base as means to determine build series
     local base=$(grep 'build-base:' ${snapcraft_yaml} | awk '{print $2}')
-    [ -z "${base}" ] && base=$(grep 'base:' ${snapcraft_yaml} | awk '{print $2}')
+    [ -z "${base}" ] && base=$(awk -F ':' '{if ($1 == "base") {gsub(/[[:blank:]]/,"");print $2}}' ${snapcraft_yaml} )
     case ${base} in
       core16|core)
         local ubuntu_series="xenial"
