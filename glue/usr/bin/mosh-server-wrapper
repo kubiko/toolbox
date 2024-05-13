@@ -1,16 +1,8 @@
 #!/bin/sh
 
-snap_name="toolbox"
-snap="/snap/${snap_name}/current"
-# determine arch
-case $(uname -m) in
-  "armv7*") arch="arm-linux-gnueabihf"
-  ;;
-  "aarch64") arch="aarch64-linux-gnu"
-  ;;
-  "x86_64") arch="x86_64-linux-gnu"
-esac
+SNAP_PATH="/snap/toolbox/current"
+ARCH_TRIPLET=$(sed -n 's/.*ARCH_TRIPLET: \(.*\)/\1/p' ${SNAP_PATH}/meta/snap.yaml)
 
-export LD_LIBRARY_PATH="${snap}/lib/${arch}:/${snap}/usr/lib/${arch}"
+export LD_LIBRARY_PATH="/${SNAP_PATH}/usr/lib/${ARCH_TRIPLET}"
 
-${snap}/usr/bin/mosh-server "$@"
+${SNAP_PATH}/usr/bin/mosh-server "$@"
