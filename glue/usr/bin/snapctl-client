@@ -11,10 +11,11 @@ check_in_snap_env() {
 
 services_status () {
   header=""
-  for name in "${@}"; do \
+  # shellcheck disable=SC2068 # SC2068 is irrelevant as we want to treat input as array
+  for name in ${@}; do \
     # remove snap. from the name
     [ -z "${header}" ] && header="yes" && echo "Service Startup Current Notes"; \
-    echo ${name:5} $(systemctl is-enabled ${name}) $(systemctl is-active ${name}); \
+    echo "${name:5} $(systemctl is-enabled "${name}") $(systemctl is-active "${name}")"; \
   done | column -t | grep --color=always '\(disabled\|inactive\|$\)'
 }
 
@@ -41,7 +42,7 @@ handle_service_action() {
     esac
     shift
   done
-  systemctl "${action}" "${services}"
+  systemctl "${action}" "${services}"  || true
 }
 
 print_services_status() {
@@ -53,7 +54,7 @@ print_services_status() {
   fi
   # we use trick that all the services of insterest has following pattern
   # /usr/lib/systemd/system/snap.<snap name>.<service name>.service
-  services_status "$(ls """/usr/lib/systemd/system/snap.${pattern}.service""" | xargs -n 1 basename)"
+  services_status "$(find /usr/lib/systemd/system /etc/systemd/system -name "snap.${pattern}.service" -exec basename {} \;)"
 }
 
 snap_config=/var/snap/snap.${SNAP_INSTANCE_NAME}.json
@@ -115,7 +116,7 @@ case "${cmd}" in
     fi
     KEY="${key_value%=*}"
     VALUE="${key_value##*=}"
-    cat "${snap_config}" | jq  ".${KEY} = \"${VALUE}\"" > "${snap_config}.tmp"; mv "${snap_config}.tmp" "${snap_config}"
+    jq  ".${KEY} = \"${VALUE}\"" "${snap_config}" > "${snap_config}.tmp"; mv "${snap_config}.tmp" "${snap_config}"
     ;;
 
   # Print either configuration op
@@ -140,7 +141,7 @@ case "${cmd}" in
     check_in_snap_env
     check_config
     KEY="${1}"
-    cat "${snap_config}" | jq  --arg key "$KEY" 'del(."$key")' > "${snap_config}.tmp"; mv "${snap_config}.tmp" "${snap_config}"
+    jq  --arg key "$KEY" 'del(."$key")' "${snap_config}" > "${snap_config}.tmp"; mv "${snap_config}.tmp" "${snap_config}"
     ;;
 
   # Get the current system mode and associated details
