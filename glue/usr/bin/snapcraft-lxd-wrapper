@@ -53,8 +53,8 @@ lxd_ensure_ssh_setup () {
   fi
   # ensure public key is in authorised_keys
   # don't assume there is always ${HOME}/.ssh/authorized_keys
-  if [ ! -e "${HOME}/.ssh/authorized_keys" ] || ! grep - q "$(cat "${PUBLIC_KEY}")" "${HOME}/.ssh/authorized_keys"; then
-    # check is thre is new line in authorised keys so we don't mangle last key
+  if [ ! -e "${HOME}/.ssh/authorized_keys" ] || ! grep -q "$(cat "${PUBLIC_KEY}")" "${HOME}/.ssh/authorized_keys"; then
+    # check is there is new line in authorised keys so we don't mangle last key
     if [ ! -e "${HOME}/.ssh/authorized_keys" ] || [ -z "$(tail -c 1 "${HOME}/.ssh/authorized_keys")" ]; then
       cat "${PUBLIC_KEY}" >> "${HOME}/.ssh/authorized_keys"
     else
@@ -82,7 +82,7 @@ lxd_ensure_ssh_setup () {
       rm ~/bin/lxd-ssh
       echo "Failed to create symbolic link to /snap/toolbox/current/usr/bin/lxd-ssh"
       echo "Perhaps remove existing ~/bin/lxd-ssh and create link manually"
-      exit 0
+      return 1
     fi
   fi
 }
@@ -100,7 +100,10 @@ lxd_ensure () {
       echo "There is deb version of lxd installed. Please remove it by runnig:"
       echo "$ sudo apt-get remove -y lxd"
       echo "$ sudo apt-get remove -y lxd-client"
-      exit 0
+      return 1
+    fi
+    if [ -e ~/.lxd-wrapper-configured ]; then
+      return 0
     fi
   fi
 
@@ -120,7 +123,9 @@ lxd_ensure () {
   fi
 
   # make sure we have configured ssh setup
-  lxd_ensure_ssh_setup
+  if ! lxd_ensure_ssh_setup; then
+    return 1
+  fi
 
   # if lxd is configured bail out here
   if [ -e ~/.lxd-wrapper-configured ]; then
@@ -130,7 +135,7 @@ lxd_ensure () {
   # make sure lxd is initialised
   local lxd_dump
   lxd_dump="$(lxd init --dump)"
-  if "$(echo "${lxd_dump}" | grep -q 'storage_pools: \[\]')"; then
+  if echo "${lxd_dump}" | grep -q 'storage_pools: \[\]'; then
     echo "Initialising lxd..."
     # if there is zfs support, use zfs as backend
     # on classic we need sudo for dmesg, so check for zfs instead
@@ -150,7 +155,8 @@ lxd_ensure () {
     fi
     echo -e "#cloud-config\nssh_authorized_keys:\n - $(cat "${PUBLIC_KEY}")" | lxc profile set default user.user-data -
     lxc profile show default
-  elif ! "$(echo "${lxd_dump}" | grep -q "$(cat "${PUBLIC_KEY}")")"; then
+  # double check authorized keys configuration
+  elif ! echo "${lxd_dump}" | grep -q "$(cat "${PUBLIC_KEY}")"; then
     echo -e "#cloud-config\nssh_authorized_keys:\n - $(cat "${PUBLIC_KEY}")" | lxc profile set default user.user-data -
   fi
   # touch file to signal lxd was fully configured
@@ -489,7 +495,8 @@ lxd_get_snap_base() {
 lxd_get_target_arch() {
   local snapcraft_yaml=${1}
   local base=${2}
-  if [ "${base}" = "core22" ] && [ -n "$(which yq)" ] && [[ ${@} != *"--build-for"* ]]; then
+  local snapcraft_args=${3}
+  if [ "${base}" = "core22" ] && [ -n "$(which yq)" ] && [[ "${snapcraft_args}" != *"--build-for"* ]]; then
     # determine host arch
     local host_arch="amd64"
     case $(uname -m) in
@@ -526,25 +533,15 @@ lxd_get_target_arch() {
 lxd_snapcraft () {
   # handle special case first parameter:
   #   -h: print help, (snapcraft help is "snapcraft help)"
-  #   armhf: arm64 can run natively armhf containers
-  #          if first parameter is "armhf" interpret it as run build
-  #          in "armhf" container on arm64 systems"
   if [ "${1}" = "-h" ]; then
     print_help_lxd_snapcraft
-    exit 0
-  elif [ "${1}" = "armhf" ]; then
-    # first make sure we are on compatible platform
-    if ! uname -a | grep -q "aarch64"; then
-      echo "This host does not seem to support native armhf containers"
-      exit 0
-    fi
-    local container_flavour="-armhf"
-    local container_arch="armhf"
-    shift
+    return
   fi
 
   # check if lxd is installed, if installed assume it's configured as well
-  lxd_ensure
+  if ! lxd_ensure; then
+    return
+  fi
 
   # make sure we have container and it's running
   # try to determine which container to use
@@ -577,7 +574,7 @@ lxd_snapcraft () {
         local ubuntu_series="xenial"
         ;;
     esac
-    local container_name="snapcraft-${ubuntu_series}${container_flavour}"
+    local container_name="snapcraft-${ubuntu_series}"
     local snap_type
     snap_type=$(grep -m 1 'type:' "${snapcraft_yaml}" | awk '{print $2}')
     # if we are building base or snapd, run build as root
@@ -590,22 +587,22 @@ lxd_snapcraft () {
       local root_build="sudo "
     fi
 
-    if ! lxd_get_target_arch "${snapcraft_yaml}" "${base}" ${@}; then
-      return 0
+    if ! lxd_get_target_arch "${snapcraft_yaml}" "${base}" "${@}"; then
+      return
     fi
   else
     echo -e "Not in snapcraft project directory\n"
     print_help_lxd_snapcraft
-    return 0
+    return
   fi
 
   # run snapcraft command if we have container ready
-  if lxd_ensure_container ${ubuntu_series} "${container_name}" "${container_arch}"; then
+  if lxd_ensure_container ${ubuntu_series} "${container_name}"; then
     # shellcheck disable=SC2145 # SC2145 does not apply, we want to treat @ it as array
     echo -e "Running snapcraft in container: ${container_name}, command [snapcraft ${@} ${target_arch}]"
     # shellcheck disable=SC2145 # SC2145 does not apply, we want to treat @ it as array
     ssh -A -t -q "${container_name}.lxd" "cd $(pwd | sed 's|'"${HOME}"'|/home/ubuntu/host|g');${root_build} snapcraft ${@} ${target_arch}"
   else
-    return 0
+    return
   fi
 }
