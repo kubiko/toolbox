@@ -68,46 +68,6 @@ rawurlencode() {
     echo "${encoded}"
 }
 
-get_account_key_assertions() {
-  # first get public SHA3 signature of your account key from snapcraft list-keys
-  publicSHA3=$(snapcraft list-keys | grep $'\s'"${CONFIGS["key"]}"$'\s' | awk '{print $3}') 
-  
-  # make sure that we didn't pick up more than one key if you have multiple keys matching the provided name
-  if [ "$(echo "$publicSHA3" | wc -w)" != "1" ]; then
-    echo "invalid number of keys found, must be exactly 1"
-    exit 1
-  fi
-
-  # first always output the "account-key" assertion for this account key
-  accountKeyAssertion=$(snap known --remote account-key "public-key-sha3-384=$publicSHA3")
-
-  # then get the account-id from the account-key assertion to get the "account" assertion
-  accountID=$(echo "$accountKeyAssertion" | grep -Po "account-id: \K.*")
-
-  # get the "account" assertion
-  accountAssertion=$(snap known --remote account "account-id=$accountID")
-
-  # TODO: what about system user assertions that do not have the same authority-id and
-  #       brand-id as the account which is being used to sign the assertion? Those
-  #       probably also need to be included too?
-
-  # brandIDAccountID=$(echo "${system_user_assertion_json}" | jq -r '.brand-id')
-
-  # if [ "$brandIDAccountID" != "$accountID" ]; then
-  #   brandAccountAssertion=$(snap known --remote account "account-id=$brandIDAccountID")
-  # fi
-}
-
-print_all_assertions() {
-  # output the first two assertions
-  echo "$accountKeyAssertion"
-  echo ""
-  echo "$accountAssertion"
-  echo ""
-  # finally sign the document, this will go back out to stdout
-  echo "${system_user_assertion_json}" | snap sign -k "${CONFIGS["key"]}"
-}
-
 check_value() {
   # check value does not start with "-"
   if [[ ${2::1} == "-" ]]; then
@@ -285,5 +245,4 @@ if [ -z "${system_user_assertion_json}" ]; then
     fi
 fi
 
-get_account_key_assertions
-print_all_assertions
+echo "${system_user_assertion_json}" | snap sign --chain -k "${CONFIGS["key"]}"
