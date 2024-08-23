@@ -84,6 +84,7 @@ case "${cmd}" in
        | sed '/^{/!d' \
        | jq --raw-output 'if .type == "async" then ["Change", .change] | "\(.[0])\t\(.[1])" else [.result.message, .result.kind] | "\(.[0])\t \(.[1])" end'
     ;;
+
   install)
     # parse optional params and snap name(s)
     cmd_options=""
@@ -151,6 +152,7 @@ case "${cmd}" in
          | handle_async_reply
     fi
     ;;
+
   revert)
     cmd_options="{\"action\":\"$cmd\""
     while [ "$1" != "" ]
@@ -195,6 +197,61 @@ case "${cmd}" in
        | jq --raw-output 'if .type == "async" then ["Change", .change] | "\(.[0])\t\(.[1])" else [.result.message, .result.kind] | "\(.[0])\t \(.[1])" end' \
        | handle_async_reply
     ;;
+
+  refresh)
+    cmd_options="{\"action\":\"$cmd\""
+    while [ "$1" != "" ]
+    do
+        case $1 in
+            --edge)
+                cmd_options+=",\"channel\": \"edge\""
+                ;;
+            --beta)
+                cmd_options+=",\"channel\": \"beta\""
+                ;;
+            --candidate)
+                cmd_options+=",\"channel\": \"candidate\""
+                ;;
+            --stable)
+                cmd_options+=",\"channel\": \"stable\""
+                ;;
+            --channel)
+                cmd_options+=",\"channel\": \"${2}\""
+                shift
+                ;;
+            --channel=*)
+                cmd_options+=",\"channel\": \"${1##*=}\""
+                ;;
+            --devmode)
+                cmd_options+=",\"devmode\": \"true\""
+                ;;
+            --jailmode)
+                cmd_options+=",\"jailmode\": \"true\""
+                ;;
+            --system-restart-immediate)
+                cmd_options+=",\"system-restart-immediate\": \"true\""
+                ;;
+            --no-wait)
+                no_wait="true"
+                ;;
+            *)
+                name="${1}"
+                ;;
+        esac
+        shift
+    done
+    cmd_options+="}"
+    if [ -z "$name" ]; then
+      echo "error: missing snap name"
+      exit 1
+    fi
+    echo "${cmd_options}" | $CURL \
+       -X POST -d@- "http://localhost/v2/snaps/$name" \
+       | sed '/^{/!d' \
+       | jq --raw-output 'if .type == "async" then ["Change", .change] | "\(.[0])\t\(.[1])" else [.result.message, .result.kind] | "\(.[0])\t \(.[1])" end' \
+       | handle_async_reply
+    ;;
+
   abort)
     nr="$1"
     if [ -z "$nr" ]; then
@@ -206,6 +263,7 @@ case "${cmd}" in
        | sed '/^{/!d' \
        | jq --raw-output 'if .type == "async" then ["Change", .change] | "\(.[0])\t\(.[1])" else [.result.message, .result.kind] | "\(.[0])\t \(.[1])" end'
     ;;
+
   ack)
     as="$1"
     if [ ! -e "${as}" ]; then
@@ -217,6 +275,7 @@ case "${cmd}" in
       | sed '/^{/!d' \
       | jq -r 'if .status != "OK" then [ .result.message ] | "error: \(.[0])" else empty end'
     ;;
+
   known)
     as="$1"
     if [ -z "${as}" ]; then
@@ -228,12 +287,14 @@ case "${cmd}" in
       "http://localhost/v2/assertions/${as}" \
       | sed '/type:.*/,$!d'
     ;;
+
   list)
     $CURL "http://localhost/v2/snaps" | sed '/^{/!d' \
       | jq --raw-output '.result|=sort_by(.name)|.result[] |[.name, .version, .revision, ."tracking-channel" ,.publisher.username, .type]| "\(.[0])\t\(.[1])\t\(.[2])\t\(.[3])\t\(.[4])\t\(.[5])"' \
       | awk 'BEGIN{print "Name\tVersion\tRev\tTracking\tPublisher\tNotes"}1' \
       | column -t
     ;;
+
   change)
     nr="$1"
     if [ -z "$nr" ]; then
@@ -263,6 +324,7 @@ case "${cmd}" in
        | jq --raw-output '.result|=sort_by(.id|tonumber)|.result[] | [.id , .status, ."spawn-time", ."ready-time", .summary] | "\(.[0])\t\(.[1])\t\(.[2])\t\(.[3])\t\t\(.[4])"' \
        | awk 'BEGIN{print "ID\tStatus\tSpawn\t\t\t\tReady\t\t\t\t\tSummary"}1'
     ;;
+
   services)
     ${CURL} "http://localhost/v2/apps?select=service" \
       | sed '/^{/!d' \
@@ -271,6 +333,7 @@ case "${cmd}" in
       | awk 'BEGIN{print "Service Startup Current Type"}1' \
       | column -t
     ;;
+
   start)
     service_name="${1}"
     shift
@@ -281,6 +344,7 @@ case "${cmd}" in
        | sed '/^{/!d' \
        | jq --raw-output 'if .type == "error" then .result.message else ["Change", .change] | "\(.[0])\t\(.[1])" end'
     ;;
+
   stop)
     service_name="${1}"
     shift
@@ -291,6 +355,7 @@ case "${cmd}" in
        | sed '/^{/!d' \
        | jq --raw-output 'if .type == "error" then .result.message else ["Change", .change] | "\(.[0])\t\(.[1])" end'
     ;;
+
   restart)
     service_name="${1}"
     shift
@@ -301,6 +366,7 @@ case "${cmd}" in
        | sed '/^{/!d' \
        | jq --raw-output 'if .type == "error" then .result.message else ["Change", .change] | "\(.[0])\t\(.[1])" end'
     ;;
+
   connect)
     # <plug snap>:<plug> [<slot snap>:<slot>]
     plug_snap="${1%:*}"
@@ -322,6 +388,7 @@ case "${cmd}" in
        | sed '/^{/!d' \
        | jq --raw-output 'if .type == "error" then .result.message else ["Change", .change] | "\(.[0])\t\(.[1])" end'
     ;;
+
   disconnect)
     # <plug snap>:<plug> [<slot snap>:<slot>]
     plug_snap="${1%:*}"
@@ -342,14 +409,17 @@ case "${cmd}" in
        | sed '/^{/!d' \
        | jq --raw-output 'if .type == "error" then .result.message else ["Change", .change] | "\(.[0])\t\(.[1])" end'
     ;;
+
   managed)
     $CURL "http://localhost/v2/system-info" | sed '/^{/!d' \
       | jq --raw-output '.result.managed'
     ;;
+
   system-info)
     $CURL "http://localhost/v2/system-info" | sed '/^{/!d' \
       | jq '.result'
     ;;
+
   watch)
     case $1 in
       --last=*)
@@ -371,6 +441,7 @@ case "${cmd}" in
         ;;
     esac
     ;;
+
   create-user)
     cmd_options="{\"action\": \"create\""
     while [ "$1" != "" ]
@@ -410,6 +481,7 @@ case "${cmd}" in
         | sed '/^{/!d' \
         | jq 'if .status != "OK" then [ .result.message ] | "error: \(.[0])" else .result end'
     ;;
+
   remove-user)
     cmd_options="{\"action\": \"remove\""
     while [ "$1" != "" ]
@@ -433,10 +505,12 @@ case "${cmd}" in
        | sed '/^{/!d' \
        | jq 'if .status != "OK" then [ .result.message ] | "error: \(.[0])" else .result.removed[] | [ .username ] | "removed user: \(.[0])" end'
     ;;
+
   users)
     $CURL "http://localhost/v2/users" | sed '/^{/!d' \
       | jq --raw-output 'if .status != "OK" then [ .result ] | "error: \(.[0])" else .result[] | [ .username, .email ] | "username: \(.[0])\t\temail: \(.[1])" end'
     ;;
+
   help|--help|-h)
     echo -e "There is no proper help :("
     echo -e "For details, refer to snapd RES API:"
@@ -466,6 +540,18 @@ case "${cmd}" in
     echo -e "\t\t--classic: classic confinement"
     echo -e "\t\t--devmode: install in devmode"
     echo -e "\t\t--system-restart-immediate: restart imediatelly after install for snaps requiring system restart"
+    echo -e "\t\t--no-wait: do not wait for completion"
+    echo -e "\t\t--jailmode: set jailmode for snap"
+    echo -e ""
+    echo -e "\trefresh: refresh snap"
+    echo -e "\t\t<snap name>"
+    echo -e "\t\t--stable: assumes --channel latest/stable"
+    echo -e "\t\t--candidate: assumes --channel latest/candidate"
+    echo -e "\t\t--beta: assumes --channel latest/beta"
+    echo -e "\t\t--edge: assumes --channel latest/edge"
+    echo -e "\t\t--channel: <channel to refresh to <track>/<channel>/<branch>"
+    echo -e "\t\t--devmode: refresh into devmode"
+    echo -e "\t\t--system-restart-immediate: restart imediatelly after refresh for snaps requiring system restart"
     echo -e "\t\t--no-wait: do not wait for completion"
     echo -e "\t\t--jailmode: set jailmode for snap"
     echo -e ""
