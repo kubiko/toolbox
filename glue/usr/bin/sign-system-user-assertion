@@ -209,7 +209,7 @@ if [ -z "${system_user_assertion_json}" ]; then
     # we need either username or email
     if [ -n "${CONFIGS["username"]}" ]; then
         # user username
-        echo "Using username: ${CONFIGS["username"]}"
+        echo "Using username: ${CONFIGS["username"]}" 1>&2
         system_user_assertion_json=$(jq --null-input \
            --arg authority_id "${CONFIGS["authority-id"]}" \
            --arg brand_id "${CONFIGS["brand-id"]}" \
