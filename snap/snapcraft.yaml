@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.9.29"
+version: "0.9.31"
 summary: Swiss knife of shell tools
 description: |
   Set of useful shell tools to be used on Ubuntu/Ubuntu core systems.
@@ -48,7 +48,6 @@ parts:
       - bsdmainutils
       - busybox-static
       - byobu
-      - certbot
       - cpio
       - cpu-checker
       - cryptsetup-bin
