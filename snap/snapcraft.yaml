@@ -98,6 +98,7 @@ parts:
       - parted
       - pastebinit
       - pciutils
+      - perl
       - ppp
       - psmisc
       - pv
@@ -131,12 +132,9 @@ parts:
         - sysbench
     stage:
       - -bin/bash
-      - -usr/bin/perl*
       - -usr/bin/py*
       - -usr/lib/gcc
       - -usr/lib/klibc*
-      - -usr/lib/*/perl*
-      - -usr/lib/*/libperl*
       - -usr/lib/python3/dist-packages/R*
       - -usr/lib/python3/dist-packages/c*
       - -usr/lib/python3/dist-packages/h*
@@ -149,7 +147,6 @@ parts:
       - -usr/share/doc
       - -usr/share/locale
       - -usr/share/man/
-      - -usr/share/perl*
       - -usr/share/python*
       - -usr/share/vim
       # make sure we do not have pulled in lsb_release, it makes no sense
