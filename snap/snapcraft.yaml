@@ -131,6 +131,9 @@ parts:
     stage:
       - -bin/bash
       - -usr/bin/py*
+      - -usr/lib/*/libdrm_*
+      - -usr/lib/*/libgallium*
+      - -usr/lib/*/libLLVM*
       - -usr/lib/gcc
       - -usr/lib/klibc*
       - -usr/lib/python3/dist-packages/R*
