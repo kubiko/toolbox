@@ -13,8 +13,10 @@ echo "export PATH=\"\${SNAP_PATH}/usr/bin:\${SNAP_PATH}/usr/sbin:\${PATH}\"" >&2
 echo "export PATH=\"\${SNAP_PATH}/usr/bin:\${SNAP_PATH}/usr/sbin:\${PATH}\""
 echo "export LD_LIBRARY_PATH=\"/usr/lib:/usr/lib/${ARCH_TRIPLET}:\${SNAP_PATH}/usr/lib:\${SNAP_PATH}/usr/lib/${ARCH_TRIPLET}\"" >&2
 echo "export LD_LIBRARY_PATH=\"/usr/lib:/usr/lib/${ARCH_TRIPLET}:\${SNAP_PATH}/usr/lib:\${SNAP_PATH}/usr/lib/${ARCH_TRIPLET}\""
-echo "alias sudo='sudo -E env \"PATH=\$PATH\" \"LD_LIBRARY_PATH=\$LD_LIBRARY_PATH\"'" >&2
-echo "alias sudo='sudo -E env \"PATH=\$PATH\" \"LD_LIBRARY_PATH=\$LD_LIBRARY_PATH\"'"
+echo "alias sudo='ssudo -E env \"PATH=\$PATH\" \"LD_LIBRARY_PATH=\$LD_LIBRARY_PATH\"'" >&2
+echo "alias sudo='ssudo -E env \"PATH=\$PATH\" \"LD_LIBRARY_PATH=\$LD_LIBRARY_PATH\"'"
+echo "alias sudo='ssudo '" >&2
+echo "alias sudo='ssudo '"
 echo "export XDG_DATA_DIRS=/usr/local/share:/usr/share:/snap/snapd/current/usr/share:\${SNAP_PATH}/usr/share" >&2
 echo "export XDG_DATA_DIRS=/usr/local/share:/usr/share:/snap/snapd/current/usr/share:\${SNAP_PATH}/usr/share"
 echo "source ${SNAP_PATH}/etc/profile.d/bash_completion.sh" >&2
@@ -23,6 +25,8 @@ echo "source ${SNAP_PATH}/usr/bin/snapcraft-lxd-wrapper" >&2
 echo "source ${SNAP_PATH}/usr/bin/snapcraft-lxd-wrapper"
 echo "alias vim='vim.basic'" >&2
 echo "alias vim='vim.basic'"
+echo "alias file='file -m ${SNAP_PATH}/usr/share/misc/magic.mgc'" >&2
+echo "alias file='file -m ${SNAP_PATH}/usr/share/misc/magic.mgc'"
 echo "export PYTHONPATH=\"\${SNAP_PATH}/usr/lib/python3/dist-packages\"" >&2
 echo "export PYTHONPATH=\"\${SNAP_PATH}/usr/lib/python3/dist-packages\""
 echo "# end of modifications done by toolbox snap" >&2
