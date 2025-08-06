@@ -267,7 +267,8 @@ lxd_ensure_container () {
 
   echo "Configuring new container..."
   # if host is amd64, override source template, so we can cross build
-  if uname -a | grep -q "x86_64"; then
+  # do not update source for noble+, snapcraft supports package-repositories to handle cross
+  if uname -a | grep -q "x86_64" && [[ "${ubuntu_series}" = "jammy" || "${ubuntu_series}" = "focal" ]]; then
     local tmp_sources
     tmp_sources=$(mktemp -u -q)
     local tmp_sources_deb822
@@ -426,8 +427,8 @@ EOF
   fi
   # done configuring proxy
 
-  # check if we need cross compilation source
-  if uname -a | grep -q "x86_64"; then
+  # check if we need to add foreigned arch, only before noble containers
+  if uname -a | grep -q "x86_64" && [[ "${ubuntu_series}" = "jammy" || "${ubuntu_series}" = "focal" ]]; then
     lxc exec "${container_name}" -- sh -c 'dpkg --add-architecture arm64'
     lxc exec "${container_name}" -- sh -c 'dpkg --add-architecture armhf'
   fi
