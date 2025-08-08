@@ -45,6 +45,14 @@ print_help_lxd_snapcraft () {
   echo -e "\t\$ lxd_snapcraft prime --target-arch=armhf"
   echo -e "\t\$ lxd_snapcraft armhf prime"
 }
+uid() {
+  user="${1:-"$USER"}"
+  while IFS=':' read -r uname x uid etc; do
+    if [ "$uname" = "$user" ]; then
+      echo "$uid"
+    fi
+  done
+}
 
 lxd_ensure_ssh_setup () {
   # get ssh keys ready
@@ -63,7 +71,7 @@ lxd_ensure_ssh_setup () {
     fi
   fi
 
-  if [ ! -f "${SSH_CONFIG}" ] || [ -z "$(grep -Pzo  'Host \*.lxd\n  User ubuntu\n  ProxyCommand lxd-ssh %h\n  StrictHostKeyChecking no\n  IdentityFile ' "${SSH_CONFIG}" | tr -d  '\0')" ]; then
+  if [ ! -f "${SSH_CONFIG}" ] || [ -z "$(grep -Pzo  'Host \*.lxd\n  User root\n  ProxyCommand lxd-ssh %h\n  StrictHostKeyChecking no\n  IdentityFile ' "${SSH_CONFIG}" | tr -d  '\0')" ]; then
     echo -e \
       "\nHost *.lxd\n  User ubuntu\n  ProxyCommand lxd-ssh %h\n  StrictHostKeyChecking no\n  IdentityFile ${IDENTITY_FILE}\n" \
       >> "${SSH_CONFIG}"
@@ -280,111 +288,26 @@ lxd_ensure_container () {
     [ -e "${tmp_sources}" ] && rm "${tmp_sources}"
     [ -e "${tmp_sources_deb822}" ] && rm "${tmp_sources_deb822}"
   fi
-  echo -en "uid $(id -u) 1000\ngid $(id -g) 1000" | lxc config set "${container_name}" raw.idmap -
+
+  cuid="0" # root
+  lxc config set "${container_name}" raw.idmap "both $(uid "${USER}" < /etc/passwd) ${cuid}"
   # check if kernel version is 5.x, enough to enable mknod interception, to support debootstrap
   # we cannot enable it for all the kernels, container would refuse to boot
   if [ "$(uname -a | awk '{print $3}' | awk -F . '{print $1}')" -ge 5 ]; then
     echo -e "Enabling debootstrap support"
     lxc config set "${container_name}" security.syscalls.intercept.mknod=true
     lxc config set "${container_name}" security.syscalls.intercept.setxattr=true
-    lxc config device add "${container_name}" home disk source="${HOME}" path=/home/ubuntu/host
-    lxc config device add "${container_name}" sshconf disk source="${HOME}/.ssh path=/home/ubuntu/.ssh"
   fi
   # if there is X server socket on host, make it avaiable in the container for GUI apps
   if [ -e /tmp/.X11-unix/X0 ]; then
     lxc config device add "${container_name}" xorg-socket disk source=/tmp/.X11-unix/X0 path=/tmp/.X11-unix/X0
   fi
 
-  # if there is git snap install, share gitconfig with container
-  if [ -e "${HOME}/snap/git-ondra/common/.gitconfig" ]; then
-    lxc config device add "${container_name}" gitconfig disk source="${HOME}/snap/git-ondra/common/.gitconfig" path=/home/ubuntu/.gitconfig
-  fi
-
   lxd_start_container "${container_name}"
 
-  lxc exec "${container_name}" -- sh -c 'cp -r /etc/skel/. /home/ubuntu'
+  lxc exec "${container_name}" -- sh -c 'cp -r /etc/skel/. /root'
   lxc exec "${container_name}" -- sh -c 'echo "export SNAPCRAFT_BUILD_ENVIRONMENT=host" >> /etc/environment'
   lxc exec "${container_name}" -- sh -c 'echo "export SNAPCRAFT_ENABLE_EXPERIMENTAL_TARGET_ARCH=true" >> /etc/environment'
-  # snapcraft 7.x+ does not like to run apt as root, setup wrappers if this jammy+ container
-  if [ "${ubuntu_series}" == "jammy" ] || [ "${ubuntu_series}" == "noble" ] ; then
-    local tmp_wrapper
-    tmp_wrapper=$(mktemp -u -q)
-    tee "${tmp_wrapper}" <<EOF
-#!/bin/sh
-# do not force sudo use for all the options as that can cause problems
-if [ "\${1}" = "changelog" ] || [ "\${1}" = "download" ] || [ "\${1}" = "source" ]; then
-  /usr/bin/apt "\$@"
-else
-  sudo /usr/bin/apt "\$@"
-fi
-EOF
-
-    lxc file push "${tmp_wrapper}" "${container_name}/usr/local/bin/apt"
-    tee "${tmp_wrapper}" <<EOF
-#!/bin/sh
-# do not force sudo use for all the options as that can cause problems
-if [ "\${1}" = "changelog" ] || [ "\${1}" = "download" ] || [ "\${1}" = "source" ]; then
-  /usr/bin/apt-get "\$@"
-else
-  sudo /usr/bin/apt-get "\$@"
-fi
-EOF
-
-    lxc file push "${tmp_wrapper}" "${container_name}/usr/local/bin/apt-get"
-    tee "${tmp_wrapper}" <<EOF
-#!/bin/sh
-# do not force sudo use for all the options as that can cause problems
-if [ "\${1}" = "--extract" ] || [ "\${1}" = "-x" ] || [ "\${1}" = "--print-architecture" ] || [ "\${1}" = "--print-avail" ] \
-   || [ "\${1}" = "--print-foreign-architectures" ] || [ "\${1}" = "--list" ] || [ "\${1}" = "-l" ] || [ "\${1}" = "--listfiles" ] \
-   || [ "\${1}" = "-L" ] ||[ "\${1}" = "--search" ] || [ "\${1}" = "-S" ] || [ "\${1}" = "--unpack" ] || [ "\${1}" = "--vextract" ] \
-   || [ "\${1}" = "-X" ] || [ "\${1}" = "--info" ] || [ "\${1}" = "-I" ]; then
-  /usr/bin/dpkg "\$@"
-else
-  sudo /usr/bin/dpkg "\$@"
-fi
-EOF
-
-    lxc file push "${tmp_wrapper}" "${container_name}/usr/local/bin/dpkg"
-    tee "${tmp_wrapper}" <<EOF
-#!/bin/sh
-sudo /usr/bin/apt-key "\$@"
-EOF
-
-    lxc file push "${tmp_wrapper}" "${container_name}/usr/local/bin/apt-key"
-    tee "${tmp_wrapper}" <<EOF
-#!/bin/sh
-sudo /usr/bin/add-apt-repository "\$@"
-EOF
-
-    lxc file push "${tmp_wrapper}" "${container_name}/usr/local/bin/add-apt-repository"
-    tee "${tmp_wrapper}" <<EOF
-#!/bin/sh
-sudo /usr/bin/apt-cache "\$@"
-EOF
-
-    lxc file push "${tmp_wrapper}" "${container_name}/usr/local/bin/apt-cache"
-    tee "${tmp_wrapper}" <<EOF
-#!/bin/sh
-sudo /usr/bin/apt-config "\$@"
-EOF
-
-    lxc file push "${tmp_wrapper}" "${container_name}/usr/local/bin/apt-config"
-    tee "${tmp_wrapper}" <<EOF
-#!/bin/sh
-if [ "\${1}" = "install" ]; then
-  sudo /usr/bin/snap "\$@"
-else
-  /usr/bin/snap "\$@"
-fi
-EOF
-
-    lxc file push "${tmp_wrapper}" "${container_name}/usr/local/bin/snap"
-
-    [ -e "${tmp_wrapper}" ] && rm "${tmp_wrapper}"
-    lxc exec "${container_name}" -- sh -c 'chown root:root /usr/local/bin/*'
-    lxc exec "${container_name}" -- sh -c 'chmod 755 /usr/local/bin/*'
-    lxc exec "${container_name}" -- sed -i 's|PATH=\"\(.*\)\"|PATH=\"\1\:/snap/bin\"|g' /etc/environment
-  fi
 
   # if host has proxy, configure it inside container as well
   if [ -n "${http_proxy}" ]; then
@@ -422,7 +345,7 @@ EOF
     fi
     if [ -f "${HOME}/.netrc" ]; then
       echo "Sharing host netrc auth file with container"
-      lxc config device add "${container_name}" netrc disk source="$HOME/.netrc" path=/home/ubuntu/.netrc
+      lxc config device add "${container_name}" netrc disk source="$HOME/.netrc" path=/root/.netrc
     fi
   fi
   # done configuring proxy
@@ -432,6 +355,7 @@ EOF
     lxc exec "${container_name}" -- sh -c 'dpkg --add-architecture arm64'
     lxc exec "${container_name}" -- sh -c 'dpkg --add-architecture armhf'
   fi
+
   lxc exec "${container_name}" -- sh -c 'apt-get update'
   # clean container from not needed packages
   lxc exec "${container_name}" -- sh -c 'apt-get remove -y lxd'
@@ -441,10 +365,6 @@ EOF
 
   # install ccache
   lxc exec "${container_name}" -- sh -c 'apt-get -y install ccache'
-
-  # finishing touches
-  lxc exec "${container_name}" -- sh -c 'chown ubuntu:ubuntu /home/ubuntu'
-  lxc exec "${container_name}" -- sh -c 'find /home/ubuntu/ -maxdepth 1 -type f -name ".*" -exec chown ubuntu:ubuntu {} \;'
 
   # wait till system is seeded to install snapcraft
   wait_text="waiting for container to finish snap seeding"
@@ -471,6 +391,9 @@ EOF
   if [ "${ubuntu_series}" == "jammy" ]; then
     lxc exec "${container_name}" -- sh -c 'snap install core22'
   fi
+  # we are done, share ssh and home to the container
+  lxc config device add "${container_name}" home disk source="${HOME}" path=/root/host
+  lxc config device add "${container_name}" sshconf disk source="${HOME}/.ssh" path="/root/.ssh"
 }
 
 # try to resolve snapcraft.yaml path in the current directory
@@ -574,18 +497,6 @@ lxd_snapcraft () {
         ;;
     esac
     local container_name="snapcraft-${ubuntu_series}"
-    local snap_type
-    snap_type=$(grep -m 1 'type:' "${snapcraft_yaml}" | awk '{print $2}')
-    # if we are building base or snapd, run build as root
-    if [ "${snap_type}" == "base" ] || [ "${snap_type}" == "snapd" ]; then
-      echo "Automatically building snap type ${snap_type} as root"
-      local root_build="sudo "
-    fi
-    if [ "${USER}" == "root" ]; then
-      echo "Assuming build to be run as root based on current user"
-      local root_build="sudo "
-    fi
-
     if ! lxd_get_target_arch "${snapcraft_yaml}" "${base}" "${@}"; then
       return
     fi
@@ -600,7 +511,7 @@ lxd_snapcraft () {
     # shellcheck disable=SC2145 # SC2145 does not apply, we want to treat @ it as array
     echo -e "Running snapcraft in container: ${container_name}, command [snapcraft ${@} ${target_arch}]"
     # shellcheck disable=SC2145 # SC2145 does not apply, we want to treat @ it as array
-    ssh -A -t -q "${container_name}.lxd" "cd $(pwd | sed 's|'"${HOME}"'|/home/ubuntu/host|g');${root_build} snapcraft ${@} ${target_arch}"
+    ssh -A -t -q "${container_name}.lxd" "cd $(pwd | sed 's|'"${HOME}"'|/root/host|g');snapcraft ${@} ${target_arch}"
   else
     return
   fi
