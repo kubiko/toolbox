@@ -73,7 +73,7 @@ lxd_ensure_ssh_setup () {
 
   if [ ! -f "${SSH_CONFIG}" ] || [ -z "$(grep -Pzo  'Host \*.lxd\n  User root\n  ProxyCommand lxd-ssh %h\n  StrictHostKeyChecking no\n  IdentityFile ' "${SSH_CONFIG}" | tr -d  '\0')" ]; then
     echo -e \
-      "\nHost *.lxd\n  User ubuntu\n  ProxyCommand lxd-ssh %h\n  StrictHostKeyChecking no\n  IdentityFile ${IDENTITY_FILE}\n" \
+      "\nHost *.lxd\n  User root\n  ProxyCommand lxd-ssh %h\n  StrictHostKeyChecking no\n  IdentityFile ${IDENTITY_FILE}\n" \
       >> "${SSH_CONFIG}"
     chmod 600 "${SSH_CONFIG}"
   fi
