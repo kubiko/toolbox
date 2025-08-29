@@ -93,6 +93,7 @@ parts:
       - net-tools
       - pastebinit
       - pciutils
+      - ppp
       - psmisc
       - pv
       - rhash
