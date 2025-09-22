@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.9.42"
+version: "0.9.43"
 summary: Swiss knife of shell tools
 description: |
   Set of useful shell tools to be used on Ubuntu/Ubuntu core systems.
@@ -90,6 +90,7 @@ parts:
       - minicom
       - mkbootimg
       - mmc-utils
+      - mokutil
       - mtd-utils
       - nano
       - netdiscover
