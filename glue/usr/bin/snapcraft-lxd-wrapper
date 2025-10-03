@@ -45,14 +45,6 @@ print_help_lxd_snapcraft () {
   echo -e "\t\$ lxd_snapcraft prime --target-arch=armhf"
   echo -e "\t\$ lxd_snapcraft armhf prime"
 }
-uid() {
-  user="${1:-"$USER"}"
-  while IFS=':' read -r uname x uid etc; do
-    if [ "$uname" = "$user" ]; then
-      echo "$uid"
-    fi
-  done
-}
 
 lxd_ensure_ssh_setup () {
   # get ssh keys ready
@@ -289,8 +281,15 @@ lxd_ensure_container () {
     [ -e "${tmp_sources_deb822}" ] && rm "${tmp_sources_deb822}"
   fi
 
-  cuid="0" # root
-  lxc config set "${container_name}" raw.idmap "both $(uid "${USER}" < /etc/passwd) ${cuid}"
+  if [ -z "$USER" ]; then
+    echo "USER variable is not set" >&2
+    return 1
+  fi
+
+  userid="$(id -u "$USER")"
+  groupid="0" # root
+
+  lxc config set "${container_name}" raw.idmap "both ${userid} ${groupid}"
   # check if kernel version is 5.x, enough to enable mknod interception, to support debootstrap
   # we cannot enable it for all the kernels, container would refuse to boot
   if [ "$(uname -a | awk '{print $3}' | awk -F . '{print $1}')" -ge 5 ]; then
