@@ -71,7 +71,7 @@ do
       ;;
     generate)
       action="Generate"
-      ;;     
+      ;;
     --debug)
       debug=1
       ;;
@@ -79,10 +79,10 @@ do
       action="Try"
       ;;
     *)
-      if [ "${action}" = "apply" ]; then
+      if [ "${action}" = "Apply" ]; then
         interface="${arg}"
       else
-        echo "unsupported option [${1}]passed"
+        echo "unsupported option [${arg}] passed (current action: ${action})"
         print_help
       fi
       ;;
@@ -90,7 +90,7 @@ do
 done
 
 # handle case when we are in confinement
-if [ -n "${SNAP}" ]; then 
+if [ -n "${SNAP}" ]; then
   exec busctl call --quiet --system "io.netplan.Netplan" "/io/netplan/Netplan" "io.netplan.Netplan" "${action}"
 else
   case ${action} in
@@ -102,7 +102,7 @@ else
       check_root
       /usr/libexec/netplan/generate
       ;;
-    *)      
+    *)
       echo "Missing action or not supported action"
       print_help
       ;;
