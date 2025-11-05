@@ -1,0 +1,56 @@
+#!/bin/bash
+
+UNSQUASHFS="/snap/toolbox/current/usr/bin/unsquashfs"
+
+print_help() {
+  echo -e "Generate delta between source and target snaps."
+  echo -e "Tool prints timestamp which should be passed when recreating target snap with delta!"
+  echo -e "Usage:"
+  echo -e "\t$(basename "${0}") --source <source snap file>  --target <output file> --delta <delta file>"
+  echo -e "\t\tor: $(basename "${0}") -s <source snap file>  -t <output file> -d <delta file>"
+  echo -e ""
+  echo -e "Example: $(basename "${0}") --source core22_2134.snap --target core22_2140.snap --delta delta-core22-2134-2140"
+  exit
+}
+
+# parse passed parameters
+while [ "$1" != "" ];
+do
+  case $1 in
+    --source | -s)
+      SOURCE_SNAP=${2}
+      ;;
+    --target | -t)
+      TARGET_SNAP=${2}
+      ;;
+    --delta  | -d)
+      DELTA=${2}
+      ;;
+    --help | -h)
+      print_help
+      ;;
+    *)
+      print_help
+      ;;
+  esac
+  shift; shift
+done
+if [ -z "${SOURCE_SNAP}" ] || [ -z "${DELTA}" ] || [ -z "${TARGET_SNAP}" ]; then
+  echo "Missing some of the required parameters"
+  print_help
+fi
+
+source_snap_pipe=$(mktemp -u /tmp/snap-delta-XXXXXX)
+new_snap_pipe=$(mktemp -u /tmp/snap-delta-XXXXXX)
+
+rm -rf "${source_snap_pipe}" "${new_snap_pipe}" "${DELTA}"
+mkfifo "${source_snap_pipe}" "${new_snap_pipe}"
+
+"${UNSQUASHFS}" -n -pf "${source_snap_pipe}" "${SOURCE_SNAP}" &
+"${UNSQUASHFS}" -n -pf "${new_snap_pipe}" "${TARGET_SNAP}" &
+
+xdelta3 -e -f -A -s "${source_snap_pipe}" "${new_snap_pipe}" "${DELTA}"
+rm "${source_snap_pipe}" "${new_snap_pipe}"
+
+creation_time=$("${UNSQUASHFS}" -s "${TARGET_SNAP}" | grep -i "Creation"| cut -c 30-)
+echo "When re-creating squashfs from delta, pass creation time \"${creation_time}\""
