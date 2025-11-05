@@ -1,15 +1,18 @@
 #!/bin/bash
 
 UNSQUASHFS="/snap/toolbox/current/usr/bin/unsquashfs"
-
+DELTA_HEADER_SIZE=512
 print_help() {
   echo -e "Generate delta between source and target snaps."
-  echo -e "Tool prints timestamp which should be passed when recreating target snap with delta!"
+  echo -e "Arguments:"
+  echo -e "\t--source | -s: source snap"
+  echo -e "\t--target | -t: target snap"
+  echo -e "\t--delta  | -d: generated delta between source and target snap"
+  echo -e ""
   echo -e "Usage:"
   echo -e "\t$(basename "${0}") --source <source snap file>  --target <output file> --delta <delta file>"
-  echo -e "\t\tor: $(basename "${0}") -s <source snap file>  -t <output file> -d <delta file>"
-  echo -e ""
-  echo -e "Example: $(basename "${0}") --source core22_2134.snap --target core22_2140.snap --delta delta-core22-2134-2140"
+  echo -e "Example:"
+  echo -e "\t$(basename "${0}") --source core22_2134.snap --target core22_2140.snap --delta delta-core22-2134-2140"
   exit
 }
 
@@ -46,11 +49,19 @@ new_snap_pipe=$(mktemp -u /tmp/snap-delta-XXXXXX)
 rm -rf "${source_snap_pipe}" "${new_snap_pipe}" "${DELTA}"
 mkfifo "${source_snap_pipe}" "${new_snap_pipe}"
 
+# read timestamp and store it at the start of the delta
+creation_time=$("${UNSQUASHFS}" -s "${TARGET_SNAP}" | grep -i "Creation"| cut -c 30- | date -f - +%s)
+epoch_time=$((creation_time))
+delta_header=$(mktemp /tmp/snap-delta-XXXXXX)
+for b in $((epoch_time & 255)) $(((epoch_time >> 8) & 255)) $(((epoch_time >> 16) & 255)) $(((epoch_time >> 24) & 255)) $(((epoch_time >> 32) & 255)) $(((epoch_time >> 40) & 255)) $(((epoch_time >> 48) & 255)) $(((epoch_time >> 56) & 255))
+do
+  printf "\\$(printf '%03o' "${b}")" >> "${DELTA}"
+done
+# padd delta header to 512 bytes so we have options to add more params, e.g. compression algo (8 bytes is the time)
+truncate -s +$((${DELTA_HEADER_SIZE} - 8)) "${DELTA}"
+
 "${UNSQUASHFS}" -n -pf "${source_snap_pipe}" "${SOURCE_SNAP}" &
 "${UNSQUASHFS}" -n -pf "${new_snap_pipe}" "${TARGET_SNAP}" &
 
-xdelta3 -e -f -A -s "${source_snap_pipe}" "${new_snap_pipe}" "${DELTA}"
+xdelta3 -e -f -A -s "${source_snap_pipe}" "${new_snap_pipe}" >> "${DELTA}"
 rm "${source_snap_pipe}" "${new_snap_pipe}"
-
-creation_time=$("${UNSQUASHFS}" -s "${TARGET_SNAP}" | grep -i "Creation"| cut -c 30-)
-echo "When re-creating squashfs from delta, pass creation time \"${creation_time}\""
