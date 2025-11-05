@@ -254,6 +254,23 @@ parts:
       - usr/bin/mosh
       - usr/lib/
 
+  squashfs-tools:
+    plugin: make
+    source: https://github.com/plougher/squashfs-tools.git
+    source-type: git
+    source-subdir: squashfs-tools
+    make-parameters:
+      - INSTALL_PREFIX=${SNAPCRAFT_PART_INSTALL}/usr
+    override-pull: |
+      # pull the latest tag
+      snapcraftctl pull
+      git_url="https://github.com/plougher/squashfs-tools.git"
+      tag=$(git ls-remote --tags --refs  --sort='version:refname' "${git_url}" "refs/tags/4.*" | tail -1 | awk '{print $2}' | cut -c 11-)
+      echo "building tag: ${tag}"
+      git checkout "${tag}"
+    stage:
+      - usr/bin
+
   squashfs-delta:
     plugin: dump
     source: https://github.com/kubiko/squashfs-delta.git
@@ -323,10 +340,14 @@ build-packages:
   - g++
   - gawk
   - gettext
+  - help2man
   - jq
   - libboost-dev
   - libglib2.0-dev
   - libltdl-dev
+  - liblz4-dev
+  - liblzma-dev
+  - liblzo2-dev
   - libncurses5-dev
   - libnuma-dev
   - libprotobuf-dev
@@ -334,6 +355,7 @@ build-packages:
   - libssl-dev
   - libtool
   - libudev-dev
+  - libzstd-dev
   - pkg-config
   - protobuf-compiler
   - python2.7
