@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DELTA_HEADER_SIZE=512
+DELTA_HEADER_SIZE=256
 DELTA_FORMAT_VERSION=0x100
 DELTA_MAGIC_NUMBER=0xF989789C
 XDELTA3_MAGIC_NUMBER=0x00c4c3d6
@@ -95,8 +95,18 @@ parse_superblock_flags() {
   echo "${mksqfs_args}"
 }
 
-handle_plain_xdelta3_delta() {
-  xdelta3 -f -d -s "${SOURCE_SNAP}" "${DELTA}" "${TARGET_SNAP}"
+handle_plain_xdelta3_generate() {
+  local source=${1}
+  local target=${3}
+  local delta=${2}
+  xdelta3 -f -e -s "${source}" "${target}" "${delta}"
+}
+
+handle_plain_xdelta3_apply() {
+  local source=${1}
+  local delta=${2}
+  local target=${3}
+  xdelta3 -f -d -s "${source}" "${delta}" "${target}"
 }
 
 handle_generate_delta() {
@@ -135,6 +145,9 @@ handle_generate_delta() {
   if ((target_flags &  0x0400)); then
     # TODO: handle optional compression options
     echo "Custom compression options detected, created target snap is likely be different from target snap!"
+    # falling back to traditional delta, till custom compression options are supported
+    handle_plain_xdelta3_generate "${SOURCE_SNAP}" "${TARGET_SNAP}" "${DELTA}"
+    return
   fi
 
   # padd delta header to 512 bytes so we have options to add more params, e.g. compression algo (8 bytes is the time)
@@ -154,6 +167,7 @@ handle_apply_delta() {
   magic_number="0x$(od --address-radix n --format x4 --skip-bytes 0 --read-bytes 4 "${DELTA}" | xargs)"
   if (( XDELTA3_MAGIC_NUMBER == magic_number )); then
     echo "This is plain xdelta3 diff, falling back to plain xdelta3!!"
+    handle_plain_xdelta3_apply "${SOURCE_SNAP}" "${TARGET_SNAP}" "${DELTA}"
     exit
   elif (( DELTA_MAGIC_NUMBER != magic_number )); then
     echo "Wrong magic number!!!"
