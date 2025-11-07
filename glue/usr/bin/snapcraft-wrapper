@@ -81,7 +81,7 @@ if [ -z "${wrapper}" ]; then
 fi
 
 # if running outside of the container, call lxd_snapcraft
-if [[ "$(systemd-detect-virt)" = "lxc" ]] || [[ ! -e "${PWD}/snapcraft.yaml" && ! -e "${PWD}/snap/snapcraft.yaml" && ! -e "${PWD}/build-aux/snap/snapcraft.yaml" ]]; then
+if [[ "$(systemd-detect-virt)" != "lxc" ]] || [[ ! -e "${PWD}/snapcraft.yaml" && ! -e "${PWD}/snap/snapcraft.yaml" && ! -e "${PWD}/build-aux/snap/snapcraft.yaml" ]]; then
   # is this build or some other command?
   # extra params indicating build are: clean, cleanbuild, pull, build, stage, prime, pack, --build-for, --target-arch
   # ignore "--verbose" parameter
