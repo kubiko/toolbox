@@ -277,10 +277,12 @@ lxd_ensure_container () {
     tmp_sources=$(mktemp -u -q)
     local tmp_sources_deb822
     tmp_sources_deb822=$(mktemp -u -q)
-    curl -s https://people.canonical.com/~okubik/sources.list.ubuntu.lxd.tmpl > "${tmp_sources}"
-    curl -s https://people.canonical.com/~okubik/sources.list.ubuntu.deb822.lxd.tmpl > "${tmp_sources_deb822}"
-    lxc file push "${tmp_sources}" "${container_name}/etc/cloud/templates/sources.list.ubuntu.tmpl"
-    lxc file push "${tmp_sources_deb822}" "${container_name}/etc/cloud/templates/sources.list.ubuntu.deb822.tmpl"
+    toolbox_snap="/snap/toolbox/current"
+    template_dir="etc/cloud/templates"
+    source_tmpl="sources.list.ubuntu.deb822.tmpl"
+    source_deb822_tmpl="sources.list.ubuntu.tmpl"
+    lxc file push "${toolbox_snap}/${template_dir}/${source_tmpl}" "${container_name}/${template_dir}/${source_tmpl}"
+    lxc file push "${toolbox_snap}/${template_dir}/${source_deb822_tmpl}" "${container_name}/${template_dir}/${source_deb822_tmpl}"
     [ -e "${tmp_sources}" ] && rm "${tmp_sources}"
     [ -e "${tmp_sources_deb822}" ] && rm "${tmp_sources_deb822}"
   fi
