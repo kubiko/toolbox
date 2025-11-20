@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.9.55"
+version: "0.9.56"
 summary: Swiss knife of shell tools
 description: |
   Set of useful shell tools to be used on Ubuntu/Ubuntu core systems.
@@ -263,6 +263,16 @@ parts:
       - usr/bin/mosh-server
       - usr/bin/mosh
       - usr/lib/
+
+  squashfs-delta:
+    plugin: dump
+    source: https://github.com/kubiko/squashfs-delta.git
+    source-type: git
+    source-branch: master
+    organize:
+      '*': usr/bin/
+    stage:
+      - usr/bin/*.sh
 
   tiobench:
     plugin: nil
