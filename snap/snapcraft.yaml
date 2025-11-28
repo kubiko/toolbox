@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.9.56"
+version: "0.9.57"
 summary: Swiss knife of shell tools
 description: |
   Set of useful shell tools to be used on Ubuntu/Ubuntu core systems.
@@ -45,6 +45,7 @@ parts:
       - bash-completion
       - bc
       - binutils
+      - bsdiff
       - bsdmainutils
       - busybox-static
       - byobu
