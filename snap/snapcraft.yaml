@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.9.57"
+version: "0.9.58"
 summary: Swiss knife of shell tools
 description: |
   Set of useful shell tools to be used on Ubuntu/Ubuntu core systems.
@@ -294,6 +294,31 @@ parts:
       - bin/bigbench*
       - usr/doc/tiobench
 
+  hdiff:
+    plugin: dump
+    source: https://api.github.com/repos/sisong/HDiffPatch/releases/latest
+    source-type: zip
+    override-pull: |
+      if [ "armhf" = "${SNAPCRAFT_TARGET_ARCH}" ]; then
+        linux_flavour="linux_arm32"
+      elif [ "arm64" = "${SNAPCRAFT_TARGET_ARCH}" ]; then
+        linux_flavour="linux_arm64"
+      elif [ "amd64" = "${SNAPCRAFT_TARGET_ARCH}" ]; then
+        linux_flavour="linux64"
+      elif [ "riscv64" = "${SNAPCRAFT_TARGET_ARCH}" ]; then
+        linux_flavour="linux_riscv64"
+      fi
+      if [ -n "${linux_flavour}" ]; then
+        url=$(curl -sL https://api.github.com/repos/sisong/HDiffPatch/releases/latest | jq -r '.assets[].browser_download_url' | grep "${linux_flavour}")
+        wget --quiet -O "${SNAPCRAFT_PART_SRC}/hdiffpatch_linux.zip" "${url}"
+        unzip -j "${SNAPCRAFT_PART_SRC}/hdiffpatch_linux.zip"
+        chmod 755 *
+      fi
+    organize:
+      '*': usr/bin/
+    stage:
+      - -usr/bin/*.zip
+
   ioctl:
     plugin: make
     source: https://github.com/jerome-pouiller/ioctl.git
@@ -309,6 +334,7 @@ build-packages:
   - g++
   - gawk
   - gettext
+  - jq
   - libboost-dev
   - libglib2.0-dev
   - libltdl-dev
@@ -323,6 +349,7 @@ build-packages:
   - protobuf-compiler
   - python2.7
   - texinfo
+  - unzip
   - wget
   - zlib1g
   - zlib1g-dev
