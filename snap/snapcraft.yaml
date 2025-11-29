@@ -77,7 +77,7 @@ parts:
       - jq
       - libdb5.3
       - libgpm2
-      - liblz4-tool
+      - liblz4-1
       - libmagic1
       - libslang2
       - libusb-1.0-0
@@ -85,6 +85,7 @@ parts:
       - lm-sensors
       - lshw
       - lsof
+      - liblz4-tool
       - minicom
       - mkbootimg
       - mmc-utils
