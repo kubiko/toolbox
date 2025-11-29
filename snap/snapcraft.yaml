@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.9.58"
+version: "0.10.1"
 summary: Swiss knife of shell tools
 description: |
   Set of useful shell tools to be used on Ubuntu/Ubuntu core systems.
@@ -216,9 +216,9 @@ parts:
       curl -o ${SNAPCRAFT_PART_INSTALL}/usr/share/bash-completion/completions/httpie https://raw.githubusercontent.com/jakubroztocil/httpie/master/extras/httpie-completion.bash
 
   rt-tests:
-    source: https://git.kernel.org/pub/scm/linux/kernel/git/clrkwllms/rt-tests.git
+    source: https://git.kernel.org/pub/scm/utils/rt-tests/rt-tests.git
     source-type: git
-    source-branch: master
+    source-branch: main
     plugin: make
     stage-packages:
       - libnuma1
