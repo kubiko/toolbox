@@ -1,5 +1,5 @@
 name: toolbox
-version: "0.10.1"
+version: "0.10.2"
 summary: Swiss knife of shell tools
 description: |
   Set of useful shell tools to be used on Ubuntu/Ubuntu core systems.
@@ -102,6 +102,7 @@ parts:
       - rhash
       - rng-tools5
       - rsync
+      - rt-tests
       - screen
       - silversearcher-ag
       - smartmontools
@@ -214,20 +215,6 @@ parts:
       cp resty ${SNAPCRAFT_PART_INSTALL}/usr/bin
       mkdir -p ${SNAPCRAFT_PART_INSTALL}/usr/share/bash-completion/completions/
       curl -o ${SNAPCRAFT_PART_INSTALL}/usr/share/bash-completion/completions/httpie https://raw.githubusercontent.com/jakubroztocil/httpie/master/extras/httpie-completion.bash
-
-  rt-tests:
-    source: https://git.kernel.org/pub/scm/utils/rt-tests/rt-tests.git
-    source-type: git
-    source-branch: main
-    plugin: make
-    stage-packages:
-      - libnuma1
-    organize:
-      usr/local/: usr/
-    override-build: |
-      snapcraftctl build
-    stage:
-      - -usr/bin/hwlatdetect
 
   mountinfo-tool:
     plugin: nil
