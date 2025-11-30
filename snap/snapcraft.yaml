@@ -125,7 +125,6 @@ parts:
       - vim-tiny
       - watchdog
       - wget
-      - wireless-tools
       - xz-utils
       - zip
       - on amd64,arm64,armhf:
@@ -203,7 +202,7 @@ parts:
     override-stage: |
       ${CRAFT_PROJECT_DIR}/clean-stage.sh -f \
             -i 'usr/share/bash-completion/completions usr/lib/python* etc/cloud/templates etc/profile.d/bash_completion.sh' \
-            /snap/core24/current/ ${CRAFT_PART_INSTALL}
+            /snap/core26/current/ ${CRAFT_PART_INSTALL}
       craftctl default
 
   mc:
