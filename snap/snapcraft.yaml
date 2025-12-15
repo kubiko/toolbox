@@ -299,10 +299,15 @@ parts:
     source: https://github.com/kubiko/squashfs-delta.git
     source-type: git
     source-branch: master
+    override-build: |
+      go build -o "${CRAFT_PART_INSTALL}/squashfs-delta" snap-delta.go
+      strip "${CRAFT_PART_INSTALL}/squashfs-delta"
+      ln -sf squashfs-delta ${CRAFT_PART_INSTALL}/snap-delta
     organize:
       '*': usr/bin/
     stage:
-      - usr/bin/*.sh
+      - usr/bin/squashfs-delta*
+      - usr/bin/snap-delta*
 
   tiobench:
     plugin: nil
@@ -351,6 +356,9 @@ parts:
       if [ -z $(uname -a | grep "ppc64el") ]; then
         craftctl default
       fi
+
+build-snaps:
+  - go/latest/stable
 
 build-packages:
   - curl
