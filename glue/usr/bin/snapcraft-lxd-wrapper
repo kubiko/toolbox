@@ -140,7 +140,7 @@ lxd_ensure () {
     # if there is zfs support, use zfs as backend
     # on classic we need sudo for dmesg, so check for zfs instead
     if [ -n "$(which lsb_release)" ] && [ -n "$(which zfs)" ] || dmesg | grep -q "ZFS"; then
-      lxd init --auto --storage-backend=zfs
+      lxd init --auto --storage-backend=zfs --storage-pool lxd-pool
     else
       # no zfs availablem, on classic use dir backend instead, on core try btrfs
       if [ ! -d /writable ]; then
@@ -313,6 +313,7 @@ lxd_ensure_container () {
   lxc exec "${container_name}" -- sh -c 'cp -r /etc/skel/. /root'
   lxc exec "${container_name}" -- sh -c 'echo "export SNAPCRAFT_BUILD_ENVIRONMENT=host" >> /etc/environment'
   lxc exec "${container_name}" -- sh -c 'echo "export SNAPCRAFT_ENABLE_EXPERIMENTAL_TARGET_ARCH=true" >> /etc/environment'
+  lxc exec "${container_name}" -- sh -c 'echo "export SNAPCRAFT_BUILD_INFO=1" >> /etc/environment'
 
   # if host has proxy, configure it inside container as well
   if [ -n "${http_proxy}" ]; then
