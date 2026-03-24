@@ -15,8 +15,8 @@ echo "export LD_LIBRARY_PATH=\"/usr/lib:/usr/lib/${ARCH_TRIPLET}:\${SNAP_TOOLBOX
 echo "export LD_LIBRARY_PATH=\"/usr/lib:/usr/lib/${ARCH_TRIPLET}:\${SNAP_TOOLBOX}/usr/lib:\${SNAP_TOOLBOX}/usr/lib/${ARCH_TRIPLET}\""
 echo "export PERL5LIB=\"\${SNAP_TOOLBOX}/usr/lib/${ARCH_TRIPLET}/perl:\${SNAP_TOOLBOX}/usr/lib/${ARCH_TRIPLET}/perl-base:\${SNAP_TOOLBOX}/usr/share/perl\"" >&2
 echo "export PERL5LIB=\"\${SNAP_TOOLBOX}/usr/lib/${ARCH_TRIPLET}/perl:\${SNAP_TOOLBOX}/usr/lib/${ARCH_TRIPLET}/perl-base:\${SNAP_TOOLBOX}/usr/share/perl\""
-echo "alias ssudo='sudo -E env \"PATH=\$PATH\" \"PERL5LIB=\$PERL5LIB\" \"LD_LIBRARY_PATH=\$LD_LIBRARY_PATH\"'" >&2
-echo "alias ssudo='sudo -E env \"PATH=\$PATH\" \"PERL5LIB=\$PERL5LIB\" \"LD_LIBRARY_PATH=\$LD_LIBRARY_PATH\"'"
+echo "alias ssudo='sudo --preserve-env=PATH,PERL5LIB,LD_LIBRARY_PATH,PYTHONPATH env PATH=\"\${PATH}\" PERL5LIB=\"\${PERL5LIB}\" LD_LIBRARY_PATH=\"\${LD_LIBRARY_PATH}\" PYTHONPATH=\"\${PYTHONPATH}\"'" >&2
+echo "alias ssudo='sudo --preserve-env=PATH,PERL5LIB,LD_LIBRARY_PATH,PYTHONPATH env PATH=\"\${PATH}\" PERL5LIB=\"\${PERL5LIB}\" LD_LIBRARY_PATH=\"\${LD_LIBRARY_PATH}\" PYTHONPATH=\"\${PYTHONPATH}\"'"
 echo "alias sudo='ssudo '" >&2
 echo "alias sudo='ssudo '"
 echo "export XDG_DATA_DIRS=/usr/local/share:/usr/share:/snap/snapd/current/usr/share:\${SNAP_TOOLBOX}/usr/share" >&2
