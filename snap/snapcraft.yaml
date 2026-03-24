@@ -191,14 +191,6 @@ parts:
       sed -i \
           -e 's|\(conf_file = "\)\(.*\)|\1/snap/toolbox/current\2|g' \
           ${CRAFT_PART_INSTALL}/usr/lib/python3/dist-packages/ssh_import_id/__init__.py
-      # merge {s}bin/,lib, to usr/{s}bin, usr/lib
-      [ -d "${CRAFT_PART_INSTALL}/bin" ]  && mv "${CRAFT_PART_INSTALL}"/bin/*     "${CRAFT_PART_INSTALL}/usr/bin"
-      [ -d "${CRAFT_PART_INSTALL}/sbin" ] && mv "${CRAFT_PART_INSTALL}"/sbin/*    "${CRAFT_PART_INSTALL}/usr/sbin"
-      [ -d "${CRAFT_PART_INSTALL}/lib" ]  && cp -rl "${CRAFT_PART_INSTALL}"/lib/* "${CRAFT_PART_INSTALL}/usr/lib"
-      rm -rf "${CRAFT_PART_INSTALL}/bin"   "${CRAFT_PART_INSTALL}/sbin" "${CRAFT_PART_INSTALL}/lib"
-      ln -sf usr/bin  "${CRAFT_PART_INSTALL}/bin"
-      ln -sf usr/sbin "${CRAFT_PART_INSTALL}/sbin"
-      ln -sf usr/lib  "${CRAFT_PART_INSTALL}/lib"
     override-stage: |
       ${CRAFT_PROJECT_DIR}/clean-stage.sh -f \
             -i 'usr/share/bash-completion/completions usr/lib/python* etc/cloud/templates etc/profile.d/bash_completion.sh' \
