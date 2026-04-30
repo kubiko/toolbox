@@ -102,6 +102,11 @@ parts:
       - ppp
       - psmisc
       - pv
+      - python3
+      - python3-dbus
+      - python3-minimal
+      - python3.14
+      - python3.14-minimal
       - rhash
       - rng-tools5
       - rsync
@@ -130,29 +135,18 @@ parts:
       - on amd64,arm64,armhf:
         - sysbench
     stage:
-      - -bin/bash
-      - -usr/bin/py*
-      - -usr/lib/*/libdrm_*
-      - -usr/lib/*/libgallium*
-      - -usr/lib/*/libLLVM*
-      - -usr/lib/gcc
-      - -usr/lib/klibc*
-      - -usr/lib/python3/dist-packages/R*
-      - -usr/lib/python3/dist-packages/c*
-      - -usr/lib/python3/dist-packages/h*
-      - -usr/lib/python3/dist-packages/idna*
-      - -usr/lib/python3/dist-packages/pygments
-      - -usr/lib/python3/dist-packages/r*
-      - -usr/lib/python3/dist-packages/six*
-      - -usr/lib/python3/dist-packages/u*
-      - -usr/lib/python3.*
-      - -usr/share/doc
-      - -usr/share/locale
-      - -usr/share/man/
-      - -usr/share/python*
-      - -usr/share/vim
-      # make sure we do not have pulled in lsb_release, it makes no sense
       - -usr/bin/lsb_release
+      - -usr/bin/vim*
+      - -usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}/ceph*
+      - -usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}/dri
+      - -usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}/libdrm_*
+      - -usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}/libgallium-*
+      - -usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}/libLLVM*
+      - -usr/share/doc*
+      - -usr/share/grub
+      - -usr/share/locale
+      - -usr/share/man
+      - -usr/share/vim
     override-build: |
       # first clean files from stage packages we want override
       for f in ${CRAFT_PART_INSTALL}/usr/share/bash-completion/completions/ssh
