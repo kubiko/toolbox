@@ -51,17 +51,6 @@ lxd_ensure_ssh_setup () {
   if [ ! -f "${IDENTITY_FILE}" ]; then
     ssh-keygen -t rsa -C "${USER}@lxd" -N "" -f "${IDENTITY_FILE}"
   fi
-  # ensure public key is in authorised_keys
-  # don't assume there is always ${HOME}/.ssh/authorized_keys
-  if [ ! -e "${HOME}/.ssh/authorized_keys" ] || ! grep -q "$(cat "${PUBLIC_KEY}")" "${HOME}/.ssh/authorized_keys"; then
-    # check is there is new line in authorised keys so we don't mangle last key
-    if [ ! -e "${HOME}/.ssh/authorized_keys" ] || [ -z "$(tail -c 1 "${HOME}/.ssh/authorized_keys")" ]; then
-      cat "${PUBLIC_KEY}" >> "${HOME}/.ssh/authorized_keys"
-    else
-      echo >> "${HOME}/.ssh/authorized_keys"
-      cat "${PUBLIC_KEY}" >> "${HOME}/.ssh/authorized_keys"
-    fi
-  fi
 
   if [ ! -f "${SSH_CONFIG}" ] || [ -z "$(grep -Pzo  'Host \*.lxd\n  User root\n  ProxyCommand lxd-ssh %h\n  StrictHostKeyChecking no\n  IdentityFile ' "${SSH_CONFIG}" | tr -d  '\0')" ]; then
     echo -e \
@@ -153,11 +142,11 @@ lxd_ensure () {
         lxd init --auto --storage-backend=btrfs
       fi
     fi
-    echo -e "#cloud-config\nssh_authorized_keys:\n - $(cat "${PUBLIC_KEY}")" | lxc profile set default user.user-data -
+    echo -e "#cloud-config\nusers:\n  - name: root\n    ssh_authorized_keys:\n      - $(cat "${PUBLIC_KEY}")" | lxc profile set default user.user-data -
     lxc profile show default
   # double check authorized keys configuration
-  elif ! echo "${lxd_dump}" | grep -q "$(cat "${PUBLIC_KEY}")"; then
-    echo -e "#cloud-config\nssh_authorized_keys:\n - $(cat "${PUBLIC_KEY}")" | lxc profile set default user.user-data -
+  elif ! echo "${lxd_dump}" | grep -q "$(cat "${PUBLIC_KEY}")" || ! echo "${lxd_dump}" | grep -q "\- name: root"; then
+    echo -e "#cloud-config\nusers:\n  - name: root\n    ssh_authorized_keys:\n      - $(cat "${PUBLIC_KEY}")" | lxc profile set default user.user-data -
   fi
   # touch file to signal lxd was fully configured
   touch ~/.lxd-wrapper-configured
@@ -391,15 +380,15 @@ lxd_ensure_container () {
   # xenial container is at this stage only used for snapd builds, so have it ready
   if [ "${ubuntu_series}" == "xenial" ]; then
     lxc exec "${container_name}" -- sh -c 'snap install snapcraft --classic --channel 4.x/stable'
+  elif [ "${ubuntu_series}" == "bionic" ]; then
+    lxc exec "${container_name}" -- sh -c 'snap install snapcraft --classic --channel 7.x/stable'
+  elif [[ "${ubuntu_series}" = "jammy" || "${ubuntu_series}" = "focal" ]]; then
+    lxc exec "${container_name}" -- sh -c 'snap install snapcraft --classic --channel 8.x/stable'
   else
     lxc exec "${container_name}" -- sh -c 'snap install snapcraft --classic'
   fi
-  if [ "${ubuntu_series}" == "jammy" ]; then
-    lxc exec "${container_name}" -- sh -c 'snap install core22'
-  fi
   # we are done, share ssh and home to the container
   lxc config device add "${container_name}" home disk source="${HOME}" path=/root/host
-  lxc config device add "${container_name}" sshconf disk source="${HOME}/.ssh" path="/root/.ssh"
 }
 
 # try to resolve snapcraft.yaml path in the current directory
