@@ -201,6 +201,11 @@ parts:
       ln -sf usr/bin  "${CRAFT_PART_INSTALL}/bin"
       ln -sf usr/sbin "${CRAFT_PART_INSTALL}/sbin"
       ln -sf usr/lib  "${CRAFT_PART_INSTALL}/lib"
+    override-stage: |
+      ${CRAFT_PROJECT_DIR}/clean-stage.sh -f \
+            -i 'usr/share/bash-completion/completions usr/lib/python* etc/cloud/templates etc/profile.d/bash_completion.sh' \
+            /snap/core22/current/ ${CRAFT_PART_INSTALL}
+      craftctl default
 
   mc:
     source: https://github.com/MidnightCommander/mc.git
