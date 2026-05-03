@@ -6,3 +6,4 @@ snap/.snapcraft
 **/*.snap
 **/*.tar*
 .project
+.craft
