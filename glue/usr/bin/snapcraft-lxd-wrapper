@@ -129,7 +129,7 @@ lxd_ensure () {
     # if there is zfs support, use zfs as backend
     # on classic we need sudo for dmesg, so check for zfs instead
     if [ -n "$(which lsb_release)" ] && [ -n "$(which zfs)" ] || dmesg | grep -q "ZFS"; then
-      lxd init --auto --storage-backend=zfs --storage-pool lxd-pool
+      lxd init --auto --storage-backend=zfs
     else
       # no zfs availablem, on classic use dir backend instead, on core try btrfs
       if [ ! -d /writable ]; then
