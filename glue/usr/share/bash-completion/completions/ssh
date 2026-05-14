@@ -53,7 +53,7 @@ _ssh_options()
         NoHostAuthenticationForLocalhost NumberOfPasswordPrompts
         PasswordAuthentication PermitLocalCommand PKCS11Provider Port
         PreferredAuthentications ProxyCommand ProxyJump ProxyUseFdpass
-        PubkeyAcceptedKeyTypes PubkeyAuthentication RekeyLimit RemoteCommand
+        PubkeyAcceptedAlgorithms PubkeyAuthentication RekeyLimit RemoteCommand
         RemoteForward RequestTTY RevokedHostKeys SendEnv ServerAliveCountMax
         ServerAliveInterval SmartcardDevice StreamLocalBindMask
         StreamLocalBindUnlink StrictHostKeyChecking SyslogFacility TCPKeepAlive
@@ -172,7 +172,7 @@ _ssh_suboption()
         proxycommand | remotecommand | localcommand)
             COMPREPLY=($(compgen -c -- "$cur"))
             ;;
-        pubkeyacceptedkeytypes)
+        pubkeyacceptedalgorithms | pubkeyacceptedkeytypes)
             COMPREPLY=($(compgen -W '$(_ssh_query "$2" key)' -- "$cur"))
             ;;
         requesttty)
