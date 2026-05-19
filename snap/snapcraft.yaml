@@ -339,6 +339,15 @@ parts:
     organize:
       bin: usr/bin
 
+  netplan-cli-rs:
+    plugin: rust
+    source: https://github.com/kubiko/netplan.git
+    source-type: git
+    source-tag: cli-rust
+    source-subdir: netplan_cli_rs
+    organize:
+      bin/netplan: usr/sbin/netplan
+
   # ioctl:
   #   plugin: make
   #   source: https://github.com/jerome-pouiller/ioctl.git
@@ -369,6 +378,7 @@ build-packages:
   - liblzma-dev
   - liblzo2-dev
   - libncurses5-dev
+  - libnetplan1
   - libnuma-dev
   - libprotobuf-dev
   - libslang2-dev
