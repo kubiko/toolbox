@@ -300,25 +300,25 @@ lxd_ensure_container () {
   lxd_start_container "${container_name}"
 
   lxc exec "${container_name}" -- sh -c 'cp -r /etc/skel/. /root'
-  lxc exec "${container_name}" -- sh -c 'echo "export SNAPCRAFT_BUILD_ENVIRONMENT=host" >> /etc/environment'
-  lxc exec "${container_name}" -- sh -c 'echo "export SNAPCRAFT_ENABLE_EXPERIMENTAL_TARGET_ARCH=true" >> /etc/environment'
-  lxc exec "${container_name}" -- sh -c 'echo "export SNAPCRAFT_BUILD_INFO=1" >> /etc/environment'
+  lxc exec "${container_name}" -- sh -c 'echo "SNAPCRAFT_BUILD_ENVIRONMENT=host" >> /etc/environment'
+  lxc exec "${container_name}" -- sh -c 'echo "SNAPCRAFT_ENABLE_EXPERIMENTAL_TARGET_ARCH=true" >> /etc/environment'
+  lxc exec "${container_name}" -- sh -c 'echo "SNAPCRAFT_BUILD_INFO=1" >> /etc/environment'
 
   # if host has proxy, configure it inside container as well
   if [ -n "${http_proxy}" ]; then
-    lxc exec "${container_name}" -- sh -c "echo 'export http_proxy=${http_proxy}' >> /etc/environment"
+    lxc exec "${container_name}" -- sh -c "echo 'http_proxy=${http_proxy}' >> /etc/environment"
     lxc exec "${container_name}" -- sh -c "snap set system proxy.http=$http_proxy"
     if [ -n "${https_proxy}" ];then
-      lxc exec "${container_name}" -- sh -c "echo 'export https_proxy=${https_proxy}' >> /etc/environment"
+      lxc exec "${container_name}" -- sh -c "echo 'https_proxy=${https_proxy}' >> /etc/environment"
       lxc exec "${container_name}" -- sh -c "snap set system proxy.https=${http_proxy}"
     else
-      lxc exec "${container_name}" -- sh -c "echo 'export https_proxy=${http_proxy}' >> /etc/environment"
+      lxc exec "${container_name}" -- sh -c "echo 'https_proxy=${http_proxy}' >> /etc/environment"
       lxc exec "${container_name}" -- sh -c "snap set system proxy.https=${https_proxy}"
     fi
     if [ -n "${ftp_proxy}" ];then
-      lxc exec "${container_name}" -- sh -c "echo 'export ftp_proxy=${ftp_proxy}' >> /etc/environment"
+      lxc exec "${container_name}" -- sh -c "echo 'ftp_proxy=${ftp_proxy}' >> /etc/environment"
     else
-      lxc exec "${container_name}" -- sh -c "echo 'export ftp_proxy=${http_proxy}' >> /etc/environment"
+      lxc exec "${container_name}" -- sh -c "echo 'ftp_proxy=${http_proxy}' >> /etc/environment"
     fi
     lxc exec "${container_name}" -- sh -c "echo 'Acquire::http::Proxy \"$http_proxy\";' > /etc/apt/apt.conf.d/proxy"
     # if proxy points to local host, bind host port into the container
