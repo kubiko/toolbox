@@ -7,8 +7,8 @@ echo -e "\n# Updating ~/.bashrc with folloving lines" >&2
 # print each line twice, one to stdout and once to stderr
 echo "# start of modifications done by toolbox snap" >&2
 echo "# start of modifications done by toolbox snap"
-echo "SNAP_PATH=\"${SNAP_PATH}\"" >&2
-echo "SNAP_PATH=\"${SNAP_PATH}\""
+echo "SNAP_TOOLBOX=\"${SNAP_PATH}\"" >&2
+echo "SNAP_TOOLBOX=\"${SNAP_PATH}\""
 echo "export PATH=\"\${SNAP_TOOLBOX}/usr/bin:\${SNAP_TOOLBOX}/usr/sbin:\${PATH}\"" >&2
 echo "export PATH=\"\${SNAP_TOOLBOX}/usr/bin:\${SNAP_TOOLBOX}/usr/sbin:\${PATH}\""
 echo "export LD_LIBRARY_PATH=\"/usr/lib:/usr/lib/${ARCH_TRIPLET}:\${SNAP_TOOLBOX}/usr/lib:\${SNAP_TOOLBOX}/usr/lib/${ARCH_TRIPLET}\"" >&2
@@ -19,14 +19,14 @@ echo "alias sudo='ssudo '" >&2
 echo "alias sudo='ssudo '"
 echo "export XDG_DATA_DIRS=/usr/local/share:/usr/share:/snap/snapd/current/usr/share:\${SNAP_TOOLBOX}/usr/share" >&2
 echo "export XDG_DATA_DIRS=/usr/local/share:/usr/share:/snap/snapd/current/usr/share:\${SNAP_TOOLBOX}/usr/share"
-echo "source ${SNAP_TOOLBOX}/etc/profile.d/bash_completion.sh" >&2
-echo "source ${SNAP_TOOLBOX}/etc/profile.d/bash_completion.sh"
-echo "source ${SNAP_TOOLBOX}/usr/bin/snapcraft-lxd-wrapper" >&2
-echo "source ${SNAP_TOOLBOX}/usr/bin/snapcraft-lxd-wrapper"
+echo "source \${SNAP_TOOLBOX}/etc/profile.d/bash_completion.sh" >&2
+echo "source \${SNAP_TOOLBOX}/etc/profile.d/bash_completion.sh"
+echo "source \${SNAP_TOOLBOX}/usr/bin/snapcraft-lxd-wrapper" >&2
+echo "source \${SNAP_TOOLBOX}/usr/bin/snapcraft-lxd-wrapper"
 echo "alias vim='vim.basic'" >&2
 echo "alias vim='vim.basic'"
-echo "alias file='file -m ${SNAP_TOOLBOX}/usr/share/misc/magic.mgc'" >&2
-echo "alias file='file -m ${SNAP_TOOLBOX}/usr/share/misc/magic.mgc'"
+echo "alias file='file -m \${SNAP_TOOLBOX}/usr/share/misc/magic.mgc'" >&2
+echo "alias file='file -m \${SNAP_TOOLBOX}/usr/share/misc/magic.mgc'"
 echo "export PYTHONPATH=\"\${SNAP_TOOLBOX}/usr/lib/python3/dist-packages\"" >&2
 echo "export PYTHONPATH=\"\${SNAP_TOOLBOX}/usr/lib/python3/dist-packages\""
 echo "# end of modifications done by toolbox snap" >&2
