@@ -346,6 +346,14 @@ parts:
     stage:
       - -usr/bin/*.zip
 
+  eza:
+    plugin: rust
+    source: https://github.com/eza-community/eza.git
+    source-type: git
+    source-branch: main
+    organize:
+      bin: usr/bin
+
   # ioctl:
   #   plugin: make
   #   source: https://github.com/jerome-pouiller/ioctl.git
@@ -360,6 +368,7 @@ build-snaps:
   - go/latest/stable
 
 build-packages:
+  - cmake
   - curl
   - g++
   - gawk
@@ -381,6 +390,7 @@ build-packages:
   - libssl-dev
   - libtool
   - libudev-dev
+  - libz-dev
   - libzstd-dev
   - pkg-config
   - protobuf-compiler
