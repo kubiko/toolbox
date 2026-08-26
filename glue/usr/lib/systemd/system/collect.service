@@ -1,0 +1,13 @@
+[Unit]
+Description=Collect performance data
+After=snapd.seeded.service
+Requisite=snapd.seeded.service
+
+[Service]
+# Note that we want the commands to run after the default target has finished,
+# otherwise systemd-analyze fails as the bootup is not finished yet.
+Type=exec
+ExecStart=/snap/toolbox/current/usr/bin/collect-boot-performance.sh
+
+[Install]
+WantedBy=graphical.target

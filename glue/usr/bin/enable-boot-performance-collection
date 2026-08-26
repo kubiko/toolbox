@@ -1,0 +1,4 @@
+#!/bin/bash
+
+sudo cp /snap/toolbox/current/usr/lib/systemd/system/collect.service /etc/systemd/system/collect.service
+sudo systemctl enable collect.service
