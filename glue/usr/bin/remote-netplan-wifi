@@ -1,0 +1,175 @@
+#!/bin/bash
+
+# Add wifi configuration from reference netplan file to remote device
+# Requires local yq (https://github.com/mikefarah/yq) v4+
+# Remote user is expected to be sudoer without password
+
+remote_netplan="/etc/netplan/00-snapd-config.yaml"
+unset interface dry_run force reference remote
+
+print_usage() {
+    echo -e "Add 'wifis' section from reference netplan config to remote device and apply it"
+    echo -e "Wifi interface name is adjusted to match the remote device, e.g. wlan0 -> mlan0"
+    echo -e ""
+    echo -e "use: \$ $(basename "${0}") [options] <reference netplan.yaml> <[user@]ip address>"
+    echo -e ""
+    echo -e "options:"
+    echo -e "\t-i, --interface <name>: remote wifi interface to use, detected if not set"
+    echo -e "\t-f, --file <path>: remote netplan file, default: ${remote_netplan}"
+    echo -e "\t-n, --dry-run: only print what would be done, do not modify remote device"
+    echo -e "\t--force: write and apply config even if there is no change"
+    echo -e "\t-h, --help: print this help"
+    echo -e ""
+    echo -e "Extra ssh options can be passed with SSH_OPTS env variable"
+}
+
+while [ -n "${1}" ]; do
+    case "${1}" in
+    -h | --help)
+        print_usage
+        exit 0
+        ;;
+    -i | --interface)
+        interface="${2}"
+        shift
+        ;;
+    -f | --file)
+        remote_netplan="${2}"
+        shift
+        ;;
+    -n | --dry-run)
+        dry_run="true"
+        ;;
+    --force)
+        force="true"
+        ;;
+    -*)
+        echo "Unknown option '${1}'"
+        print_usage
+        exit 1
+        ;;
+    *)
+        if [ -z "${reference}" ]; then
+            reference="${1}"
+        elif [ -z "${remote}" ]; then
+            remote="${1}"
+        else
+            echo "Unexpected argument '${1}'"
+            print_usage
+            exit 1
+        fi
+        ;;
+    esac
+    shift
+done
+
+if [ -z "${reference}" ] || [ -z "${remote}" ]; then
+    echo "Missing reference netplan file or remote address!"
+    print_usage
+    exit 1
+fi
+
+if [ ! -f "${reference}" ]; then
+    echo "Reference netplan file '${reference}' does not exist"
+    exit 1
+fi
+
+if ! yq --version 2> /dev/null | grep -q "mikefarah"; then
+    echo "yq (https://github.com/mikefarah/yq) is required"
+    exit 1
+fi
+
+# shellcheck disable=SC2086
+remote_run() {
+    ssh ${SSH_OPTS} "${remote}" "${@}"
+}
+
+# reference wifi interface
+ref_interfaces=$(yq '.network.wifis // {} | keys | .[]' "${reference}")
+if [ -z "${ref_interfaces}" ]; then
+    echo "Reference netplan file '${reference}' has no 'network.wifis' section"
+    exit 1
+fi
+ref_interface=$(echo "${ref_interfaces}" | head -n 1)
+if [ "$(echo "${ref_interfaces}" | wc -l)" -gt 1 ]; then
+    echo "Reference has multiple wifi interfaces, using '${ref_interface}'"
+fi
+
+# remote wifi interfaces
+remote_interfaces=$(remote_run \
+    'for i in /sys/class/net/*; do [ -d "${i}/wireless" ] || [ -e "${i}/phy80211" ] && echo "${i##*/}"; done' \
+    < /dev/null | sort -u)
+
+if [ -n "${interface}" ]; then
+    if ! echo "${remote_interfaces}" | grep -q -x "${interface}"; then
+        echo "Warning: '${interface}' is not wifi interface on remote, available: $(echo "${remote_interfaces}" | xargs)"
+    fi
+elif echo "${remote_interfaces}" | grep -q -x "${ref_interface}"; then
+    interface="${ref_interface}"
+else
+    # ignore access point, wifi direct and p2p interfaces
+    candidates=$(echo "${remote_interfaces}" | grep -v -E '^(uap|wfd|p2p|ap)[0-9]*' | grep -v '^$')
+    case "$(echo -n "${candidates}" | grep -c '^')" in
+    0)
+        echo "No wifi interface found on '${remote}'"
+        exit 1
+        ;;
+    1)
+        interface="${candidates}"
+        ;;
+    *)
+        echo "Multiple wifi interface candidates on remote: $(echo "${candidates}" | xargs)"
+        echo "Use --interface to select one"
+        exit 1
+        ;;
+    esac
+fi
+echo "Using remote wifi interface '${interface}' (reference '${ref_interface}')"
+
+work_dir=$(mktemp -d)
+trap 'rm -rf "${work_dir}"' EXIT
+current="${work_dir}/current.yaml"
+updated="${work_dir}/updated.yaml"
+
+if ! remote_run "sudo cat '${remote_netplan}' 2> /dev/null" < /dev/null > "${current}"; then
+    echo "Remote '${remote_netplan}' does not exist, creating new one"
+    echo -e "network:\n    version: 2" > "${current}"
+fi
+
+cp "${current}" "${updated}"
+REF="${reference}" REF_IFACE="${ref_interface}" IFACE="${interface}" \
+    yq -i -I4 \
+    '.network.version = (.network.version // 2) |
+     .network.wifis[strenv(IFACE)] = (load(strenv(REF)) | .network.wifis[strenv(REF_IFACE)])' \
+    "${updated}" || exit 1
+
+if [ "$(yq -o json '.' "${current}")" = "$(yq -o json '.' "${updated}")" ]; then
+    echo "Remote wifi config for '${interface}' already matches reference"
+    if [ -z "${force}" ]; then
+        exit 0
+    fi
+fi
+
+if [ -n "${dry_run}" ]; then
+    echo "Dry run, updated '${remote_netplan}' would be (passwords masked):"
+    yq -I4 '(.. | select(key == "password")) = "****"' "${updated}"
+    exit 0
+fi
+
+echo "Updating '${remote_netplan}' on '${remote}' (backup: ${remote_netplan}.bak)"
+if ! remote_run "sudo sh -c '\
+        { [ ! -f \"${remote_netplan}\" ] || cp -p \"${remote_netplan}\" \"${remote_netplan}.bak\"; } && \
+        cat > \"${remote_netplan}.new\" && chmod 600 \"${remote_netplan}.new\" && \
+        mv \"${remote_netplan}.new\" \"${remote_netplan}\"'" < "${updated}"; then
+    echo "Failed to update '${remote_netplan}'"
+    exit 1
+fi
+
+if ! remote_run "sudo netplan generate" < /dev/null; then
+    echo "netplan generate failed, restoring original config"
+    remote_run "sudo sh -c '[ -f \"${remote_netplan}.bak\" ] && mv \"${remote_netplan}.bak\" \"${remote_netplan}\"'" < /dev/null
+    exit 1
+fi
+
+echo "Applying netplan config"
+remote_run "sudo netplan apply" < /dev/null
