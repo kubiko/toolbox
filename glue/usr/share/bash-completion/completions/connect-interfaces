@@ -1,0 +1,17 @@
+_connect_interfaces()
+{
+  local cur snaps
+  COMPREPLY=()
+  cur="${COMP_WORDS[COMP_CWORD]}"
+
+  if [[ "$cur" == -* ]]; then
+    COMPREPLY=( $(compgen -W "-h --help" -- "$cur") )
+    return 0
+  fi
+
+  # offer installed snaps, skip header line
+  snaps=$(snap list 2> /dev/null | awk 'NR > 1 {print $1}')
+  COMPREPLY=( $(compgen -W "$snaps" -- "$cur") )
+  return 0
+}
+complete -F _connect_interfaces connect-interfaces
