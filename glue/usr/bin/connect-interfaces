@@ -35,8 +35,12 @@ if [ ${#snap_names[@]} -eq 0 ]; then
     exit 1
 fi
 
-# all plugs and slots (connected and unconnected) in the system
-# columns: Interface Plug Slot Notes, system slots are listed as ':<slot>'
+# columns: Interface Plug Slot Notes
+# 'snap connections --all' does not list unconnected system slots, those are
+# only listed when asking for the system snap explicitly
+# normalise system slots to ':<slot>' form
+system_connections="$(snap connections system | tail -n +2 \
+    | awk '$3 != "-" {sub(/^(system|snapd|core[0-9]*):/, ":", $3); print $1, $3}')"
 all_connections="$(snap connections --all | tail -n +2)"
 
 connect_plug() {
@@ -47,8 +51,8 @@ connect_plug() {
 
     # system slots implementing the interface, slot name does not have to match
     # interface name (e.g. ':kernel-module-load') nor plug name
-    system_slots=$(echo "${all_connections}" \
-        | awk -v iface="${iface}" '$1 == iface && $3 ~ /^:/ {print $3}' | sort -u)
+    system_slots=$(echo "${system_connections}" \
+        | awk -v iface="${iface}" '$1 == iface && $2 ~ /^:/ {print $2}' | sort -u)
     if [ -n "${system_slots}" ]; then
         # prefer slot named after the interface, otherwise take first one
         if echo "${system_slots}" | grep -q -x ":${iface}"; then
@@ -77,15 +81,11 @@ connect_plug() {
         return
     fi
 
-    case "${iface}" in
-    system-files | personal-files)
-        echo -e "\tconnecting '${snap_name}:${plug}' to implicit slot"
-        snap connect "${snap_name}:${plug}"
-        ;;
-    *)
-        echo -e "\tno good candidate found for plug ${snap_name}:${plug} (${iface})"
-        ;;
-    esac
+    # last resort, let snapd resolve the slot, without slot given it looks for
+    # a system slot with matching interface (e.g. system-files, personal-files)
+    echo -e "\tno explicit candidate found for plug ${snap_name}:${plug} (${iface}), letting snapd pick the slot"
+    snap connect "${snap_name}:${plug}" \
+        || echo -e "\tno good candidate found for plug ${snap_name}:${plug} (${iface})"
 }
 
 for snap_name in "${snap_names[@]}"
