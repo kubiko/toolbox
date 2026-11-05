@@ -36,7 +36,7 @@
 # Additional supported features
 
 if [ -n "${PKCS11_PIN}" ] ; then
-  PIN="--pin "${PKCS11_PIN}""
+  PIN="--pin ${PKCS11_PIN}"
 fi
 
 print_help() {
@@ -59,7 +59,7 @@ print_help() {
 }
 
 get_key_id_from_name() {
-  pkcs11-tool -l ${PIN} --list-objects --type pubkey | sed -n '/'"${1}"'/{n;p}' | awk '{print $2}'
+  pkcs11-tool -l "${PIN}" --list-objects --type pubkey | sed -n '/'"${1}"'/{n;p}' | awk '{print $2}'
 }
 
 get_features() {
@@ -67,12 +67,13 @@ get_features() {
 }
 
 get_key_names() {
-  local key_names="$(pkcs11-tool -l ${PIN} --list-objects --type pubkey | sed -n  's/.*label:[[:space:]]*\(.*\)/"\1"/p'| tr '\n' ',')"
+  local key_names
+  key_names="$(pkcs11-tool -l "${PIN}" --list-objects --type pubkey | sed -n  's/.*label:[[:space:]]*\(.*\)/"\1"/p'| tr '\n' ',')"
   echo "{\"key-names\": [${key_names::-1}]}"
 }
 
 list_pub_keys() {
-  pkcs11-tool -l ${PIN} --list-objects --type pubkey
+  pkcs11-tool -l "${PIN}" --list-objects --type pubkey
 }
 
 get_public_key() {
@@ -85,7 +86,7 @@ get_public_key() {
     echo "Unsupported key format: ${key_format}"
     exit 1
   fi
-  pkcs11-tool -l ${PIN} --read-object --type pubkey --label "${key_name}"
+  pkcs11-tool -l "${PIN}" --read-object --type pubkey --label "${key_name}"
 }
 
 do_sign() {
@@ -96,10 +97,11 @@ do_sign() {
   fi
   # there is bug in pkcs11 for signing operation, key label is not honoured
   # get key id based on the key name first
-  local key_id=$(pkcs11-tool -l ${PIN} --list-objects --type pubkey | sed -n '/'"${key_name}"'/{n;p}' | awk '{print $2}')
+  local key_id
+  key_id=$(pkcs11-tool -l "${PIN}" --list-objects --type pubkey | sed -n '/'"${key_name}"'/{n;p}' | awk '{print $2}')
 
   # signing buf is  coming from stdin
-  pkcs11-tool -s ${PIN} -m "${mechanism}" --id "${key_id}"
+  pkcs11-tool -s "${PIN}" -m "${mechanism}" --id "${key_id}"
 }
 
 do_generate_key() {
@@ -113,7 +115,7 @@ do_generate_key() {
     echo "Not suitable key type for snap assertion. Supported type: rsa:4096"
     exit 1
   fi
-  pkcs11-tool -l ${PIN} --keypairgen --key-type "${key_type}" --label "${key_name}"
+  pkcs11-tool -l "${PIN}" --keypairgen --key-type "${key_type}" --label "${key_name}"
 }
 
 # parse arguments
