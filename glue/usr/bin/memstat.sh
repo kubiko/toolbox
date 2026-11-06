@@ -23,18 +23,18 @@ trap 'rm -f "${TMP_RES}" "${TMP_RES2}" "${TMP_RES3}"' EXIT
 get_process_mem ()
 {
     PID=$1
-    if [ -f /proc/${PID}/status ] && [ -f /proc/${PID}/smaps ]; then
-        Pss=$(grep -e "^Pss:" /proc/${PID}/smaps | awk '{print $2}' | paste -sd+ | bc)
-        Private=$(grep -e "^Private" /proc/${PID}/smaps | awk '{print $2}' | paste -sd+ | bc)
+    if [ -f /proc/"${PID}"/status ] && [ -f /proc/"${PID}"/smaps ]; then
+        Pss=$(grep -e "^Pss:" /proc/"${PID}"/smaps | awk '{print $2}' | paste -sd+ | bc)
+        Private=$(grep -e "^Private" /proc/"${PID}"/smaps | awk '{print $2}' | paste -sd+ | bc)
 
         if [ -n "${Pss}" ] && [ -n "${Private}" ]; then
-            let Shared=${Pss}-${Private}
-            Name=$(grep -e "^Name:" /proc/${PID}/status | cut -d':' -f2 | tr -d ' \t')
+            Shared=$(( Pss - Private ))
+            Name=$(grep -e "^Name:" /proc/"${PID}"/status | cut -d':' -f2 | tr -d ' \t')
 
             # Keep results in bytes
-            let Shared=${Shared}*1024
-            let Private=${Private}*1024
-            let Sum=${Shared}+${Private}
+            Shared=$(( Shared * 1024 ))
+            Private=$(( Private * 1024 ))
+            Sum=$(( Shared + Private ))
 
             echo -e "${Private} \t + ${Shared} = ${Sum} \t ${Name}"
         fi
@@ -50,10 +50,10 @@ convert()
         value="0.00"
     fi
 
-    while [ $(echo "${value} > 1024" | bc) -eq 1 ]
+    while [ "$(echo "${value} > 1024" | bc)" -eq 1 ]
     do
         value=$(echo "scale=2;${value}/1024" | bc)
-        let power=$power+1
+        power=$(( power + 1 ))
     done
 
     case ${power} in
@@ -68,12 +68,13 @@ convert()
 
 # --- 1. Gather Userspace Process Memory ---
 if [ $# -eq 0 ]; then
-    pids=$(ls /proc | grep -E '^[0-9]+$')
-    for i in $pids; do
-        get_process_mem $i >> "$TMP_RES"
+    for d in /proc/[0-9]*; do
+        pid="${d#/proc/}"
+        [[ "${pid}" =~ ^[0-9]+$ ]] || continue
+        get_process_mem "${pid}" >> "${TMP_RES}"
     done
 else
-    get_process_mem $1 >> "$TMP_RES"
+    get_process_mem "$1" >> "${TMP_RES}"
 fi
 
 # --- 2. Gather and Format Kernel Memory ---
@@ -120,18 +121,15 @@ total=$(cat "${TMP_RES}" | awk '{print $5}' | paste -sd+ | bc)
 echo -e "Private \t\t Shared \t\t RAM used \t Program"
 echo "----------------------------------------------------------------------------------"
 
-while read -r line
+while read -r a _ c _ e f
 do
-    echo "${line}" | while read -r a b c d e f
-    do
-        if [ "$e" != "0" ]; then
-            echo -e "$(convert ${a}) \t\t $(convert ${c}) \t\t $(convert ${e}) \t\t ${f}"
-        fi
-    done
+    if [ "${e}" != "0" ]; then
+        echo -e "$(convert "${a}") \t\t $(convert "${c}") \t\t $(convert "${e}") \t\t ${f}"
+    fi
 done < "${TMP_RES}"
 
 echo "----------------------------------------------------------------------------------"
-echo -e "TOTAL MEMORY TRACKED BY SCRIPT:\t\t $(convert $total)"
+echo -e "TOTAL MEMORY TRACKED BY SCRIPT:\t\t $(convert "${total}")"
 echo "================================================================================--"
 echo ""
 echo "SYSTEM MEMORY REFERENCE (${FREE_DATA_CMD}):"
