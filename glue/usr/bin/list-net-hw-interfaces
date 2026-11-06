@@ -2,9 +2,9 @@
 
 for iface in $(ip -br address | awk '{print $1}')
 do
-  if test -n ${iface} && ip addr show dev ${iface} >/dev/null 2>&1; then
-    if test -e /sys/class/net/${iface}/device; then
-      echo ${iface}
+  if test -n "${iface}" && ip addr show dev "${iface}" >/dev/null 2>&1; then
+    if test -e "/sys/class/net/${iface}/device"; then
+      echo "${iface}"
     fi
   fi
 done
