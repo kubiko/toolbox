@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # set script version, so we have some tracking
-LXD_SCRIPT_VERSION="0.2"
 IDENTITY_FILE="${HOME}/.ssh/id_rsa-lxd"
 PUBLIC_KEY=${IDENTITY_FILE}.pub
 SSH_CONFIG="${HOME}/.ssh/config"
